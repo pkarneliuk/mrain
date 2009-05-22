@@ -1,0 +1,93 @@
+.TH MRAIN 1 "21 May 2009" "Manual page for mrain"
+.\"
+.\" 21th May 2009
+.\" Man page author:
+.\"    Pavel Karneliuk <pavel_karneliuk@users.sourceforge.net>
+.SH NAME
+.I mrain
+\- Matrix Rain is interactive screensaveer for X Server.
+.SH SYNOPSIS
+.B mrain
+[OPTIONS]
+.br
+.SH DESCRIPTION
+.I mrain
+is a OpenGL screensaver for X Server systems. It can capture a real-time video from your web-camera then displays it in "matrix-style".
+If you have not a web-camera, screensaver will be display simply matrix rain. This screensaver can produce a twister-effect.
+.SH OPTIONS
+.
+.TP
+.B "-r --root\ "
+Setup a root window for fullscreen mode. default: false
+.
+.TP
+.B "   --window-id=<hex-id>\ "
+Specific X window ID. default: 0x0 (it means not set)
+.
+.TP
+.B "-c --config\ "
+Show the configuration settings dialog box. default: false
+.
+.TP
+.B "   --width=<pixels>\ "
+Setup a width of screensaver window. default: 640 pixels
+.
+.TP
+.B "   --height=<pixels>\ "
+Setup a height of screensaver window. default: 480 pixels
+.
+.TP
+.B "-V --vflip\ "
+Setup a vertical flip of a video frame. default: false
+.
+.TP
+.B "-H --hflip\ "
+Setup a horisontal flip of a video frame. default: false
+.TP
+.B "-N --no-shaders\ "
+Force disable shaders. default: false.
+.
+.TP
+.B "   --device=<device name>\ "
+Setup a device for capturing video. defaut: /dev/video0
+.
+.TP
+.B "-h --help\ "
+Show usage information and quit. default: false
+.
+.TP
+.B "   --convert <input.bmp> <output.filename>\ "
+My little bitmap converter. This option allows to convert standard bitmap file to a C include file (*.h).
+.
+.SH EXAMPLES
+.
+Use 
+.B /dev/video2
+as a capture device and disable all shaders:
+.PP
+.br
+.B mrain --device=/dev/video2 --no-shaders
+.PP
+.br
+Draw screensaver into specific window: 
+.PP
+.br
+.B mrain --window-id=0xDF21
+.PP
+.br
+Flip video on vertical and horisontal:
+.PP
+.br
+.B mrain --vflip --hflip
+.br
+.SH VERSION
+This manual page documents Matrix Rain version 20090521.
+.br
+Latest version of this screensaver is available at: 
+.B http://sourceforge.net/projects/mrain/
+.SH AUTHOR
+.br
+Matrix Rain Screensaver (C) 2008, 2009 by Pavel Karneliuk
+.B
+<pavel_karneliuk@users.sourceforge.net>
+.PP
