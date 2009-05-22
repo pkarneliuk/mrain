@@ -1,0 +1,29 @@
+Wed, 20 May 2009 19:56:00 +0300
+	Major refactoring. Add --vflip and --hflip options. Move UNIX specific modules into nix folder.
+Thu, 01 Jan 2009 20:27:12 +0200
+	Fix bug in converting raw video frames YUYV -> RGB(BGR).
+Sun, 28 Dec 2008 02:52:19 +0200
+	HAPPY NEW YEAR 2009 !
+	Fix bug in receiving SIGTERM signal. Animation perion has been expanded. Add a man page.
+Mon, 24 Nov 2008 14:30:25 +0200
+	Performance refactoring. Finish twister-effect implementation. Update of glyphs` images.
+Tue, 14 Oct 2008 10:54:08 +0300
+	Performance refactoring. Add new option --no-shaders. Begin twister-effect implemantation.
+Mon, 15 Sep 2008 00:46:10 +0300
+	Add new console options --help and --window-id. GL-logging has been enlarged.
+Thu, 11 Sep 2008 17:46:36 +0300
+	Fix bugs im Makefile, refactored shaders and minor fixes in source code.
+Mon, 08 Sep 2008 16:53:00 +0300
+	Refactored video rendering and fixing some graphic artefacts.
+Fri, 29 Aug 2008 09:53:37 +0300	
+	Fixed warnings in building package scripts.
+	Refactored bmp->*h converter and add some samll fixes.
+Вск Авг 24 23:06:44 EEST 2008
+	Refactored video-capturing and image processing. Additioned fragment shader.
+Сбт Авг 2 01:51:27 EEST 2008
+	Refactored vertex shader and parametrized shader by captured video resolution.
+	Updated a hardcoded data of "matrix-letters", switch to 8-bit alpha from 32-bit rgba.
+Срд Июл 23 14:13:58 EEST 2008
+	Initial release.
+
+
