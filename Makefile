@@ -6,7 +6,7 @@ SRC	:= $(wildcard $(addsuffix /*.cpp, $(VPATH)))
 DEP	:= $(patsubst %.cpp,%.d,$(SRC))  
 OBJ	:= $(addprefix out/, $(notdir $(patsubst %.cpp,%.o,$(SRC))))
 
-CFLAGS	:= -Wall -O3 -funroll-loops  
+CFLAGS	:= -Wall -O3 -funroll-loops 
 INCLUDES:= -I. -I./nix -I/usr/include/ -I/usr/
 DEFINES	:= -DUNIX -DSTANDALONE -DHAVE_GL -DUSE_GL -DGL_GLEXT_PROTOTYPES -DGETTIMEOFDAY_TWO_ARGS -DHAVE_UNISTD_H
 LIBS	:= -lX11 -lGL

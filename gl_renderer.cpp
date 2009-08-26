@@ -18,6 +18,7 @@
 GLRenderer::GLRenderer(NativeWindow* win):GLContext(win)
 {
     printf("GL version:\t%s\n", glGetString(GL_VERSION));
+    printf("GLSL version:\t%s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
     printf("GL renderer:\t%s\n", glGetString(GL_RENDERER));
     printf("GL vendor:\t%s\n", glGetString(GL_VENDOR));
 

@@ -11,6 +11,7 @@
 #define OPTIONS_H
 //-----------------------------------------------------------------------------
 #include <string>
+#include <cstring>
 //-----------------------------------------------------------------------------
 class Options
 {
@@ -33,26 +34,29 @@ private:
         void operator=(float v);
         void operator=(double v);
 
+        bool empty()const{ return 0 == strlen(value); }
+
     private:
         Opt(char k, const char* n, const char* v, const char* c);
         Opt():comment(NULL){}
         Opt& operator=(const Opt&);
 
-        char value[32]; // string value of option
+        char value[128]; // string value of option
         char name [16]; // name of option
         const char*const comment;
         char key;   // a character 'X' or '-' if it is not set
     };
 
 public:
-    enum opt_name{scrsvr_mode, window_id, config, width, height, vflip, hflip, no_shaders, device, help, convert, num};
+    enum opt_name{scrsvr_mode, window_id, config, width, height, vflip, hflip, no_shaders, device, help, num};
 
     Options(const char* default_file_name);
+    Options& operator=(Options&);  // undefined
 
     void parse(int argc, char **argv);  //parse command-line
     bool save(const char* filepath=NULL);
     bool load(const char* filepath=NULL);
-    int usage();
+    int  usage()const;
 
     inline const Opt& operator[](opt_name id)const{ return options[id]; }
     inline       Opt& operator[](opt_name id)     { return options[id]; }
@@ -66,7 +70,7 @@ private:
     const char* is_short_key(const char* str);
 
     Opt options[num];
-    
+
     char default_filepath[max_path];
 };
 //-----------------------------------------------------------------------------

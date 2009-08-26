@@ -12,17 +12,7 @@
 //-----------------------------------------------------------------------------
 #include <cstdio>
 #include <cstdlib>
-
-#ifdef WIN32
-#include <windows.h>
-#endif// WIN32
-
-#include <GL/gl.h>
-
-#ifdef WIN32
-#include "glext.h"
-#endif//WIN32
-
+#include "gl_context.h"
 #include "stuff.h"
 //-----------------------------------------------------------------------------
 class TextureArray

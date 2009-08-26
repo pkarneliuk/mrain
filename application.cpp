@@ -66,7 +66,6 @@ int Application::run()
 
     GLRenderer* renderer = window->get_renderer();
 
-
     Scene scene(renderer, capture, options);
 
     while( running && window->process_events() )

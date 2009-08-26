@@ -1,3 +1,5 @@
+Wed, 26 Aug 2009 17:33:43 +0300
+	Add implementation for M$ Windows.
 Wed, 20 May 2009 19:56:00 +0300
 	Major refactoring. Add --vflip and --hflip options. Move UNIX specific modules into nix folder.
 Thu, 01 Jan 2009 20:27:12 +0200
