@@ -1,0 +1,57 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+IDD_CONFIG DIALOGEX 0, 0, 172, 88
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION "Matrix Rain Properties"
+FONT 8, "MS Shell Dlg", 400, 0, 0x0
+BEGIN
+    CONTROL         "Disable vertex shaders",IDC_NOSHADERS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,27,89,10
+    COMBOBOX        IDC_DEVICE,7,7,105,48,CBS_DROPDOWNLIST | CBS_SORT | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Capture Device",IDC_DEVICETEXT,115,9,50,8
+    PUSHBUTTON      "Ok",IDC_OK,7,68,50,14
+    PUSHBUTTON      "Cancel",IDC_CANCEL,61,68,50,14
+    CONTROL         "Vertical flip",IDC_VFLIP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,41,51,10
+    CONTROL         "Horisontal flip",IDC_HFLIP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,55,59,10
+    PUSHBUTTON      "Register",IDC_REGISTER,115,68,50,14,WS_DISABLED
+    PUSHBUTTON      "Activate",IDC_ACTIVATE,57,139,50,14,WS_DISABLED
+    EDITTEXT        IDC_AKEY,90,115,72,14,ES_UPPERCASE | ES_AUTOHSCROLL
+    PUSHBUTTON      "Take activation key",IDC_SUBMIT,6,115,72,14
+    LTEXT           "Press 'Take activation key' and put key in the field. Just make sure you are connected to the Internet",IDC_STATIC,6,92,163,20
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    1                       "Matrix Rain"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////

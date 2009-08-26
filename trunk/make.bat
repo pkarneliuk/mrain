@@ -1,10 +1,13 @@
 @echo off
 setlocal enabledelayedexpansion
 
+rem Global configuration
+rem set DEBUG=1
+rem set PACK_UPX=1
+rem set PACK_FSG=1
 
 set SRC=
 set OBJ=
-rem set DEBUG=1
 for %%i in ( *.cpp .\win\*.cpp ) do (
 
   set SRC=%%~fi !SRC!

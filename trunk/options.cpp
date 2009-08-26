@@ -5,7 +5,7 @@
 // license:     GNU General Public License v2
 // e-mail:      pavel_karneliuk@users.sourceforge.net
 //-----------------------------------------------------------------------------
-
+//Ida Maria
 //-----------------------------------------------------------------------------
 #include <cassert>
 #include <cstdio>
@@ -201,7 +201,6 @@ Options::Options(const char* default_file_name)
     options[hflip]       = Opt( 'H', "--hflip",     "false",      "horisontal flip of a video frame"          );
     options[no_shaders]  = Opt( 'N', "--no-shaders","false",      "force disable shaders"                     );
     options[help]        = Opt( 'h', "--help",      "false",      "show this message and quit"                );
-    options[convert]     = Opt( '-', "--convert",   "false",      "my little bitmap converter. usage: mrain --convert <input.bmp> <output.filename>" );
 }
 
 void Options::parse(int argc, char **argv)
@@ -265,6 +264,14 @@ void Options::parse(int argc, char **argv)
     }
 }
 
+
+const Options::opt_name serializable[]={
+    Options::device,
+    Options::no_shaders,
+    Options::vflip,
+    Options::hflip,
+    };
+
 bool Options::save(const char* filepath)
 {
     if(NULL == filepath) filepath = default_filepath; // use default filepath
@@ -272,10 +279,15 @@ bool Options::save(const char* filepath)
     std::ofstream out(filepath, std::ios_base::binary | std::ios_base::out);
     if( !out.is_open() ) return false;
 
-    out << options[device].name     << '=' << options[device].value     << '\n';
-    out << options[no_shaders].name << '=' << options[no_shaders].value << '\n';
-    out << options[vflip].name << '=' << options[vflip].value << '\n';
-    out << options[hflip].name << '=' << options[hflip].value << '\n';
+    const int count = sizeof(serializable)/sizeof(serializable[0]);
+    for(int i=0; i<count; i++)
+    {
+        Options::Opt& opt = options[serializable[i]];
+        if( !opt.empty() )
+        {
+            out << opt.name << '=' << opt.value << '\n';
+        }
+    }
 
     return out.good();
 }
@@ -287,42 +299,29 @@ bool Options::load(const char* filepath)
     std::ifstream in(filepath, std::ios_base::binary | std::ios_base::in);
     if( !in.is_open() ) return false;
 
-    char buffer[48];
+    const int count = sizeof(serializable)/sizeof(serializable[0]);
+
+    char buffer[128];
     while( in.getline(buffer, sizeof(buffer)) )
     {
-        if( strstr(buffer, options[no_shaders].name) )
+        for(int i=0; i<count; i++)
         {
-            if( char* s=strchr(buffer,'=') ) // format: [key=value] ?
+            Options::Opt& opt = options[serializable[i]];
+
+            if( strstr(buffer, opt.name) )
             {
-                options[no_shaders] = s+1;
-            }
-        }
-        else if( strstr(buffer, options[device].name) )
-        {
-            if( char* s=strchr(buffer,'=') ) // format: [key=value] ?
-            {
-                options[device] = s+1;
-            }
-        }
-        else if( strstr(buffer, options[vflip].name) )
-        {
-            if( char* s=strchr(buffer,'=') ) // format: [key=value] ?
-            {
-                options[vflip] = s+1;
-            }
-        }
-        else if( strstr(buffer, options[hflip].name) )
-        {
-            if( char* s=strchr(buffer,'=') ) // format: [key=value] ?
-            {
-                options[hflip] = s+1;
+                if( char* s=strchr(buffer,'=') ) // format: [key=value] ?
+                {
+                    opt = s+1;  // save new value
+                }
+                break;
             }
         }
     }
     return true;
 }
 
-int Options::usage()
+int Options::usage()const
 {
     fprintf(stdout, "possible arguments:\n");
     for(int i=0; i<num; i++)

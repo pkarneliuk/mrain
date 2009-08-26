@@ -17,25 +17,18 @@ VideoBuffer::VideoFrame::VideoFrame(char* data, unsigned int width, unsigned int
 
     unsigned int tex_width = round_pow_2 ( width  );
     unsigned int tex_height = round_pow_2( height );
-/*
-    #ifdef UNIX
-    char dummy[tex_width*tex_height];
-    #else
-    #pragma message ("video_buffer.cpp:23 set up constant size value of array")
-    char dummy[800];
-    #endif
-*/
+
     char* dummy = new char[tex_width*tex_height];
 
-    memset (dummy, 0, tex_width*tex_height);
+    memset (dummy, 0x20, tex_width*tex_height);
 
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
-    glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE8, tex_width, tex_height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, dummy);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
+    glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE8, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
+//    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
     delete[] dummy;
 }
 
@@ -46,8 +39,8 @@ void VideoBuffer::VideoFrame::update(char* data, unsigned int offset_x, unsigned
 
 VideoBuffer::VideoBuffer(const Bitmap& frame, int layers, unsigned long micsec_delay):TextureArray(layers+1 /*for current*/), top_index(0), last_time(micsec_delay), delay(micsec_delay)
 {
-    s = float(frame.width() ) / float(round_pow_2( frame.width()  ));
-    t = float(frame.height()) / float(round_pow_2( frame.height() ));
+    s = 1.0f;//float(frame.width() ) / float(round_pow_2( frame.width()  ));
+    t = 1.0f;//float(frame.height()) / float(round_pow_2( frame.height() ));
 
     for(unsigned int i=0; i<num_textures; i++)
     {

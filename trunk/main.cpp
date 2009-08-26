@@ -21,12 +21,6 @@ int main(int argc, char **argv)
 
     if( opts[Options::help] ) return opts.usage();
 
-    // A little converter bmp -> *.h
-    if( opts[Options::convert] )
-    {
-        return convert_bmp_2_include_array(argv[2], argv[3]) == false;
-    }
-
     if( int id = opts[Options::config] )
     {
         Config config(opts);

@@ -20,7 +20,7 @@ Matrix::Matrix(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture)
     colors(NULL),
     firsts(NULL), counts(NULL),
     nstrips(ns), nglyphs(ng),
-    strips(NULL), grid_random(324467), animation_period(180000000 + grandom(90000000U))
+    strips(NULL), grid_random(324467), animation_period(100000000 + grandom(50000000U))
 {
     unsigned int strip_pack = nglyphs * 4;
 
@@ -34,11 +34,11 @@ Matrix::Matrix(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture)
 
     for(unsigned int i=0; i<nstrips; i++)
     {
-        strips[i] = new Strip(	strip_pack,
+        strips[i] = new Strip( strip_pack,
                         &glyph_st[i*strip_pack],
                         &vertexies[i*strip_pack],
                         &colors[i*strip_pack],
-                        float(i)/2.0f, -grid_random(3.0f), 0,
+                        float(i)/2.0f, -grid_random(5.0f), 0,
                         -48.0f, 35.0f, grid_random(5.0f)+2.0f,
                         grid_random(10.0f)+15.0f, grid_random(1.0f)+5.0f, grid_random(10.0f)+10.0f);
     }
@@ -281,8 +281,7 @@ void Matrix::Strip::wave_tick(unsigned long usec)
         if(end_glyph < n_glyphs)
         {
             end_glyph += inc;
-            if(end_glyph > n_glyphs)
-                end_glyph = n_glyphs;
+            if(end_glyph > n_glyphs) end_glyph = n_glyphs;
         }
 
         const unsigned int per = 64;        // period of waves
@@ -328,7 +327,7 @@ void Matrix::Strip::wave_tick(unsigned long usec)
     }
 }
 
-MatrixVideo::MatrixVideo(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture, const VideoBuffer* buffer, int widht, int height, bool vflip, bool hflip)
+MatrixVideo::MatrixVideo(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture, const VideoBuffer* buffer, int width, int height, bool vflip, bool hflip)
     :Matrix(ns, ng, texture), video_st(NULL), video(NULL)
 {
     video_st = new GLRenderer::T2F[ns * ng * 4];    // Vertex array for video texture unit
@@ -338,7 +337,7 @@ MatrixVideo::MatrixVideo(unsigned int ns, unsigned int ng, TextureAtlas::Texture
     float video_res[4];
     video_res[0] = 64.0f;
     video_res[1] = 48.0f;
-    video_res[2] = video_res[0]/buffer->s+0.5f;
+    video_res[2] = video_res[0]/buffer->s;
     video_res[3] = video_res[1]/buffer->t;
 
     const unsigned int n = nstrips * nglyphs * 4;
@@ -346,7 +345,7 @@ MatrixVideo::MatrixVideo(unsigned int ns, unsigned int ng, TextureAtlas::Texture
     if(vflip)
         for(unsigned int i=0; i<n; i++)
         {
-            video_st[i].s = (video_res[0] - vertexies[i].x)/(video_res[2]+0.5f);
+            video_st[i].s = (video_res[0] - vertexies[i].x)/video_res[2];
         }
     else
         for(unsigned int i=0; i<n; i++)
@@ -362,17 +361,8 @@ MatrixVideo::MatrixVideo(unsigned int ns, unsigned int ng, TextureAtlas::Texture
     else
         for(unsigned int i=0; i<n; i++)
         {
-            video_st[i].t = 1.0f+(vertexies[i].y/video_res[3]);
+            video_st[i].t = buffer->t+(vertexies[i].y/video_res[3]);
         }
-
-/*      //      Vertical flip
-        video_st[i].s = vertexies[i].x/video_res[2];
-        //      Horisontal flip
-        video_st[i].t = 1.0f+(vertexies[i].y/video_res[3]);
-        // Old UNIX
-        video_st[i].s = (video_res[0] - vertexies[i].x)/(video_res[2]+0.5f);
-        video_st[i].t = -(vertexies[i].y/video_res[3]);
-*/
 }
 
 MatrixVideo::~MatrixVideo()

@@ -48,6 +48,9 @@ Scene::Scene(GLRenderer* render, Capture* capture, const Options& options):atlas
         target << *capture;
         frames_stack = new VideoBuffer(target, 0, 10000);
 
+//        screen = new VideoScreen(64,48);
+//        screen->set_video(frames_stack);
+
         if( options[Options::no_shaders] || renderer->version() <= "2.0")
         {
             matrix = new MatrixVideo(128, 112, atlas[0], frames_stack, target.width(), target.height(), options[Options::vflip], options[Options::hflip]);
@@ -70,9 +73,10 @@ unsigned int Scene::draw()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
-    glTranslatef(-32.0,24.0,-27.0f);
+    glTranslatef(-32.0,26.0,-25.0f);
 
     matrix->draw();
+//    screen->draw();
     return 0;
 }
 
