@@ -14,7 +14,22 @@
 //-----------------------------------------------------------------------------
 class Capture: public BaseCapture
 {
+public:
+    Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_name);
+    ~Capture();
+
+    const char* capture();
+    unsigned int width()const { return captured_width;  }
+    unsigned int height()const{ return captured_height; }
+
+    static unsigned int enum_devices(char buffers[][32], unsigned int num)throw()
+    {
+        return 0;   // Not implemented yet
+    }
+
 private:
+    void free();
+
     struct Device
     {
     public:
@@ -37,6 +52,8 @@ private:
         void*   start;
         size_t  length;
     };
+
+    void decode_buffer(int index);
 
     // See http://www.fourcc.org/yuv.php
     //+#define V4L2_PIX_FMT_GREY    v4l2_fourcc('G','R','E','Y') /*  8  Greyscale     */
@@ -65,20 +82,7 @@ private:
 
     static void YUV422PtoGREY(const char* src, const char* end, char* dst);
 
-public:
-    Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_name);
-    ~Capture();
 
-    const char* capture();
-    unsigned int width()const { return captured_width;  }
-    unsigned int height()const{ return captured_height; }
-
-    static unsigned int enum_devices(char buffers[][32], unsigned int num)throw()
-    {
-        return 0;   // Not implemented yet
-    }
-
-private:
     unsigned int select_format();
 
     typedef void (*Decoder)(const char* src, const char* end, char* dst);
@@ -97,6 +101,10 @@ private:
     MMapBuffer**    buffers;
     unsigned int    num_buffers;
     const Decoder*  decoders;
+	
+	// thread`s stuff
+	static void* capture_frame_thead(void* capture);
+	pthread_t worker_thread;
 };
 //-----------------------------------------------------------------------------
 #endif//CAPTURE_H
