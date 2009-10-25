@@ -81,8 +81,8 @@ Capture::MMapBuffer::~MMapBuffer()
         throw runtime_error("munmap failed");
 }
 
-Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_name):
-    device(dev_name), buffers(NULL), decoders(NULL)
+Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_name) try:
+    device(dev_name), buffers(NULL), num_buffers(0), decoders(NULL), worker_thread(NULL)
 {
     // obtain information about driver and hardware capabilities
     struct v4l2_capability cap;
@@ -256,9 +256,10 @@ Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_nam
     {
         throw runtime_error("Insufficient buffer memory on %s\n", dev_name);
     }
-    num_buffers = req.count;
-    buffers = new MMapBuffer*[num_buffers];
 
+    buffers = new MMapBuffer*[req.count];
+    num_buffers = req.count;
+    memset(buffers, 0, sizeof(MMapBuffer*)*num_buffers);
     for (unsigned int i=0; i<num_buffers; ++i)
     {
         struct v4l2_buffer buf;
@@ -275,9 +276,25 @@ Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_nam
     }
 
     xioctl (device, VIDIOC_STREAMON, &buf_type);
+
+    if(0 != pthread_create( &worker_thread, NULL, capture_frame_thead, (void*) this))
+    {
+        throw runtime_error(strerror(errno));
+    }
+}
+catch(...)
+{
+	free();
 }
 
 Capture::~Capture()
+{
+    pthread_cancel(worker_thread);
+    pthread_join(worker_thread, NULL);
+    free();
+}
+
+void Capture::free()
 {
     xioctl(device, VIDIOC_STREAMOFF, &buf_type);
 
@@ -289,38 +306,45 @@ Capture::~Capture()
 
 const char* Capture::capture()
 {
-    if( buffer )  // output buffer must be set
+    return buffer;
+}
+
+void* Capture::capture_frame_thead(void* ptr)
+{
+    while(Capture* instance = reinterpret_cast<Capture*>(ptr))
     {
-/*        fd_set fds;
-        FD_ZERO (&fds); 
-        FD_SET (device, &fds);
-
-        timeval timeout={0, 5000};
-
-        int ret = select (device+1, &fds, NULL, NULL, &timeout);
-
-        // select timeout or something worse
-        if(1 != ret) return NULL;
-*/
-        struct v4l2_buffer buf;
-        CLEAR (buf);
-
-        buf.type = buf_type;
-        buf.memory = V4L2_MEMORY_MMAP;
-
-        // dequeue a filled (capturing) buffer from the driver’s outgoing queue
-        if(0 == xioctl(device, VIDIOC_DQBUF, &buf))
+        usleep(0);
+        if(instance->buffer) // output buffer must be set
         {
-            assert(buf.index < num_buffers);
+            int fd = instance->device;
+            fd_set fds;
+            FD_ZERO (&fds); 
+            FD_SET (instance->device, &fds);
 
-            MMapBuffer* current = buffers[buf.index];
-            decoders[format]((char*)current->start, (char*)current->start + current->length, buffer);
+            int ret = select (fd+1, &fds, NULL, NULL, NULL);
 
-            // enqueue an empty (capturing) buffer in the driver’s incoming queue
-            xioctl(device, VIDIOC_QBUF, &buf);
+            // select timeout or something worse
+            if(1 != ret || !FD_ISSET(fd, &fds)) continue;
+
+            struct v4l2_buffer buf;
+            CLEAR (buf);
+
+            buf.type = buf_type;
+            buf.memory = V4L2_MEMORY_MMAP;
+
+            // dequeue a filled (capturing) buffer from the driver’s outgoing queue
+            if(0 == xioctl(instance->device, VIDIOC_DQBUF, &buf))
+            {
+                assert(buf.index < instance->num_buffers);
+
+                instance->decode_buffer(buf.index);
+
+                // enqueue an empty (capturing) buffer in the driver’s incoming queue
+                xioctl(instance->device, VIDIOC_QBUF, &buf);
+            }
         }
     }
-    return buffer;
+	return NULL;
 }
 
 unsigned int Capture::select_format()
@@ -363,6 +387,13 @@ unsigned int Capture::select_format()
 
     if(0 == format) fprintf(stderr, "not found supported formats, sorry\n");
     return format;
+}
+
+void Capture::decode_buffer(int index)
+{
+    MMapBuffer* current = buffers[index];
+    decoders[format]((char*)current->start,
+        (char*)current->start + current->length, buffer);
 }
 
 const Capture::Converter Capture::supported_formats[4]=
