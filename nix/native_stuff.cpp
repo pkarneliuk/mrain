@@ -8,6 +8,7 @@
 
 //-----------------------------------------------------------------------------
 #include <cstdarg>
+#include <cstdio>
 #include <locale>
 
 #include "native_stuff.h"

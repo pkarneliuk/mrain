@@ -97,10 +97,10 @@ private:
     unsigned int captured_width;
     unsigned int captured_height;
 
-    Device          device;
     MMapBuffer**    buffers;
     unsigned int    num_buffers;
     const Decoder*  decoders;
+    Device          device;
 	
 	// thread`s stuff
 	static void* capture_frame_thead(void* capture);
