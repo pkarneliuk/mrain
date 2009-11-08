@@ -82,7 +82,7 @@ Capture::MMapBuffer::~MMapBuffer()
 }
 
 Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_name) try:
-    device(dev_name), buffers(NULL), num_buffers(0), decoders(NULL), worker_thread(NULL)
+    buffers(NULL), num_buffers(0), decoders(NULL), device(dev_name), worker_thread(NULL)
 {
     // obtain information about driver and hardware capabilities
     struct v4l2_capability cap;
@@ -285,6 +285,7 @@ Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_nam
 catch(...)
 {
 	free();
+    throw;
 }
 
 Capture::~Capture()

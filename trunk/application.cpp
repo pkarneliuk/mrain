@@ -27,8 +27,8 @@ Application::Application(const Options& opts):options(opts),window(NULL),capture
     }
     else
     {
-        auto int width  = options[Options::width];
-        auto int height = options[Options::height];
+        int width  = options[Options::width];
+        int height = options[Options::height];
         window = new AppWindow(width, height);
     }
 

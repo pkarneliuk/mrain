@@ -11,6 +11,7 @@
 #define STUFF_H
 //-----------------------------------------------------------------------------
 #include <stdexcept>
+#include <cstdio>
 #include <cstdarg>
 
 #include "native_stuff.h"
