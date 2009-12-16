@@ -11,6 +11,7 @@
 #define CAPTURE_H
 //-----------------------------------------------------------------------------
 #include <windows.h>
+#include <AtlBase.h>
 #include <Dshow.h>
 #include <Qedit.h>
 
@@ -40,11 +41,11 @@ public:
 
 private:
 
-    struct IMediaControl*           media_control;
-    struct IGraphBuilder*           filter_graph;
-    struct ICaptureGraphBuilder2*   graph_builder;
-    struct ISampleGrabber*          sample_grabber;
-    struct IAMStreamConfig*         stream_config;
+    CComPtr<IMediaControl>           media_control;
+    CComPtr<IGraphBuilder>           filter_graph;
+    CComPtr<ICaptureGraphBuilder2>   graph_builder;
+    CComPtr<ISampleGrabber>          sample_grabber;
+    CComPtr<IAMStreamConfig>         stream_config;
 
     AM_MEDIA_TYPE media_type;
     VIDEOINFOHEADER video_info;
