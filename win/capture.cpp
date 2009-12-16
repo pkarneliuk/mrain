@@ -9,8 +9,6 @@
 //-----------------------------------------------------------------------------
 #include <cassert>
 
-#include <AtlBase.h>
-
 #include "capture.h"
 #include "stuff.h"
 //-----------------------------------------------------------------------------
@@ -25,9 +23,6 @@ Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_nam
     ZeroMemory(&media_type, sizeof(media_type));
     ZeroMemory(&video_info, sizeof(video_info));
 
-    ICreateDevEnum* device_enum = NULL;
-    IEnumMoniker*   enumerator  = NULL;
-
     try
     {
         // Initialize COM
@@ -37,34 +32,36 @@ Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_nam
         }
 
         HRESULT hr = MB_OK;
-        IBaseFilter *bf_capture_filter=NULL;
 
         // Create the system device enumerator
-        hr = CoCreateInstance(CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC, IID_ICreateDevEnum, (LPVOID*) &device_enum);
+        CComPtr<ICreateDevEnum> device_enum;
+        hr = device_enum.CoCreateInstance(CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC);
         if (FAILED(hr))
         {
             throw runtime_error("Couldn't create system device enumaration hr=0x%x", hr);
         }
 
         // Create an enumerator for the video capture devices
+        CComPtr<IEnumMoniker> enumerator;
         hr = device_enum->CreateClassEnumerator(CLSID_VideoInputDeviceCategory, &enumerator, 0);
         if( S_OK != hr )
         {
             throw runtime_error("Couldn't create class enumerator!  hr=0x%x", hr);
         }
 
-        USES_CONVERSION;
         IMoniker* moniker = NULL;
+        CComPtr<IBaseFilter> bf_capture_filter;
         bool not_found = true;
         while( not_found && S_OK == enumerator->Next(1, &moniker, NULL) && moniker )
         {
-            IPropertyBag* prop_bag = NULL;
+            CComPtr<IPropertyBag> prop_bag;
             if(S_OK == moniker->BindToStorage(0, 0, IID_IPropertyBag, (void**)&prop_bag))
             {
                 VARIANT name;
                 VariantInit(&name);
                 if(S_OK == prop_bag->Read(L"FriendlyName", &name, 0))
                 {
+                    USES_CONVERSION;
                     if( 0 == strcmp(dev_name, OLE2A(name.bstrVal)) || '\0' == *dev_name ) // device is not set
                     {
                         printf("device:\t\t%s\n", dev_name);
@@ -74,7 +71,6 @@ Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_nam
                 }
                 VariantClear(&name);
             }
-            prop_bag->Release();
             moniker->Release();
         }
         if(not_found || NULL == bf_capture_filter)
@@ -83,21 +79,21 @@ Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_nam
         }
 
         // Create the filter graph
-        hr = CoCreateInstance(CLSID_FilterGraph, NULL, CLSCTX_INPROC, IID_IGraphBuilder, (LPVOID*) &filter_graph);
+        hr = filter_graph.CoCreateInstance(CLSID_FilterGraph, NULL, CLSCTX_INPROC);
         if (FAILED(hr))
         {
             throw runtime_error("Can not create Filter Graph hr=0x%x", hr);
         }
 
         // Obtain interfaces for media control
-        hr = filter_graph->QueryInterface(IID_IMediaControl,(LPVOID*) &media_control);
+        hr = filter_graph.QueryInterface(&media_control);
         if (FAILED(hr))
         {
             throw runtime_error("Can not get Media Control Interface hr=0x%x", hr);
         }
 
         // Create the capture graph builder
-        hr = CoCreateInstance(CLSID_CaptureGraphBuilder2 , NULL, CLSCTX_INPROC, IID_ICaptureGraphBuilder2, (LPVOID*) &graph_builder);
+        hr = graph_builder.CoCreateInstance(CLSID_CaptureGraphBuilder2 , NULL, CLSCTX_INPROC);
         if (FAILED(hr))
         {
             throw runtime_error("Can not create Capture Graph Builder 2 hr=0x%x", hr);
@@ -165,8 +161,8 @@ Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_nam
         }
 
 
-        IBaseFilter * bf_sample_grabber = NULL;
-        hr = CoCreateInstance(CLSID_SampleGrabber, NULL, CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void**)&bf_sample_grabber);
+        CComPtr<IBaseFilter> bf_sample_grabber;
+        hr = bf_sample_grabber.CoCreateInstance(CLSID_SampleGrabber, NULL, CLSCTX_INPROC_SERVER);
         if (FAILED(hr))
         {
             throw runtime_error("Can not create SampleGrabber filter hr=0x%x", hr);
@@ -215,8 +211,8 @@ Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_nam
             throw runtime_error("Can not set Callback hr=0x%x", hr);
         }
 
-        IBaseFilter* bf_null_renderer = NULL;
-        hr = CoCreateInstance(CLSID_NullRenderer, NULL, CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void**)&bf_null_renderer);
+        CComPtr<IBaseFilter> bf_null_renderer;
+        hr = bf_null_renderer.CoCreateInstance(CLSID_NullRenderer, NULL, CLSCTX_INPROC_SERVER);
         if (FAILED(hr))
         {
             throw runtime_error("Can not create NullRenderer filter hr=0x%x", hr);
@@ -231,7 +227,6 @@ Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_nam
         hr = graph_builder->RenderStream (pin_category, &MEDIATYPE_Video, bf_capture_filter, bf_sample_grabber, bf_null_renderer);
         if (FAILED(hr))
         {
-            bf_capture_filter->Release();
             throw runtime_error("Can not render the video capture stream hr=0x%x", hr);
         }
 
@@ -270,20 +265,9 @@ Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_nam
                 throw runtime_error("Bad AM_MEDIA_TYPE");
             }
         }
-
-        if(device_enum) device_enum->Release();
-        if(enumerator) enumerator->Release();
     }
     catch(runtime_error&)
     {
-        if (media_control) media_control->Release();
-        if (graph_builder) graph_builder->Release();
-        if (filter_graph ) filter_graph ->Release();
-        if (stream_config) stream_config->Release();
-
-        if(device_enum) device_enum->Release();
-        if(enumerator) enumerator->Release();
-
         // clean all
         CoUninitialize();
         throw;
@@ -293,11 +277,9 @@ Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_nam
 Capture::~Capture()
 {
     if (media_control) media_control->Stop(); // StopWhenReady();
+    if (sample_grabber) sample_grabber->SetCallback(NULL, 0);
 
-    if (media_control) media_control->Release();
-    if (graph_builder) graph_builder->Release();
-    if (filter_graph ) filter_graph ->Release();
-    if (stream_config) stream_config->Release();
+    assert(1 == ref_count);
 
     CoUninitialize();
 }
@@ -400,16 +382,14 @@ const char* Capture::capture()
 
 unsigned int Capture::enum_devices(char buffers[][128], unsigned int num)throw()
 {
-    ICreateDevEnum* device_enum = NULL;
-    IEnumMoniker*   enumerator  = NULL;
-
     if(FAILED(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED)))
     {
         return 0;
     }
 
     // Create the system device enumerator
-    HRESULT hr = CoCreateInstance(CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC, IID_ICreateDevEnum, (LPVOID*) &device_enum);
+    CComPtr<ICreateDevEnum> device_enum;
+    HRESULT hr = device_enum.CoCreateInstance(CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC);
     if (FAILED(hr))
     {
         CoUninitialize();
@@ -417,9 +397,9 @@ unsigned int Capture::enum_devices(char buffers[][128], unsigned int num)throw()
     }
 
     // Create an enumerator for the video capture devices
+    CComPtr<IEnumMoniker> enumerator;
     if( S_OK != device_enum->CreateClassEnumerator(CLSID_VideoInputDeviceCategory, &enumerator, 0) )
     {
-        device_enum->Release();
         CoUninitialize();
         return 0;
     }
@@ -436,7 +416,7 @@ unsigned int Capture::enum_devices(char buffers[][128], unsigned int num)throw()
         for(ULONG i=0; i<fetched; i++)
         {
             assert(found_devices < fetched);
-            IPropertyBag* prop_bag = NULL;
+            CComPtr<IPropertyBag> prop_bag;
             if(S_OK == monikers[i]->BindToStorage(0, 0, IID_IPropertyBag, (void**)&prop_bag))
             {
                 VARIANT name;
@@ -449,15 +429,11 @@ unsigned int Capture::enum_devices(char buffers[][128], unsigned int num)throw()
                 }
                 VariantClear(&name);
             }
-            if(prop_bag) prop_bag->Release();
             monikers[i]->Release();
         }
     }
 
     delete[] monikers;
-
-    if(enumerator ) enumerator ->Release();
-    if(device_enum) device_enum->Release();
 
     CoUninitialize();
     return found_devices;
