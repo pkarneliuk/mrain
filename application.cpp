@@ -74,6 +74,7 @@ int Application::run()
     {
         unsigned long tick = counter.count_frame();
 
+   //     frame.dump("tmp.bmp");
         scene.draw();
         scene.tick(tick);
         scene.present();

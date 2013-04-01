@@ -63,15 +63,11 @@ public:
 
         char dummy[4];
 
-        unsigned char* pixel = buffer;
+        // write from bottom to up
+        unsigned char* pixel = buffer + (image_height-1) * (image_width * 3);
         for(unsigned int i=0; i<image_height; i++)
         {
-            for(unsigned int j=0; j<image_width; j++)
-            {
-                unsigned char bmp_pixel[3]={pixel[0],pixel[1],pixel[2]};
-                res = fwrite(bmp_pixel, sizeof(bmp_pixel), 1, mfd);
-                pixel+=3;
-            }
+            pixel -= fwrite(pixel, 3, image_width, mfd) * 3;
             res = fwrite(dummy, dob_width, sizeof(char), mfd);
         }
         fclose(mfd);

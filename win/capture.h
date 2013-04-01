@@ -12,6 +12,7 @@
 //-----------------------------------------------------------------------------
 #include <windows.h>
 #include <atlbase.h>
+#include <Mfapi.h>
 #include <Mfidl.h>
 #include <Mfreadwrite.h>
 
@@ -44,6 +45,15 @@ class Capture:public BaseCapture
     };
 
 public:
+
+    enum Native4CC {
+        GREY = FCC('GREY'),
+        YUYV = FCC('YUYV'),
+        UYVY = FCC('UYVY'),
+        P422 = FCC('422P'),
+        YUY2 = FCC('YUY2'),
+    };
+
     Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_name);
     ~Capture();
 
@@ -52,6 +62,7 @@ public:
     static unsigned int enum_devices(char buffers[][128], const unsigned int size)throw();
 
     void decode_to_buffer(unsigned char* src, unsigned int length);
+    void decode_padded_to_buffer(unsigned char* scanline0, unsigned int pitch);
 private:
 
     static IMFActivate* find_device(const char* dev_name);
@@ -59,6 +70,7 @@ private:
     friend class Sampler;
 
     CComPtr<IMFSourceReader> reader;
+    INT32 stride;
 
     CriticalSection cs;
 };

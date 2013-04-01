@@ -68,9 +68,9 @@ void Matrix::draw()
         firsts[i] += (i * nglyphs<<2);
     }
 
-    glMultiDrawArrays(GL_TRIANGLE_STRIP, firsts, counts, nstrips);
-  /*  for(unsigned int i=0; i<nstrips; i++)
-        glDrawArrays(GL_TRIANGLE_STRIP, firsts[i], counts[i]);*/
+    //glMultiDrawArrays(GL_TRIANGLE_STRIP, firsts, counts, nstrips);
+    for(unsigned int i=0; i<nstrips; i++)
+        glDrawArrays(GL_TRIANGLE_STRIP, firsts[i], counts[i]);
     post_draw();
 }
 

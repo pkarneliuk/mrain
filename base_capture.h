@@ -12,12 +12,6 @@
 //-----------------------------------------------------------------------------
 #include "bitmap.h"
 //-----------------------------------------------------------------------------
-
-#define FOURCC(ch4) ((((unsigned int)(ch4) & 0x000000FF) << 24) | \
-                     (((unsigned int)(ch4) & 0x0000FF00) << 8)  | \
-                     (((unsigned int)(ch4) & 0x00FF0000) >> 8)  | \
-                     (((unsigned int)(ch4) & 0xFF000000) >> 24))
-
 class BaseCapture
 {
 public:
@@ -85,14 +79,17 @@ protected:
 
     typedef void (*encoder)(const unsigned char* src, const unsigned char* end, unsigned char* dst);
 
-    const static struct Conversion
+    const static struct Transform
     {
         unsigned int fourcc;
+        size_t  bpp; // bits per pixel
         encoder func[num];
     } encoders[];
 
-    static encoder get_encoder(unsigned int fourcc, out_format fmt);
-    static bool   is_supported(unsigned int fourcc);
+    static const Transform& get_transform(unsigned int fourcc);
+    static inline bool    is_supported(unsigned int fourcc){ return get_transform(fourcc).fourcc != 0; }
+    static inline size_t  get_bpp     (unsigned int fourcc){ return get_transform(fourcc).bpp; }
+    static inline encoder get_encoder (unsigned int fourcc, out_format fmt){ return get_transform(fourcc).func[fmt]; }
 
 
     unsigned int fourcc;    // FOURCC of video encoding
