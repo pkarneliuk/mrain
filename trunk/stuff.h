@@ -58,7 +58,7 @@ public:
 
     inline unsigned int test(unsigned int delta)
     {   // integer calculations !
-        // Wirning ! There is an owerflow !
+        // Worning ! There is an overflow !
         count += delta;
         unsigned int uptimes = count/limit;
         count %= limit;

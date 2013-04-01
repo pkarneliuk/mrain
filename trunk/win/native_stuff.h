@@ -55,6 +55,11 @@ struct BMP_FILEHEADER
     unsigned int    bfOffBits;
 };
 #pragma pack(pop)
+
+inline void sleeep(unsigned long microseconds)
+{
+    ::Sleep(microseconds/1000);
+}
 //-----------------------------------------------------------------------------
 #endif//NATIVE_STUFF_H
 //-----------------------------------------------------------------------------

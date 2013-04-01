@@ -262,9 +262,9 @@ void check_exit(void*)
     ExitProcess(0);
 }
 
-void check_nop(void* data)
+void check_nop(void* /*data*/)
 {
-    auto unsigned char* ptr = (unsigned char*) data;
+/*    unsigned char* ptr = (unsigned char*) data;
     for(unsigned int i=ptr[0]; i < ptr[1]; i++)
     {
         __asm nop
@@ -275,7 +275,7 @@ void check_nop(void* data)
         int 3
         push 0
         call dword ptr [ExitProcess]
-    } 
+    } */
 
 }
 

@@ -69,6 +69,8 @@ void Matrix::draw()
     }
 
     glMultiDrawArrays(GL_TRIANGLE_STRIP, firsts, counts, nstrips);
+  /*  for(unsigned int i=0; i<nstrips; i++)
+        glDrawArrays(GL_TRIANGLE_STRIP, firsts[i], counts[i]);*/
     post_draw();
 }
 
@@ -77,7 +79,7 @@ void Matrix::tick(unsigned long usec)
     if( animation_period.ready() )
     {
         // select random spawner
-        unsigned int index = grandom(sizeof(Matrix::spawners)/sizeof(Matrix::spawn));
+        unsigned int index = grandom((unsigned int)(sizeof(Matrix::spawners)/sizeof(Matrix::spawn)));
         (this->*Matrix::spawners[index])();
     }
 
@@ -327,7 +329,7 @@ void Matrix::Strip::wave_tick(unsigned long usec)
     }
 }
 
-MatrixVideo::MatrixVideo(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture, const VideoBuffer* buffer, int width, int height, bool vflip, bool hflip)
+MatrixVideo::MatrixVideo(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture, const VideoBuffer* buffer, int /*width*/, int /*height*/, bool vflip, bool hflip)
     :Matrix(ns, ng, texture), video_st(NULL), video(NULL)
 {
     video_st = new GLRenderer::T2F[ns * ng * 4];    // Vertex array for video texture unit

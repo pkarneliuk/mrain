@@ -1,274 +1,248 @@
 //-----------------------------------------------------------------------------
 // "Matrix Rain" - screensaver for X Server Systems
 // file name:   capture.cpp
-// copyright:   (C) 2008, 2009 by Pavel Karneliuk
+// copyright:   (C) 2008, 2009, 2013 by Pavel Karneliuk
 // license:     GNU General Public License v2
 // e-mail:      pavel_karneliuk@users.sourceforge.net
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 #include <cassert>
+#include <memory>
+#include <iostream>
+
+#include <windows.h>
+#include <atlbase.h>
+#include <Mfapi.h>
+#include <Mfidl.h>
+#include <mferror.h>
+#include <Mfreadwrite.h>
+#include <Mftransform.h>
+
 
 #include "capture.h"
 #include "stuff.h"
 //-----------------------------------------------------------------------------
-EXTERN_C const CLSID CLSID_SampleGrabber;
 //-----------------------------------------------------------------------------
-void printf(const GUID& guid, unsigned int width, unsigned int height);
-
-Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_name):media_control(NULL),filter_graph(NULL),graph_builder(NULL), stream_config(NULL), ref_count(1)
+void print(const GUID& guid, unsigned int width, unsigned int height, float rate)
 {
-    const GUID* pin_category = &PIN_CATEGORY_CAPTURE;
+    //Table of GUIDs http://msdn.microsoft.com/en-us/library/windows/desktop/aa370819(v=vs.85).aspx
+    struct { DWORD dword; char c; } fourcc = {guid.Data1, '\0'};
 
-    ZeroMemory(&media_type, sizeof(media_type));
-    ZeroMemory(&video_info, sizeof(video_info));
+    printf("%s %4ux%-4u %.1f fps\n", &fourcc, width, height, rate);
+}
+
+class Sampler: public IMFSourceReaderCallback
+{
+public:
+    Sampler(Capture* c): cp(c),ref_count(0) {}
+    ~Sampler(){}
+
+    // IUnknown
+    STDMETHODIMP QueryInterface(REFIID iid, void** ppv)
+    {
+        static const QITAB qit[] =
+        {
+            QITABENT(Sampler, IMFSourceReaderCallback),
+            { 0 },
+        };
+        return QISearch(this, qit, iid, ppv);
+    }
+    STDMETHODIMP_(ULONG) AddRef()
+    {
+        return InterlockedIncrement(&ref_count);
+    }
+    STDMETHODIMP_(ULONG) Release()
+    {
+        ULONG count = InterlockedDecrement(&ref_count);
+        if (count == 0)
+        {
+            delete this;
+        }
+        return count;
+    }
+
+    // IMFSourceReaderCallback
+    STDMETHODIMP OnEvent(DWORD, IMFMediaEvent*) { return S_OK; }
+    STDMETHODIMP OnFlush(DWORD) { return S_OK; }
+    STDMETHODIMP OnReadSample(
+        HRESULT hrStatus,
+        DWORD dwStreamIndex,
+        DWORD dwStreamFlags,
+        LONGLONG llTimestamp,
+        IMFSample *pSample)
+    {
+    /*
+        if (!IsCapturing())
+        {
+            LeaveCriticalSection(&m_critsec);
+            return S_OK;
+        }*/
+
+        HRESULT hr = S_OK;
+
+        if (pSample)
+        {
+            DWORD count = 0;
+            pSample->GetBufferCount(&count);
+            for(DWORD i=0; i<count; i++)
+            {
+                CComPtr<IMFMediaBuffer> buffer;
+                pSample->GetBufferByIndex(i, &buffer);
+
+
+                BYTE *buf;
+                DWORD length;
+                if (SUCCEEDED(buffer->Lock(&buf, NULL,&length)))
+                {
+                    cp->decode_to_buffer(buf, length);
+
+                    buffer->Unlock();
+                }
+            }
+        }
+
+        if(SUCCEEDED(hrStatus))
+        {
+            hr = cp->reader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM,
+                                        0,
+                                        NULL,   // actual
+                                        NULL,   // flags
+                                        NULL,   // timestamp
+                                        NULL    // sample
+                                        );
+        }
+
+        return hr;
+    }
+
+private:
+    long ref_count;
+    Capture* cp;
+};
+
+//-------------------------------------------------------------------
+Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_name)
+{
+    HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    if(FAILED(hr))
+    {
+        throw runtime_error("CoInitializeEx == failed");
+    }
+
+    hr = MFStartup(MF_VERSION, MFSTARTUP_LITE);
 
     try
     {
-        // Initialize COM
-        if(FAILED(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED)))
+        // find the device and init device pointer
+        CComPtr<IMFActivate> device = find_device(dev_name);
+        if(!device)
         {
-            throw runtime_error("CoInitializeEx == failed");
+            throw runtime_error("Video device isn't found");
         }
 
-        HRESULT hr = MB_OK;
-
-        // Create the system device enumerator
-        CComPtr<ICreateDevEnum> device_enum;
-        hr = device_enum.CoCreateInstance(CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC);
-        if (FAILED(hr))
+        // Create the media source for the device
+        CComPtr<IMFMediaSource> source;
+        hr = device->ActivateObject(__uuidof(IMFMediaSource), (void**)&source);
         {
-            throw runtime_error("Couldn't create system device enumaration hr=0x%x", hr);
-        }
+            CComPtr<IMFAttributes> attributes;
 
-        // Create an enumerator for the video capture devices
-        CComPtr<IEnumMoniker> enumerator;
-        hr = device_enum->CreateClassEnumerator(CLSID_VideoInputDeviceCategory, &enumerator, 0);
-        if( S_OK != hr )
-        {
-            throw runtime_error("Couldn't create class enumerator!  hr=0x%x", hr);
-        }
+            hr = MFCreateAttributes(&attributes, 1);
 
-        IMoniker* moniker = NULL;
-        CComPtr<IBaseFilter> bf_capture_filter;
-        bool not_found = true;
-        while( not_found && S_OK == enumerator->Next(1, &moniker, NULL) && moniker )
-        {
-            CComPtr<IPropertyBag> prop_bag;
-            if(S_OK == moniker->BindToStorage(0, 0, IID_IPropertyBag, (void**)&prop_bag))
+            if (SUCCEEDED(hr))
             {
-                VARIANT name;
-                VariantInit(&name);
-                if(S_OK == prop_bag->Read(L"FriendlyName", &name, 0))
-                {
-                    USES_CONVERSION;
-                    if( 0 == strcmp(dev_name, OLE2A(name.bstrVal)) || '\0' == *dev_name ) // device is not set
-                    {
-                        printf("device:\t\t%s\n", dev_name);
-                        hr = moniker->BindToObject(0, 0, IID_IBaseFilter, (void**)&bf_capture_filter);
-                        not_found = false;
-                    }
-                }
-                VariantClear(&name);
+                hr = attributes->SetUnknown(MF_SOURCE_READER_ASYNC_CALLBACK, new Sampler(this));
             }
-            moniker->Release();
-        }
-        if(not_found || NULL == bf_capture_filter)
-        {
-            throw runtime_error("Couldn't bind moniker to filter object!  hr=0x%x", hr);
+
+            if (SUCCEEDED(hr))
+            {
+                hr = MFCreateSourceReaderFromMediaSource(source, attributes, &reader);
+            }
+
+            CComPtr<IMFMediaType> selected;
+
+            int i=0;
+            while(hr != MF_E_NO_MORE_TYPES)
+            {
+                CComPtr<IMFMediaType> type;
+                hr = reader->GetNativeMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM, i, &type);
+                if (SUCCEEDED(hr))
+                {
+                    GUID subtype;
+                    type->GetGUID(MF_MT_SUBTYPE, &subtype);
+    /*
+                    UINT32 mode;
+                    type->GetUINT32(MF_MT_INTERLACE_MODE, &mode);
+
+                    UINT32 bitrate;
+                    type->GetUINT32(MF_MT_AVG_BITRATE, &bitrate);
+
+
+                    UINT32 fcc;
+                    type->GetUINT32(MF_MT_ORIGINAL_4CC, &fcc);
+                
+
+                    UINT32 yuv_matrix = 0;
+                    type->GetUINT32(MF_MT_YUV_MATRIX, &yuv_matrix);
+                
+                    std::cout << mode << ' ' << yuv_matrix << ' ';*/
+
+
+                    UINT32 width, height;
+                    MFGetAttributeSize(type, MF_MT_FRAME_SIZE, &width, &height);
+
+                    UINT32 numerator, denominator;
+                    MFGetAttributeRatio(type, MF_MT_FRAME_RATE, &numerator, &denominator);
+                    const float rate = float(numerator)/float(denominator);
+
+                    if( (covet_w == width && covet_h == height) && rate >=30.0 )
+                    {
+                        if(BaseCapture::is_supported(subtype.Data1))
+                        {
+                            fourcc = subtype.Data1;
+                            selected = type;
+
+                            w = width;
+                            h = height;
+
+                            print(subtype, width, height, rate);
+                            break;
+                        }
+                    }
+
+                    i++;
+                }
+            }
+
+
+            hr = reader->SetCurrentMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM, NULL, selected);
+            if (SUCCEEDED(hr))
+            {
+     //           std::cout << "Ok!!";
+            }
         }
 
-        // Create the filter graph
-        hr = filter_graph.CoCreateInstance(CLSID_FilterGraph, NULL, CLSCTX_INPROC);
-        if (FAILED(hr))
-        {
-            throw runtime_error("Can not create Filter Graph hr=0x%x", hr);
-        }
+        /*
+        CComPtr<IMFAttributes> attributes;
 
-        // Obtain interfaces for media control
-        hr = filter_graph.QueryInterface(&media_control);
-        if (FAILED(hr))
-        {
-            throw runtime_error("Can not get Media Control Interface hr=0x%x", hr);
-        }
+        hr = MFCreateAttributes(&attributes, 1);
 
-        // Create the capture graph builder
-        hr = graph_builder.CoCreateInstance(CLSID_CaptureGraphBuilder2 , NULL, CLSCTX_INPROC);
-        if (FAILED(hr))
-        {
-            throw runtime_error("Can not create Capture Graph Builder 2 hr=0x%x", hr);
-        }
+        CComPtr<IPropertyStore> props;
 
-        hr = graph_builder->SetFiltergraph(filter_graph);
-        if (FAILED(hr))
-        {
-            throw runtime_error("Can not set Filter Graph hr=0x%x", hr);
-        }
-
-        hr = filter_graph->AddFilter(bf_capture_filter, L"Video Capture");
-        if (FAILED(hr))
-        {
-            throw runtime_error("Can not add Video Capture filter hr=0x%x", hr);
-        }
-
-        hr = graph_builder->FindInterface(pin_category, 0, bf_capture_filter, IID_IAMStreamConfig, (void**)&stream_config);
         if (SUCCEEDED(hr))
         {
-            int caps_count = 0;
-            int size_of_caps = 0;
-            hr = stream_config->GetNumberOfCapabilities(&caps_count, &size_of_caps);
+            hr = attributes->GetUnknown(MF_SOURCE_READER_MEDIASOURCE_CONFIG, __uuidof(props), (LPVOID*)&props);
+        }*/
 
-            // Check the size to make sure we pass in the correct structure.
-            if (size_of_caps == sizeof(VIDEO_STREAM_CONFIG_CAPS))
-            {
-                // Use the video capabilities structure.
-                VIDEO_STREAM_CONFIG_CAPS scc={0};
-
-                bool found = false;
-                printf("supported formats:\n");
-                for(int format=0; format < caps_count && !found; format++)
-                {
-                    AM_MEDIA_TYPE* mt = NULL;
-                    hr = stream_config->GetStreamCaps(format, &mt, (BYTE*)&scc);
-                    if (SUCCEEDED(hr))
-                    {
-                        if( mt->formattype == FORMAT_VideoInfo )
-                        {
-                            VIDEOINFOHEADER* video_info = (VIDEOINFOHEADER*)mt->pbFormat;
-                            printf(mt->subtype, video_info->bmiHeader.biWidth, video_info->bmiHeader.biHeight);
-
-                            if( mt->subtype == MEDIASUBTYPE_RGB24 ||
-                                mt->subtype == MEDIASUBTYPE_RGB32 ||
-                                mt->subtype == MEDIASUBTYPE_YUY2  ||
-                                mt->subtype == MEDIASUBTYPE_YVYU )
-                            {
-                                // Set RGB24 format with any dimensions
-                                stream_config->SetFormat(mt);
-
-                                if( scc.MaxOutputSize.cx == int(covet_w) && scc.MaxOutputSize.cy == int(covet_h))
-                                {
-                                    found = true;
-                                }
-                            }
-                        }
-
-                        // delete the media type
-                        CoTaskMemFree(mt->pbFormat);
-                        CoTaskMemFree(mt);
-                    }
-                }
-            }
-        }
-
-
-        CComPtr<IBaseFilter> bf_sample_grabber;
-        hr = bf_sample_grabber.CoCreateInstance(CLSID_SampleGrabber, NULL, CLSCTX_INPROC_SERVER);
-        if (FAILED(hr))
-        {
-            throw runtime_error("Can not create SampleGrabber filter hr=0x%x", hr);
-        }
-        hr = filter_graph->AddFilter(bf_sample_grabber, L"Sample Grabber");
-        if (FAILED(hr))
-        {
-            throw runtime_error("Can not add SampleGrabber filter to graph hr=0x%x", hr);
-        }
-
-        bf_sample_grabber->QueryInterface(IID_ISampleGrabber, (void**)&sample_grabber);
-        
-        
-/*        media_type.majortype = MEDIATYPE_Video;
-        media_type.subtype = MEDIASUBTYPE_RGB24;
-        media_type.bFixedSizeSamples = TRUE;
-        media_type.bTemporalCompression = FALSE;
-        media_type.lSampleSize = 0;
-        media_type.formattype = FORMAT_VideoInfo; // FORMAT_VideoInfo2;
-        media_type.pUnk = 0; // Not used
-        media_type.cbFormat = sizeof(video_info);
-        media_type.pbFormat = reinterpret_cast<BYTE*>(&video_info);
-
-        video_info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-        video_info.bmiHeader.biWidth = 160;
-        video_info.bmiHeader.biHeight = 120;
-        video_info.bmiHeader.biPlanes = 1;
-        video_info.bmiHeader.biBitCount = 24;
-    
-        hr = sample_grabber->SetMediaType(&media_type);
-        if (FAILED(hr))
-        {
-            bf_capture_filter->Release();
-            throw runtime_error("Can not set MediaType hr=0x%x", hr);
-        }
-*/
-        hr = sample_grabber->SetBufferSamples(FALSE);
-        if (FAILED(hr))
-        {
-            throw runtime_error("Can not set Buffer Samples to FALSE hr=0x%x", hr);
-        }
-
-        hr = sample_grabber->SetCallback(this, 0);  // 0 - filter calls the ISampleGrabberCB::SampleCB method
-        if (FAILED(hr))
-        {
-            throw runtime_error("Can not set Callback hr=0x%x", hr);
-        }
-
-        CComPtr<IBaseFilter> bf_null_renderer;
-        hr = bf_null_renderer.CoCreateInstance(CLSID_NullRenderer, NULL, CLSCTX_INPROC_SERVER);
-        if (FAILED(hr))
-        {
-            throw runtime_error("Can not create NullRenderer filter hr=0x%x", hr);
-        }
-
-        hr = filter_graph->AddFilter(bf_null_renderer, L"Null Renderer");
-        if (FAILED(hr))
-        {
-            throw runtime_error("Can not add NullRenderer filter to graph hr=0x%x", hr);
-        }
-
-        hr = graph_builder->RenderStream (pin_category, &MEDIATYPE_Video, bf_capture_filter, bf_sample_grabber, bf_null_renderer);
+     /*
+        hr = graph_builder->RenderStream(pin_category, &MEDIATYPE_Video, capture_filter, NULL, sampler);
         if (FAILED(hr))
         {
             throw runtime_error("Can not render the video capture stream hr=0x%x", hr);
-        }
-
-        // Start previewing video data
-        hr = media_control->Run();
-        if (FAILED(hr))
-        {
-            throw runtime_error("Can not run the graph hr=0x%x", hr);
-        }
-
-        hr = sample_grabber->GetConnectedMediaType(&media_type);
-        
-        // copy and free video info
-        if(media_type.pbFormat != NULL)
-        {
-            if((media_type.formattype == FORMAT_VideoInfo) &&
-            (media_type.cbFormat == sizeof(video_info)))
-            {
-                // copy VIDEOINFOHEADER into own memory
-                CopyMemory(&video_info, media_type.pbFormat, sizeof(video_info) );
-                printf("Selected device:\n");
-                printf(media_type.subtype, width(), height());
-            }
-            
-            CoTaskMemFree(media_type.pbFormat);
-            
-            if((media_type.formattype == FORMAT_VideoInfo) &&
-            (media_type.cbFormat == sizeof(video_info)))
-            {
-                media_type.pbFormat = reinterpret_cast<BYTE*>(&video_info);
-            }
-            else
-            {
-                media_type.cbFormat = 0;
-                media_type.pbFormat = NULL;
-                throw runtime_error("Bad AM_MEDIA_TYPE");
-            }
-        }
+        }*/
     }
     catch(runtime_error&)
     {
-        // clean all
         CoUninitialize();
         throw;
     }
@@ -276,198 +250,138 @@ Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_nam
 
 Capture::~Capture()
 {
-    if (media_control) media_control->Stop(); // StopWhenReady();
-    if (sample_grabber) sample_grabber->SetCallback(NULL, 0);
-
-    assert(1 == ref_count);
-
+    MFShutdown();
     CoUninitialize();
 }
 
-STDMETHODIMP Capture::QueryInterface(REFIID riid, void** ppv)
+bool Capture::set_buffer(unsigned char* buf, out_format fmt)
 {
-    if(ppv == NULL) return E_INVALIDARG;
-    if(riid == IID_IUnknown || riid == IID_ISampleGrabberCB)
+    CriticalSection::Lock lock(cs);
+
+    HRESULT hr = S_OK;
+
+    encoder tmp=NULL;
+    if(buf != NULL)
     {
-        *ppv = (IUnknown *)this;
-        AddRef();
-        return S_OK;
-    }
-    *ppv = NULL;
-    return E_NOINTERFACE;
-}
+        tmp = get_encoder(fourcc, fmt);
+        if(tmp == NULL) return false;
 
-STDMETHODIMP Capture::BufferCB(double SampleTime, BYTE *pBuffer, long BufferLen)
-{
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP Capture::SampleCB(double SampleTime, IMediaSample* sample)
-{
-    if(NULL == sample) return E_POINTER;
-
-    if( buffer )
-    {
-        if(S_OK == sample->IsPreroll()) return S_OK;
-        
-        LONG data_len = sample->GetActualDataLength();
-
-        BYTE* ptr = NULL;
-        if((S_OK != sample->GetPointer(&ptr)) || !ptr) return E_FAIL;
-
-        BYTE* end = ptr + data_len;
-
-        const unsigned int frame_size = width() * height();
-        unsigned int i = 0;
-
-        if(media_type.subtype == MEDIASUBTYPE_RGB32)
-        {
-            for(; ptr<end && i<frame_size; ptr+=4, i++)
-            {
-                buffer[i] = *ptr;
-            }
-        }
-        else if(media_type.subtype == MEDIASUBTYPE_RGB24)
-        {
-            for(; ptr<end && i<frame_size; ptr+=3, i++)
-            {
-                buffer[i] = *ptr;
-            }
-        }
-        else if(media_type.subtype == MEDIASUBTYPE_YUY2 || 
-        media_type.subtype == MEDIASUBTYPE_YVYU )
-        {
-            for(; ptr<end && i<frame_size; ptr+=4, i+=2)
-            {
-                buffer[i] = ptr[0];
-                buffer[i+1]= ptr[2];
-            }
-        }
-    }
-    return S_OK;
-}
-
-const char* Capture::capture()
-{
-/*  Using internal buffers, low performance :(
-    if( buffer )
-    {
-        // Find the required buffer size.
-        long buffer_size = 0;
-        HRESULT hr = sample_grabber->GetCurrentBuffer(&buffer_size, NULL);
-        if(SUCCEEDED(hr) && buffer_size > 0)
-        {
-            long* buf = new long[buffer_size/sizeof(long)];
-            if(buf)
-            {
-                if(S_OK == sample_grabber->GetCurrentBuffer(&buffer_size, buf))
-                {
-                    char* p = (char*)buf;
-                    char* end = p + buffer_size;
-                    unsigned int i = 0;
-                    for(char* p = (char*)buf; p<end; p+=3)
-                    {
-                        buffer[i] = *p;
-                        ++i;
-                    }
-                }
-            }
-            delete[] buf;
-        }
-    }
-    */
-
-    return buffer;
-}
-
-unsigned int Capture::enum_devices(char buffers[][128], unsigned int num)throw()
-{
-    if(FAILED(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED)))
-    {
-        return 0;
-    }
-
-    // Create the system device enumerator
-    CComPtr<ICreateDevEnum> device_enum;
-    HRESULT hr = device_enum.CoCreateInstance(CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC);
-    if (FAILED(hr))
-    {
-        CoUninitialize();
-        return 0;
-    }
-
-    // Create an enumerator for the video capture devices
-    CComPtr<IEnumMoniker> enumerator;
-    if( S_OK != device_enum->CreateClassEnumerator(CLSID_VideoInputDeviceCategory, &enumerator, 0) )
-    {
-        CoUninitialize();
-        return 0;
-    }
-
-    IMoniker** monikers = new IMoniker*[num];
-    memset(monikers, 0, num * sizeof(IMoniker*));
-    
-    ULONG fetched = 0;
-    unsigned int found_devices = 0;
-    hr = enumerator->Next(num, monikers, &fetched);
-    if( fetched <= num )
-    {
-        USES_CONVERSION;
-        for(ULONG i=0; i<fetched; i++)
-        {
-            assert(found_devices < fetched);
-            CComPtr<IPropertyBag> prop_bag;
-            if(S_OK == monikers[i]->BindToStorage(0, 0, IID_IPropertyBag, (void**)&prop_bag))
-            {
-                VARIANT name;
-                VariantInit(&name);
-                if(S_OK == prop_bag->Read(L"FriendlyName", &name, 0))
-                {
-                    assert(buffers[found_devices]);
-                    strcpy_s(buffers[found_devices], sizeof(buffers[0]), OLE2A(name.bstrVal));
-                    ++found_devices;
-                }
-                VariantClear(&name);
-            }
-            monikers[i]->Release();
-        }
-    }
-
-    delete[] monikers;
-
-    CoUninitialize();
-    return found_devices;
-}
-
-void printf(const GUID& guid, unsigned int width, unsigned int height)
-{
-    unsigned char fourcc[8]={'\0'};
-
-    // Analyze FourCC field
-    //ms-help://MS.MSDNQTR.v90.en/directshow/htm/howtoregisterafourcc.htm
-    if(guid == MEDIASUBTYPE_RGB24) // it is not mnemonic
-    {
-        fourcc[0] = 'R';
-        fourcc[1] = 'G';
-        fourcc[2] = 'B';
-        fourcc[3] = '2';
-        fourcc[4] = '4';
-    }
-    else if(guid == MEDIASUBTYPE_RGB32) // it is not mnemonic
-    {
-        fourcc[0] = 'R';
-        fourcc[1] = 'G';
-        fourcc[2] = 'B';
-        fourcc[3] = '3';
-        fourcc[4] = '2';
+        hr = reader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM,
+                                        0,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL);
     }
     else
     {
-        fourcc[0] = (guid.Data1>>0 ) & 0xFF;
-        fourcc[1] = (guid.Data1>>8 ) & 0xFF;
-        fourcc[2] = (guid.Data1>>16) & 0xFF;
-        fourcc[3] = (guid.Data1>>24) & 0xFF;
+        hr = reader->Flush(MF_SOURCE_READER_FIRST_VIDEO_STREAM);
     }
-    printf("'%s'\t %ix%i\n", fourcc, width, height);
+
+    coder = tmp;
+    format = fmt;
+    buffer = buf;
+
+    return SUCCEEDED(hr);
+}
+
+void Capture::decode_to_buffer(unsigned char* src, unsigned int length)
+{
+    CriticalSection::Lock lock(cs);
+
+    if(buffer && coder)
+    {
+        (*coder)(src, src+length, buffer);
+    }
+}
+
+IMFActivate* Capture::find_device(const char* dev_name)
+{
+    IMFActivate* device = NULL;
+    HRESULT hr = S_OK;
+    UINT32 number = 0;
+
+    CComHeapPtr<IMFActivate*> devices;
+    {
+        CComPtr<IMFAttributes> attributes;
+        hr = MFCreateAttributes(&attributes, 1);
+
+        if(SUCCEEDED(hr))
+        {
+            hr = attributes->SetGUID(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE,
+                                        MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID);
+        }
+        if(SUCCEEDED(hr))
+        {
+            hr = MFEnumDeviceSources(attributes, &devices, &number);
+        }
+    }
+
+    const size_t size = strlen(dev_name)+1;
+    std::unique_ptr<char[]> tmp(new char[size]);
+
+    for(UINT32 i=0; i<number; i++)
+    {
+        CComHeapPtr<WCHAR> name;
+        hr = devices[i]->GetAllocatedString(MF_DEVSOURCE_ATTRIBUTE_FRIENDLY_NAME, &name, NULL);
+        if(SUCCEEDED(hr))
+        {
+            wcstombs_s(NULL, tmp.get(), size, name, _TRUNCATE);
+        }
+
+        if(SUCCEEDED(hr) && 0 == strncmp(tmp.get(), dev_name, size))
+        {
+            device = devices[i];
+        }
+        else
+        {
+            devices[i]->Release();
+        }
+    }
+    return device;
+}
+
+unsigned int Capture::enum_devices(char buffers[][128], const unsigned int size)throw()
+{
+    HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    if(FAILED(hr)) return 0;
+
+    UINT32 number = 0;
+    CComHeapPtr<IMFActivate*> devices;
+    {
+        CComPtr<IMFAttributes> attributes;
+        hr = MFCreateAttributes(&attributes, 1);
+
+        if(SUCCEEDED(hr))
+        {
+            hr = attributes->SetGUID(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE,
+                                     MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID);
+        }
+        if (SUCCEEDED(hr))
+        {
+            hr = MFEnumDeviceSources(attributes, &devices, &number);
+        }
+    }
+
+    const unsigned int found_devices = min(size, number);
+
+    for(unsigned int i=0; i<found_devices; i++)
+    {
+        CComHeapPtr<WCHAR> name;
+        hr = devices[i]->GetAllocatedString(MF_DEVSOURCE_ATTRIBUTE_FRIENDLY_NAME, &name, NULL);
+        if (SUCCEEDED(hr))
+        {
+            wcstombs_s(NULL, buffers[i], sizeof(buffers[i]), name, _TRUNCATE);
+        }
+    }
+
+    for(UINT32 i = 0; i<number; i++)
+    {
+        devices[i]->Release();
+    }
+
+    CoUninitialize();
+
+    return found_devices;
 }
 //-----------------------------------------------------------------------------

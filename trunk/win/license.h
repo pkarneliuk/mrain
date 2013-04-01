@@ -65,12 +65,12 @@ namespace License
         unsigned __int64 akey;
     };
 };
-
+/*
 inline void set_rdtsc_low()
 {
     __asm rdtsc
     __asm mov rdtsc_low, eax
-}
+}*/
 //-----------------------------------------------------------------------------
 #endif//LICENSE_H
 //-----------------------------------------------------------------------------

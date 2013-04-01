@@ -22,7 +22,7 @@ public:
     unsigned int width()const { return captured_width;  }
     unsigned int height()const{ return captured_height; }
 
-    static unsigned int enum_devices(char buffers[][32], unsigned int num)throw()
+    static unsigned int enum_devices(char buffers[][128], unsigned int size)throw()
     {
         return 0;   // Not implemented yet
     }

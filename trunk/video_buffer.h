@@ -19,12 +19,12 @@ public:
     class VideoFrame:public TextureArray::Texture
     {
     public:
-        VideoFrame(char* data, unsigned int width, unsigned int height, GLuint tex_id);
-        void update(char* data, unsigned int offset_x, unsigned int offset_y, unsigned int width, unsigned int height);
+        VideoFrame(unsigned char* data, unsigned int width, unsigned int height, GLuint tex_id);
+        void update(unsigned char* data, unsigned int offset_x, unsigned int offset_y, unsigned int width, unsigned int height);
     private:
     };
 
-    VideoBuffer(const Bitmap& frame, int sub_layers, unsigned long micsec_delay);
+    VideoBuffer(const Bitmap& frame, int layers, unsigned long micsec_delay);
 
     void update(const Bitmap& frame, unsigned long usec);
     void bind(GLint texture_function)const;

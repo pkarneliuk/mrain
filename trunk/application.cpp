@@ -11,6 +11,7 @@
 
 #include "application.h"
 #include "app_window.h"
+#include "capture.h"
 #include "scene.h"
 //-----------------------------------------------------------------------------
 Application* Application::sig_handler = NULL;
@@ -44,7 +45,6 @@ Application::Application(const Options& opts):options(opts),window(NULL),capture
     Application::sig_handler = this;
 
     #ifdef UNIX
-
     struct sigaction action;
     action.sa_handler = &handler;
     sigemptyset(&action.sa_mask);
@@ -62,37 +62,23 @@ Application::~Application()
 
 int Application::run()
 {
-    FPS counter(30);
+    FPS counter(60);
 
     GLRenderer* renderer = window->get_renderer();
 
-    Scene scene(renderer, capture, options);
+    BaseCapture::Buffer frame(capture, Capture::GRAY);
+
+    Scene scene(renderer, capture != NULL ? &frame : NULL, options);
 
     while( running && window->process_events() )
     {
         unsigned long tick = counter.count_frame();
 
-        if(capture)
-        {
-            capture->capture();
-        }
-        
         scene.draw();
         scene.tick(tick);
         scene.present();
     }
 
     return 0;
-}
-
-inline void Application::sleep(unsigned long microseconds)
-{
-    #ifdef UNIX
-        usleep(microseconds);
-    #endif//UNIX
-
-    #ifdef WIN32
-        Sleep(microseconds/1000);
-    #endif//WIN32
 }
 //-----------------------------------------------------------------------------

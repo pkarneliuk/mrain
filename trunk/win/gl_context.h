@@ -13,6 +13,7 @@
 #include <windows.h>
 #include <GL/gl.h>
 #include "glext.h"
+#include "wglext.h"
 
 #include "../stuff.h"
 //-----------------------------------------------------------------------------
@@ -32,6 +33,7 @@ private:
     HGLRC   hrc;    // handler render context
     HWND    hwnd;
 };
+
 namespace OpenGL
 {
     namespace OGL
@@ -69,12 +71,14 @@ namespace OpenGL
 
     namespace WGL
     {
+        extern PFNWGLSWAPINTERVALEXTPROC    wglSwapIntervalEXT;
+        extern PFNWGLGETSWAPINTERVALEXTPROC wglGetSwapIntervalEXT;
     }
 }
 
 using namespace OpenGL::OGL;
 //using namespace OpenGL::Extensions;
-//using namespace OpenGL::WGL;
+using namespace OpenGL::WGL;
 //-----------------------------------------------------------------------------
 #endif//GL_CONTEXT_H
 //-----------------------------------------------------------------------------
