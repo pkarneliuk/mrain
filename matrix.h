@@ -108,6 +108,7 @@ protected:
                 vcache[index+3].z = v3.z;
             }
         }
+        Animation& operator=(Animation&); //undefined
 
         ~Animation()
         {
@@ -148,6 +149,7 @@ protected:
     public:
         Strip(unsigned int n, GLRenderer::T2F* g, GLRenderer::V3F* v, GLRenderer::C4F* c,
         GLfloat x, GLfloat y, GLfloat z, float h1, float h2, float r, float p, float q, float rotates);
+        Animation& operator=(Animation&); //undefined
         ~Strip();
 
         void draw(GLint* first, GLsizei* count);

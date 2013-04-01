@@ -12,7 +12,6 @@
 //---------- ------------------------------------------------------------------
 #include <cstdio>
 
-#include "capture.h"
 #include "stuff.h"
 //---------- ------------------------------------------------------------------
 class Bitmap
@@ -24,23 +23,7 @@ public:
 
     unsigned int width ()const{ return image_width;  }
     unsigned int height()const{ return image_height; }
-    char* data()const { return buffer; }
-
-    Bitmap& operator << (Capture& capture)
-    {
-        clear();
-
-        image_width = capture.width();
-        image_height = capture.height();
-
-        Capture::out_format format = Capture::GRAY;
-
-        size_t size = image_width*image_height*Capture::bpp(format);
-        buffer = new char [size];
-        capture.set_buffer(buffer, format);
-
-        return *this;
-    }
+    unsigned char* data()const{ return buffer; }
 
     bool dump(const char* bmp_file)const
     {
@@ -80,12 +63,12 @@ public:
 
         char dummy[4];
 
-        char* pixel = buffer;
+        unsigned char* pixel = buffer;
         for(unsigned int i=0; i<image_height; i++)
         {
             for(unsigned int j=0; j<image_width; j++)
             {
-                char bmp_pixel[3]={pixel[0],pixel[1],pixel[2]};
+                unsigned char bmp_pixel[3]={pixel[0],pixel[1],pixel[2]};
                 res = fwrite(bmp_pixel, sizeof(bmp_pixel), 1, mfd);
                 pixel+=3;
             }
@@ -96,7 +79,7 @@ public:
         return true;
     }
 
-private:
+protected:
 
     inline void clear()
     {
@@ -106,7 +89,7 @@ private:
 
     unsigned int image_width;
     unsigned int image_height;
-    char* buffer;
+    unsigned char* buffer;
 };
 //---------- ------------------------------------------------------------------
 #endif//BITMAP_H

@@ -55,6 +55,8 @@ namespace OpenGL
 
     namespace WGL
     {
+        PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = NULL;
+        PFNWGLGETSWAPINTERVALEXTPROC wglGetSwapIntervalEXT = NULL;
     }
 }
 //-----------------------------------------------------------------------------
@@ -67,15 +69,18 @@ GLContext::GLContext(NativeWindow* win):hwnd(win->hwnd)
     ZeroMemory(&pfd, sizeof(pfd));
     pfd.nSize      = sizeof(pfd);
     pfd.nVersion   = 1;
-    pfd.dwFlags    = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL |
-                     PFD_DOUBLEBUFFER | PFD_GENERIC_FORMAT | PFD_GENERIC_ACCELERATED;
+    pfd.dwFlags    = PFD_DRAW_TO_WINDOW |
+                     PFD_SUPPORT_OPENGL |
+                     PFD_DOUBLEBUFFER   |
+                     PFD_GENERIC_FORMAT |
+                     PFD_GENERIC_ACCELERATED;
     pfd.iPixelType = PFD_TYPE_RGBA;
     pfd.cColorBits = 32;
     pfd.cDepthBits = 24;
-    pfd.cRedBits        = 8;
-    pfd.cGreenBits      = 8;
-    pfd.cBlueBits       = 8;
-    pfd.cAlphaBits      = 8;
+    pfd.cRedBits   = 8;
+    pfd.cGreenBits = 8;
+    pfd.cBlueBits  = 8;
+    pfd.cAlphaBits = 8;
 
     pfd.iLayerType = PFD_MAIN_PLANE;
 
@@ -109,6 +114,9 @@ GLContext::GLContext(NativeWindow* win):hwnd(win->hwnd)
     wglMakeCurrent(hdc, hrc);
 
     load_ogl();
+    load_wgl();
+
+    wglSwapIntervalEXT(0); // disable V-sync
 }
 
 GLContext::~GLContext()
@@ -185,6 +193,14 @@ bool GLContext::load_extensions()
 
 bool GLContext::load_wgl()
 {
+    wglSwapIntervalEXT    = (PFNWGLSWAPINTERVALEXTPROC)    wglGetProcAddress("wglSwapIntervalEXT");
+    wglGetSwapIntervalEXT = (PFNWGLGETSWAPINTERVALEXTPROC) wglGetProcAddress("wglGetSwapIntervalEXT");
+
+#ifdef _DEBUG
+    PRINT_PROC(wglSwapIntervalEXT);
+    PRINT_PROC(wglGetSwapIntervalEXT);
+#endif
+
     return true;
 }
 //-----------------------------------------------------------------------------

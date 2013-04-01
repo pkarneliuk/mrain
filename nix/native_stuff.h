@@ -49,6 +49,11 @@ struct __attribute__ ((__packed__)) BMP_FILEHEADER
     unsigned short  bfReserved2;
     unsigned int    bfOffBits;
 };
+
+inline void sleeep(unsigned long microseconds)
+{
+    usleep(microseconds);
+}
 //-----------------------------------------------------------------------------
 #endif//NATIVE_STUFF_H
 //-----------------------------------------------------------------------------

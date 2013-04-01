@@ -143,9 +143,9 @@ bool convert_bmp_2_include_array(char* bmp_file, char* array_name)
     unsigned char buffer[16];
     for(unsigned int i=0; i<(size/16); i++)
     {
-        int count = fread(buffer, sizeof(char), sizeof(buffer), src);
+        size_t count = fread(buffer, sizeof(char), sizeof(buffer), src);
 
-        for(int k=0; k<count; k+=4)
+        for(size_t k=0; k<count; k+=4)
         {
             fprintf(dst, buffer[k+3] ? "0x0, " : "0xFF, ");
         }

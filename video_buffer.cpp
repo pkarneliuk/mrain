@@ -11,16 +11,9 @@
 
 #include "video_buffer.h"
 //-----------------------------------------------------------------------------
-VideoBuffer::VideoFrame::VideoFrame(char* data, unsigned int width, unsigned int height, GLuint tex_id):TextureArray::Texture(tex_id, GL_TEXTURE_2D)
+VideoBuffer::VideoFrame::VideoFrame(unsigned char* data, unsigned int width, unsigned int height, GLuint tex_id):TextureArray::Texture(tex_id, GL_TEXTURE_2D)
 {
     bind();
-
-    unsigned int tex_width = round_pow_2 ( width  );
-    unsigned int tex_height = round_pow_2( height );
-
-    char* dummy = new char[tex_width*tex_height];
-
-    memset (dummy, 0x20, tex_width*tex_height);
 
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -29,10 +22,9 @@ VideoBuffer::VideoFrame::VideoFrame(char* data, unsigned int width, unsigned int
 
     glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE8, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
 //    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
-    delete[] dummy;
 }
 
-void VideoBuffer::VideoFrame::update(char* data, unsigned int offset_x, unsigned int offset_y, unsigned int width, unsigned int height)
+void VideoBuffer::VideoFrame::update(unsigned char* data, unsigned int offset_x, unsigned int offset_y, unsigned int width, unsigned int height)
 {
     glTexSubImage2D(GL_TEXTURE_2D, 0, offset_x, offset_y, width, height, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
 }

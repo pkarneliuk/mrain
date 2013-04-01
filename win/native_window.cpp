@@ -89,7 +89,7 @@ NativeWindow::~NativeWindow()
         ShowCursor(TRUE);
     }
     KillTimer(hwnd, BREAK_TIMER_ID);
-    SetWindowLong(hwnd, GWL_USERDATA, 0);
+    SetWindowLongPtr(hwnd, GWLP_USERDATA, 0);
     DestroyWindow(hwnd);
     UnregisterClass(NativeWindow::win_class_name, GetModuleHandle(NULL));
 }
@@ -121,9 +121,9 @@ void NativeWindow::get_size(unsigned int* width, unsigned int* height)const
     *height = rc.bottom-rc.top;
 }
 
-LONG NativeWindow::ScreenSaverProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT NativeWindow::ScreenSaverProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    NativeWindow* win = (NativeWindow*)GetWindowLong(hWnd, GWL_USERDATA);
+    NativeWindow* win = (NativeWindow*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 
     switch(msg)
     {
@@ -131,7 +131,7 @@ LONG NativeWindow::ScreenSaverProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
         {
             CREATESTRUCT *cs=(CREATESTRUCT*)lParam;
             win = (NativeWindow*)cs->lpCreateParams;
-            SetWindowLong(hWnd, GWL_USERDATA,(LONG)win);
+            SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)win);
             GetCursorPos(&win->start_point);
         }
         break;
@@ -205,13 +205,13 @@ bool Config::show_dialog(int parent_id)
 
 INT_PTR CALLBACK Config::DialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    Config* cfg = (Config*)GetWindowLong(hwnd, GWL_USERDATA);
+    Config* cfg = (Config*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
     switch (msg)
     {
         case WM_INITDIALOG:
         {
-            SetWindowLong(hwnd, GWL_USERDATA,(LONG)lParam);
+            SetWindowLongPtr(hwnd, GWLP_USERDATA,(LONG_PTR)lParam);
             cfg = (Config*)lParam;
 
             HWND parent = GetParent(hwnd);
@@ -232,8 +232,9 @@ INT_PTR CALLBACK Config::DialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
             unsigned int count = Capture::enum_devices(buffers, 5);
             if(0 == count)
             {
-                SendDlgItemMessage(hwnd, IDC_DEVICE, CB_ADDSTRING, 0, (LPARAM)"Capture Device not found");
-                SendDlgItemMessage(hwnd, IDC_DEVICE, CB_SETCURSEL, 0, 0);
+                int id = (int)SendDlgItemMessage(hwnd, IDC_DEVICE, CB_ADDSTRING, 0, (LPARAM)"Capture Device not found");
+                SendDlgItemMessage(hwnd, IDC_DEVICE, CB_SETITEMDATA, id, -1);
+                SendDlgItemMessage(hwnd, IDC_DEVICE, CB_SETCURSEL, id, 0);
                 EnableWindow(GetDlgItem(hwnd, IDC_DEVICE), FALSE);
             }
             else
@@ -244,13 +245,15 @@ INT_PTR CALLBACK Config::DialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
                     // if not set - take first device
                     configured_device = buffers[0];
                 }
-                SendDlgItemMessage(hwnd, IDC_DEVICE, CB_ADDSTRING, 0, (LPARAM)configured_device);
-                SendDlgItemMessage(hwnd, IDC_DEVICE, CB_SETCURSEL, 0, 0);
 
                 for(unsigned int i=0; i<count; i++)
                 {
-                    if( 0 == strcmp(configured_device, buffers[i]) ) continue;
-                    SendDlgItemMessage(hwnd, IDC_DEVICE, CB_ADDSTRING, 0,(LPARAM)buffers[i]);
+                    int id = (int)SendDlgItemMessage(hwnd, IDC_DEVICE, CB_ADDSTRING, 0,(LPARAM)buffers[i]);
+                    SendDlgItemMessage(hwnd, IDC_DEVICE, CB_SETITEMDATA, id, i);
+                    if( 0 == strcmp(configured_device, buffers[i]) )
+                    {
+                        SendDlgItemMessage(hwnd, IDC_DEVICE, CB_SETCURSEL, id, 0);
+                    }
                 }
             }
 
@@ -267,6 +270,8 @@ INT_PTR CALLBACK Config::DialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
             {
                 case IDC_OK:
                 {
+                    int id = (int)SendDlgItemMessage(hwnd, IDC_DEVICE, CB_GETCURSEL, 0, 0);
+                    int index = (int)SendDlgItemMessage(hwnd, IDC_DEVICE, CB_GETITEMDATA, id, 0);
                     // save options
                     char buffer[128]={0};
                     if( GetDlgItemText(hwnd, IDC_DEVICE, buffer, sizeof(buffer)) )

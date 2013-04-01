@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // "Matrix Rain" - screensaver for X Server Systems
 // file name:   capture.h
-// copyright:   (C) 2008, 2009 by Pavel Karneliuk
+// copyright:   (C) 2008, 2009, 2012, 2013 by Pavel Karneliuk
 // license:     GNU General Public License v2
 // e-mail:      pavel_karneliuk@users.sourceforge.net
 //-----------------------------------------------------------------------------
@@ -11,46 +11,56 @@
 #define CAPTURE_H
 //-----------------------------------------------------------------------------
 #include <windows.h>
-#include <AtlBase.h>
-#include <Dshow.h>
-#include <Qedit.h>
+#include <atlbase.h>
+#include <Mfidl.h>
+#include <Mfreadwrite.h>
 
 #include "base_capture.h"
 //-----------------------------------------------------------------------------
-class Capture:public BaseCapture, public ISampleGrabberCB
+class Capture:public BaseCapture
 {
+    class CriticalSection
+    {
+    public:
+        class Lock
+        {
+        public:
+            Lock(CriticalSection& c):cs(c) { EnterCriticalSection(&cs.cs); }
+            ~Lock()                        { LeaveCriticalSection(&cs.cs); }
+        private:
+            Lock(Lock&);            // undefined
+            void operator=(Lock&);  // undefined
+
+            CriticalSection& cs;
+        };
+
+        CriticalSection()  { InitializeCriticalSection(&cs); }
+        ~CriticalSection() { DeleteCriticalSection(&cs);     }
+    private:
+        CriticalSection(CriticalSection&);  // undefined
+        void operator=(CriticalSection&);   // undefined
+
+        CRITICAL_SECTION cs;
+    };
+
 public:
     Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_name);
     ~Capture();
 
-    // IUnknown
-    STDMETHODIMP    QueryInterface (REFIID iid, void **ppv);
-    STDMETHODIMP_(ULONG) AddRef(void)  { return InterlockedIncrement(&ref_count); }
-    STDMETHODIMP_(ULONG) Release(void) { return InterlockedDecrement(&ref_count); }
+    virtual bool set_buffer(unsigned char* buf, out_format fmt);
 
-    // ISampleGrabberCB
-    STDMETHODIMP    BufferCB(double SampleTime, BYTE *pBuffer, long BufferLen);
-    STDMETHODIMP    SampleCB(double SampleTime, IMediaSample *pSample);
+    static unsigned int enum_devices(char buffers[][128], const unsigned int size)throw();
 
-
-    const char* capture();
-    unsigned int width () { return video_info.bmiHeader.biWidth;  }
-    unsigned int height() { return video_info.bmiHeader.biHeight; }
-
-    static unsigned int enum_devices(char buffers[][128], unsigned int num)throw();
-
+    void decode_to_buffer(unsigned char* src, unsigned int length);
 private:
 
-    CComPtr<IMediaControl>           media_control;
-    CComPtr<IGraphBuilder>           filter_graph;
-    CComPtr<ICaptureGraphBuilder2>   graph_builder;
-    CComPtr<ISampleGrabber>          sample_grabber;
-    CComPtr<IAMStreamConfig>         stream_config;
+    static IMFActivate* find_device(const char* dev_name);
 
-    AM_MEDIA_TYPE media_type;
-    VIDEOINFOHEADER video_info;
+    friend class Sampler;
 
-    LONG ref_count;
+    CComPtr<IMFSourceReader> reader;
+
+    CriticalSection cs;
 };
 //-----------------------------------------------------------------------------
 #endif//CAPTURE_H

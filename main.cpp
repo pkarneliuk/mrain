@@ -24,7 +24,7 @@ int main(int argc, char **argv)
     if( int id = opts[Options::config] )
     {
         Config config(opts);
-        return config.show_dialog(id);
+        return config.show_dialog(0);
     }
 
     Application application(opts);

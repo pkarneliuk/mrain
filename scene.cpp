@@ -30,34 +30,33 @@ void VideoScreen::draw()
         video->bind(GL_MODULATE);
     }
     glBegin(GL_QUADS);
-        glTexCoord2f(0.0f, 0.0f);         glVertex3f(0.0f, 0.0f, 0.0f);
+        glTexCoord2f(0.0f, 0.0f);         glVertex3f(0.0f, -height, 0.0f);
         glTexCoord2f(0.0f, video->t);     glVertex3f(0.0f, height, 0.0f);
-        glTexCoord2f(video->s, video->t); glVertex3f(width, height, 0.0f);
-        glTexCoord2f(video->s, 0.0f);     glVertex3f(width, 0.0f, 0.0f);
+        glTexCoord2f(video->s, video->t); glVertex3f(width*2, height, 0.0f);
+        glTexCoord2f(video->s, 0.0f);     glVertex3f(width*2, -height, 0.0f);
     glEnd();
 }
 
-void VideoScreen::tick(unsigned long usec)
+void VideoScreen::tick(unsigned long /*usec*/)
 {
 }
 
-Scene::Scene(GLRenderer* render, Capture* capture, const Options& options):atlas(1), frames_stack(NULL), matrix(NULL), screen(NULL), renderer(render)
+Scene::Scene(GLRenderer* render, const Bitmap* video, const Options& options):atlas(1), buffer(video), frames_stack(NULL), matrix(NULL), screen(NULL), renderer(render)
 {
-    if(capture != NULL) // capturing_enable
+    if(buffer != NULL) // capturing enabled
     {
-        target << *capture;
-        frames_stack = new VideoBuffer(target, 0, 10000);
+        frames_stack = new VideoBuffer(*buffer, 0, 10000);
 
 //        screen = new VideoScreen(64,48);
 //        screen->set_video(frames_stack);
 
         if( options[Options::no_shaders] || renderer->version() <= "2.0")
         {
-            matrix = new MatrixVideo(128, 112, atlas[0], frames_stack, target.width(), target.height(), options[Options::vflip], options[Options::hflip]);
+            matrix = new MatrixVideo(128, 112, atlas[0], frames_stack, buffer->width(), buffer->height(), options[Options::vflip], options[Options::hflip]);
         }
         else
         {
-            matrix = new MatrixVideoFX(128, 112, atlas[0], frames_stack, target.width(), target.height(), options[Options::vflip], options[Options::hflip]);
+            matrix = new MatrixVideoFX(128, 112, atlas[0], frames_stack, buffer->width(), buffer->height(), options[Options::vflip], options[Options::hflip]);
         }
     }
     else matrix = new Matrix(128, 112, atlas[0]);
@@ -86,7 +85,7 @@ unsigned int Scene::tick(unsigned long usec)
 
     if(frames_stack)
     {
-        frames_stack->update(target, usec);
+        frames_stack->update(*buffer, usec);
     }
 
     matrix->tick(usec);

@@ -35,7 +35,7 @@ private:
 
     static const char* win_class_name;
 
-    static LONG ScreenSaverProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+    static LRESULT ScreenSaverProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 };
 
 class Config

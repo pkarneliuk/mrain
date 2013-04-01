@@ -40,7 +40,7 @@ private:
             unsigned long compute_time = timer.tick();
             if(compute_time < lim)
             {
-                Application::sleep(lim - compute_time);
+                sleeep(lim - compute_time);
             }
             unsigned long frame_time = compute_time + timer.tick();
             the_sec += frame_time;
@@ -64,7 +64,6 @@ private:
     };
 
     inline void signal(int){ running = false; }
-    static void sleep(unsigned long microseconds);
     static void handler(int sig)
     {
         if(sig_handler) sig_handler->signal(sig);

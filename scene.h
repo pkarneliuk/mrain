@@ -38,7 +38,7 @@ private:
 class Scene
 {
 public:
-    Scene(GLRenderer* render, class Capture* capture, const Options& options);
+    Scene(GLRenderer* render, const Bitmap* video, const Options& options);
     ~Scene();
 
     unsigned int draw();
@@ -47,8 +47,8 @@ public:
     void present(){ renderer->present(); }
 
     TextureAtlas atlas;
-    Bitmap target;
 
+    const Bitmap* buffer;
     VideoBuffer* frames_stack;
     Matrix* matrix;
     VideoScreen* screen;
