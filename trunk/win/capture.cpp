@@ -72,13 +72,6 @@ public:
         LONGLONG llTimestamp,
         IMFSample *pSample)
     {
-    /*
-        if (!IsCapturing())
-        {
-            LeaveCriticalSection(&m_critsec);
-            return S_OK;
-        }*/
-
         HRESULT hr = S_OK;
 
         if (pSample)
@@ -88,16 +81,30 @@ public:
             for(DWORD i=0; i<count; i++)
             {
                 CComPtr<IMFMediaBuffer> buffer;
-                pSample->GetBufferByIndex(i, &buffer);
+                if(FAILED(pSample->GetBufferByIndex(i, &buffer))) continue;
 
+                CComPtr<IMF2DBuffer> buffer2D;
+                buffer->QueryInterface<IMF2DBuffer>(&buffer2D);
 
-                BYTE *buf;
-                DWORD length;
-                if (SUCCEEDED(buffer->Lock(&buf, NULL,&length)))
+                if(buffer2D)
                 {
-                    cp->decode_to_buffer(buf, length);
-
-                    buffer->Unlock();
+                    BYTE *scanline0;
+                    LONG pitch;
+                    if (SUCCEEDED(buffer2D->Lock2D(&scanline0, &pitch)))
+                    {
+                        cp->decode_padded_to_buffer(scanline0, pitch);
+                        buffer2D->Unlock2D();
+                    }
+                }
+                else
+                {
+                    BYTE *buf;
+                    DWORD length;
+                    if (SUCCEEDED(buffer->Lock(&buf, NULL, &length)))
+                    {
+                        cp->decode_to_buffer(buf, length);
+                        buffer->Unlock();
+                    }
                 }
             }
         }
@@ -122,130 +129,135 @@ private:
 };
 
 //-------------------------------------------------------------------
-Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_name)
+Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_name) try
+    :stride(0)
 {
     HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-    if(FAILED(hr))
-    {
-        throw runtime_error("CoInitializeEx == failed");
-    }
+    if(FAILED(hr)) throw hr;
 
     hr = MFStartup(MF_VERSION, MFSTARTUP_LITE);
 
-    try
+    // find the device and init device pointer
+    CComPtr<IMFActivate> device = find_device(dev_name);
+    if(!device)
     {
-        // find the device and init device pointer
-        CComPtr<IMFActivate> device = find_device(dev_name);
-        if(!device)
-        {
-            throw runtime_error("Video device isn't found");
-        }
+        throw runtime_error("Video device isn't found");
+    }
 
-        // Create the media source for the device
-        CComPtr<IMFMediaSource> source;
-        hr = device->ActivateObject(__uuidof(IMFMediaSource), (void**)&source);
-        {
-            CComPtr<IMFAttributes> attributes;
-
-            hr = MFCreateAttributes(&attributes, 1);
-
-            if (SUCCEEDED(hr))
-            {
-                hr = attributes->SetUnknown(MF_SOURCE_READER_ASYNC_CALLBACK, new Sampler(this));
-            }
-
-            if (SUCCEEDED(hr))
-            {
-                hr = MFCreateSourceReaderFromMediaSource(source, attributes, &reader);
-            }
-
-            CComPtr<IMFMediaType> selected;
-
-            int i=0;
-            while(hr != MF_E_NO_MORE_TYPES)
-            {
-                CComPtr<IMFMediaType> type;
-                hr = reader->GetNativeMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM, i, &type);
-                if (SUCCEEDED(hr))
-                {
-                    GUID subtype;
-                    type->GetGUID(MF_MT_SUBTYPE, &subtype);
-    /*
-                    UINT32 mode;
-                    type->GetUINT32(MF_MT_INTERLACE_MODE, &mode);
-
-                    UINT32 bitrate;
-                    type->GetUINT32(MF_MT_AVG_BITRATE, &bitrate);
-
-
-                    UINT32 fcc;
-                    type->GetUINT32(MF_MT_ORIGINAL_4CC, &fcc);
-                
-
-                    UINT32 yuv_matrix = 0;
-                    type->GetUINT32(MF_MT_YUV_MATRIX, &yuv_matrix);
-                
-                    std::cout << mode << ' ' << yuv_matrix << ' ';*/
-
-
-                    UINT32 width, height;
-                    MFGetAttributeSize(type, MF_MT_FRAME_SIZE, &width, &height);
-
-                    UINT32 numerator, denominator;
-                    MFGetAttributeRatio(type, MF_MT_FRAME_RATE, &numerator, &denominator);
-                    const float rate = float(numerator)/float(denominator);
-
-                    if( (covet_w == width && covet_h == height) && rate >=30.0 )
-                    {
-                        if(BaseCapture::is_supported(subtype.Data1))
-                        {
-                            fourcc = subtype.Data1;
-                            selected = type;
-
-                            w = width;
-                            h = height;
-
-                            print(subtype, width, height, rate);
-                            break;
-                        }
-                    }
-
-                    i++;
-                }
-            }
-
-
-            hr = reader->SetCurrentMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM, NULL, selected);
-            if (SUCCEEDED(hr))
-            {
-     //           std::cout << "Ok!!";
-            }
-        }
-
-        /*
+    // Create the media source for the device
+    CComPtr<IMFMediaSource> source;
+    hr = device->ActivateObject(__uuidof(IMFMediaSource), (void**)&source);
+    {
         CComPtr<IMFAttributes> attributes;
 
         hr = MFCreateAttributes(&attributes, 1);
 
-        CComPtr<IPropertyStore> props;
+        hr = attributes->SetUnknown(MF_SOURCE_READER_ASYNC_CALLBACK, new Sampler(this));
+        if(FAILED(hr)) throw hr;
 
-        if (SUCCEEDED(hr))
-        {
-            hr = attributes->GetUnknown(MF_SOURCE_READER_MEDIASOURCE_CONFIG, __uuidof(props), (LPVOID*)&props);
-        }*/
+        hr = MFCreateSourceReaderFromMediaSource(source, attributes, &reader);
+        if(FAILED(hr)) throw hr;
 
-     /*
-        hr = graph_builder->RenderStream(pin_category, &MEDIATYPE_Video, capture_filter, NULL, sampler);
-        if (FAILED(hr))
+        CComPtr<IMFMediaType> selected;
+
+        int i=0;
+        while(hr != MF_E_NO_MORE_TYPES)
         {
-            throw runtime_error("Can not render the video capture stream hr=0x%x", hr);
-        }*/
+            CComPtr<IMFMediaType> type;
+            hr = reader->GetNativeMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM, i, &type);
+            if (SUCCEEDED(hr))
+            {
+                GUID subtype;
+                type->GetGUID(MF_MT_SUBTYPE, &subtype);
+/*
+                UINT32 mode;
+                type->GetUINT32(MF_MT_INTERLACE_MODE, &mode);
+
+                UINT32 bitrate;
+                type->GetUINT32(MF_MT_AVG_BITRATE, &bitrate);
+
+
+                UINT32 fcc;
+                type->GetUINT32(MF_MT_ORIGINAL_4CC, &fcc);
+                
+
+                UINT32 yuv_matrix = 0;
+                type->GetUINT32(MF_MT_YUV_MATRIX, &yuv_matrix);
+                
+                std::cout << mode << ' ' << yuv_matrix << ' ';*/
+
+                UINT32 tmp = 0;
+                type->GetUINT32(MF_MT_DEFAULT_STRIDE, &tmp);
+                stride = static_cast<INT32>(tmp);
+
+                UINT32 width, height;
+                MFGetAttributeSize(type, MF_MT_FRAME_SIZE, &width, &height);
+
+                UINT32 numerator, denominator;
+                MFGetAttributeRatio(type, MF_MT_FRAME_RATE, &numerator, &denominator);
+                const float rate = float(numerator)/float(denominator);
+
+                if( (covet_w == width && covet_h == height) && rate >=30.0 )
+                {
+                    if(BaseCapture::is_supported(subtype.Data1))
+                    {
+                        fourcc = subtype.Data1;
+                        selected = type;
+
+                        w = width;
+                        h = height;
+
+                        print(subtype, width, height, rate);
+                        break;
+                    }
+                }
+
+                i++;
+            }
+        }
+
+        if(!selected)
+        {
+            throw runtime_error("no one supported video format");
+        }
+
+
+        hr = reader->SetCurrentMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM, NULL, selected);
+        if(FAILED(hr)) throw hr;
     }
-    catch(runtime_error&)
+
+    /*
+    CComPtr<IMFAttributes> attributes;
+
+    hr = MFCreateAttributes(&attributes, 1);
+
+    CComPtr<IPropertyStore> props;
+
+    if (SUCCEEDED(hr))
     {
-        CoUninitialize();
-        throw;
-    }
+        hr = attributes->GetUnknown(MF_SOURCE_READER_MEDIASOURCE_CONFIG, __uuidof(props), (LPVOID*)&props);
+    }*/
+
+    /*
+    hr = graph_builder->RenderStream(pin_category, &MEDIATYPE_Video, capture_filter, NULL, sampler);
+    if (FAILED(hr))
+    {
+        throw runtime_error("Can not render the video capture stream hr=0x%x", hr);
+    }*/
+}
+catch(HRESULT hr)
+{
+    TCHAR text[1024];
+
+    FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+    NULL,
+    hr,
+    MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
+    (LPTSTR)&text,
+    sizeof(text)/sizeof(text[0]),
+    NULL);
+
+    throw runtime_error(text);
 }
 
 Capture::~Capture()
@@ -292,6 +304,26 @@ void Capture::decode_to_buffer(unsigned char* src, unsigned int length)
     if(buffer && coder)
     {
         (*coder)(src, src+length, buffer);
+    }
+}
+
+void Capture::decode_padded_to_buffer(unsigned char* scanline0, unsigned int pitch)
+{
+    CriticalSection::Lock lock(cs);
+
+    if(buffer && coder)
+    {
+        unsigned char * src = scanline0;
+        unsigned char * dst = buffer;
+        size_t length = w * (BaseCapture::get_transform(fourcc)).bpp / 8;
+
+        for(unsigned int y=0; y<h; y++)
+        {
+            (*coder)(src, src+length, dst);
+
+            dst += w * bpp(format);
+            src += pitch;
+        }
     }
 }
 
