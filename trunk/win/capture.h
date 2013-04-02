@@ -58,10 +58,10 @@ public:
     ~Capture();
 
     virtual bool set_buffer(unsigned char* buf, out_format fmt);
-    HRESULT async_read();
+    HRESULT async_read()const;
 
-    void decode_to_buffer(unsigned char* src, unsigned int length);
-    void decode_padded_to_buffer(unsigned char* scanline0, unsigned int pitch);
+    void decode_to_buffer(unsigned char* src, unsigned int length)const;
+    void decode_padded_to_buffer(unsigned char* scanline0, unsigned int pitch)const;
 
     static unsigned int enum_devices(char buffers[][128], const unsigned int size)throw();
 
@@ -72,7 +72,7 @@ private:
     CComPtr<IMFSourceReader> reader;
     INT32 stride;
 
-    CriticalSection cs;
+    mutable CriticalSection cs;
 };
 //-----------------------------------------------------------------------------
 #endif//CAPTURE_H
