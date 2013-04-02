@@ -31,7 +31,7 @@ public:
         return 0;
     }
 
-    BaseCapture():fourcc(0),w(0),h(0),format(num),buffer(NULL),coder(NULL){}
+    BaseCapture():fourcc(0),w(0),h(0),rate(0),format(num),buffer(NULL),coder(NULL){}
 
     unsigned int width () { return w; }
     unsigned int height() { return h; }
@@ -89,12 +89,11 @@ protected:
     static const Transform& get_transform(unsigned int fourcc);
     static inline bool    is_supported(unsigned int fourcc){ return get_transform(fourcc).fourcc != 0; }
     static inline size_t  get_bpp     (unsigned int fourcc){ return get_transform(fourcc).bpp; }
-    static inline encoder get_encoder (unsigned int fourcc, out_format fmt){ return get_transform(fourcc).func[fmt]; }
-
 
     unsigned int fourcc;    // FOURCC of video encoding
     unsigned int w;         // resolutions of video frame
     unsigned int h;
+    unsigned int rate;
 
     out_format format;      // output format
     unsigned char* buffer;  // output buffer

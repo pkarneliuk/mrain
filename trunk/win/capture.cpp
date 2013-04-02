@@ -24,12 +24,12 @@
 #include "stuff.h"
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-void print(const GUID& guid, unsigned int width, unsigned int height, float rate)
+void print(const GUID& guid, unsigned int width, unsigned int height, unsigned int rate)
 {
     //Table of GUIDs http://msdn.microsoft.com/en-us/library/windows/desktop/aa370819(v=vs.85).aspx
     struct { DWORD dword; char c; } fourcc = {guid.Data1, '\0'};
 
-    printf("%s %4ux%-4u %.1f fps\n", &fourcc, width, height, rate);
+    printf("%s %4ux%-4u %3u fps\n", &fourcc, width, height, rate);
 }
 
 class Sampler: public IMFSourceReaderCallback
@@ -74,6 +74,11 @@ public:
     {
         HRESULT hr = S_OK;
 
+        if(SUCCEEDED(hrStatus))
+        {
+            hr = cp->async_read();
+        }
+
         if (pSample)
         {
             DWORD count = 0;
@@ -107,17 +112,6 @@ public:
                     }
                 }
             }
-        }
-
-        if(SUCCEEDED(hrStatus))
-        {
-            hr = cp->reader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM,
-                                        0,
-                                        NULL,   // actual
-                                        NULL,   // flags
-                                        NULL,   // timestamp
-                                        NULL    // sample
-                                        );
         }
 
         return hr;
@@ -195,7 +189,7 @@ Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_nam
 
                 UINT32 numerator, denominator;
                 MFGetAttributeRatio(type, MF_MT_FRAME_RATE, &numerator, &denominator);
-                const float rate = float(numerator)/float(denominator);
+                rate = numerator/denominator;
 
                 if( (covet_w == width && covet_h == height) && rate >=30.0 )
                 {
@@ -237,13 +231,6 @@ Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_nam
     {
         hr = attributes->GetUnknown(MF_SOURCE_READER_MEDIASOURCE_CONFIG, __uuidof(props), (LPVOID*)&props);
     }*/
-
-    /*
-    hr = graph_builder->RenderStream(pin_category, &MEDIATYPE_Video, capture_filter, NULL, sampler);
-    if (FAILED(hr))
-    {
-        throw runtime_error("Can not render the video capture stream hr=0x%x", hr);
-    }*/
 }
 catch(HRESULT hr)
 {
@@ -275,15 +262,10 @@ bool Capture::set_buffer(unsigned char* buf, out_format fmt)
     encoder tmp=NULL;
     if(buf != NULL)
     {
-        tmp = get_encoder(fourcc, fmt);
+        tmp = get_transform(fourcc).func[fmt];
         if(tmp == NULL) return false;
 
-        hr = reader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM,
-                                        0,
-                                        NULL,
-                                        NULL,
-                                        NULL,
-                                        NULL);
+        hr = async_read();
     }
     else
     {
@@ -295,6 +277,16 @@ bool Capture::set_buffer(unsigned char* buf, out_format fmt)
     buffer = buf;
 
     return SUCCEEDED(hr);
+}
+
+HRESULT Capture::async_read()
+{
+    return reader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM,
+                                0,
+                                NULL,
+                                NULL,
+                                NULL,
+                                NULL);
 }
 
 void Capture::decode_to_buffer(unsigned char* src, unsigned int length)
