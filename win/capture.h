@@ -58,16 +58,16 @@ public:
     ~Capture();
 
     virtual bool set_buffer(unsigned char* buf, out_format fmt);
-
-    static unsigned int enum_devices(char buffers[][128], const unsigned int size)throw();
+    HRESULT async_read();
 
     void decode_to_buffer(unsigned char* src, unsigned int length);
     void decode_padded_to_buffer(unsigned char* scanline0, unsigned int pitch);
+
+    static unsigned int enum_devices(char buffers[][128], const unsigned int size)throw();
+
 private:
 
     static IMFActivate* find_device(const char* dev_name);
-
-    friend class Sampler;
 
     CComPtr<IMFSourceReader> reader;
     INT32 stride;

@@ -16,6 +16,9 @@ namespace {
     struct RGB { unsigned char r,g,b; };
     struct BGR { unsigned char b,g,r; };
 
+    struct YUY2 { unsigned char y0,u,y1,v; };
+    struct UYVY { unsigned char u,y0,v,y1; };
+
     void GREYtoGREY(const unsigned char* src,
                     const unsigned char* end,
                           unsigned char* dst)
@@ -23,28 +26,29 @@ namespace {
         memcpy(dst, src, end - src);
     }
 
-    template <typename Pixel>
-    void YUY2toPixel(const unsigned char* src,
-                     const unsigned char* end,
-                           unsigned char* dst)
+    template <typename YUV, typename Pixel>
+    void YUV422toPixel(const unsigned char* src,
+                       const unsigned char* end,
+                             unsigned char* dst)
     {
         #define CLAMP(c) if(c & (~255)) {c = (unsigned char)~(c >> (sizeof(c)*8 -1 ));}
 
-
-        int r, g, b, cr, cg, cb, y1, y2;
+        int r, g, b, cr, cg, cb, y0, y1;
         for(; src<end; src+=4)
         {
-            y1 = src[0];
-            cb = ((src[1] -128)*454) >> 8;
-            cg = ((src[1] -128)*88);
+            YUV& data = (YUV&)*src;
 
-            y2 = src[2];
-            cr = ((src[3] - 128) * 359) >> 8;
-            cg = (cg + (src[3] - 128) * 183) >> 8;
+            y0 = data.y0;
+            cb = ((data.u -128)*454) >> 8;
+            cg = ((data.u -128)*88);
 
-            r = y1 + cr;
-            b = y1 + cb;
-            g = y1 - cg;
+            y1 = data.y1;
+            cr = (     (data.v - 128) * 359) >> 8;
+            cg = (cg + (data.v - 128) * 183) >> 8;
+
+            r = y0 + cr;
+            b = y0 + cb;
+            g = y0 - cg;
             CLAMP(r);
             CLAMP(g);
             CLAMP(b);
@@ -57,9 +61,9 @@ namespace {
 
             dst +=3;
 
-            r = y2 + cr;
-            b = y2 + cb;
-            g = y2 - cg;
+            r = y1 + cr;
+            b = y1 + cb;
+            g = y1 - cg;
             CLAMP(r);
             CLAMP(g);
             CLAMP(b);
@@ -76,67 +80,26 @@ namespace {
         #undef CLAMP
     }
 
-    const auto YUY2toRGB = YUY2toPixel<RGB>;
-    const auto YUY2toBGR = YUY2toPixel<BGR>;
-
-    void YUY2toGRAY(const unsigned char* src,
-                    const unsigned char* end,
-                          unsigned char* dst)
+    template <typename YUV>
+    void YUV422toGRAY(const unsigned char* src,
+                      const unsigned char* end,
+                            unsigned char* dst)
     {
         for(; src<end; src+=4)
         {
-            *dst++ = src[0];
-            *dst++ = src[2];
+            YUV& data = (YUV&)*src;
+            *dst++ = data.y0;
+            *dst++ = data.y1;
         }
     }
 
-    template <typename Pixel>
-    void UYVYtoPixel(const unsigned char* src,
-                     const unsigned char* end,
-                           unsigned char* dst)
-    {
-        for(; src<end; src+=4) 
-        {
-            char u  = src[0];
-            char y1 = src[1];
-            char v  = src[2];
-            char y2 = src[3];
+    const auto YUY2toRGB  = YUV422toPixel<YUY2,RGB>;
+    const auto YUY2toBGR  = YUV422toPixel<YUY2,BGR>;
+    const auto YUY2toGRAY = YUV422toGRAY<YUY2>;
 
-            float r = + 2.032f*float(u);
-            float g = - 0.395f*float(u) -0.581f*float(v);
-            float b = + 1.140f*float(v);
-
-            Pixel& p1 = (Pixel&)*dst;
-
-            p1.r = float(y1) + r;
-            p1.g = float(y1) + g;
-            p1.b = float(y1) + b;
-
-            dst +=3;
-
-            Pixel& p2 = (Pixel&)*dst;
-
-            p2.r = float(y2) + r;
-            p2.g = float(y2) + g;
-            p2.b = float(y2) + b;
-
-            dst +=3;
-        }
-    }
-
-    const auto UYVYtoRGB = UYVYtoPixel<RGB>;
-    const auto UYVYtoBGR = UYVYtoPixel<BGR>;
-
-    void UYVYtoGRAY(const unsigned char* src,
-                    const unsigned char* end,
-                          unsigned char* dst)
-    {
-        for(; src<end; src+=4)
-        {
-            *dst++ = src[1];
-            *dst++ = src[3];
-        }
-    }
+    const auto UYVYtoRGB  = YUV422toPixel<UYVY,RGB>;
+    const auto UYVYtoBGR  = YUV422toPixel<UYVY,BGR>;
+    const auto UYVYtoGRAY = YUV422toGRAY<UYVY>;
 
     void YUV422PtoGREY(const unsigned char* src,
                        const unsigned char* end,
@@ -148,9 +111,9 @@ namespace {
 
 const BaseCapture::Transform BaseCapture::encoders[]=
 {   //  FOURCC       bpp      RGB        BGR           GRAY
-    { Capture::GREY, 8,  { 0,         0,            GREYtoGREY } }, // 8 greyscale
+    { Capture::GREY, 8,  { 0,         0,            GREYtoGREY } },
     { Capture::YUY2, 16, { YUY2toRGB, YUY2toBGR,    YUY2toGRAY } },
-    { Capture::YUYV, 16, { YUY2toRGB, YUY2toBGR,    YUY2toGRAY } },
+    { Capture::YUYV, 16, { YUY2toRGB, YUY2toBGR,    YUY2toGRAY } }, // duplicate of YUY2
     { Capture::UYVY, 16, { UYVYtoRGB, UYVYtoBGR,    UYVYtoGRAY } },
     { Capture::P422, 8,  { 0,         0,         YUV422PtoGREY } },
     { 0            , 0,  { 0,         0,                     0 } }, // end of list

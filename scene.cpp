@@ -11,7 +11,7 @@
 #include "matrix.h"
 #include "scene.h"
 //-----------------------------------------------------------------------------
-VideoScreen::VideoScreen(float w, float h):video(NULL),width(w), height(h)
+VideoScreen::VideoScreen(float w, float h):video(NULL), width(w), height(h)
 {
 }
 
@@ -30,10 +30,10 @@ void VideoScreen::draw()
         video->bind(GL_MODULATE);
     }
     glBegin(GL_QUADS);
-        glTexCoord2f(0.0f, 0.0f);         glVertex3f(0.0f, -height, 0.0f);
-        glTexCoord2f(0.0f, video->t);     glVertex3f(0.0f, height, 0.0f);
-        glTexCoord2f(video->s, video->t); glVertex3f(width*2, height, 0.0f);
-        glTexCoord2f(video->s, 0.0f);     glVertex3f(width*2, -height, 0.0f);
+        glTexCoord2f(video->s, video->t);    glVertex3f(0.0f, -height, 0.0f);
+        glTexCoord2f(video->s, 0.0f);        glVertex3f(0.0f, height, 0.0f);
+        glTexCoord2f(0.0f,      0.0f);       glVertex3f(width*2, height, 0.0f);
+        glTexCoord2f(0.0f,      video->t);   glVertex3f(width*2, -height, 0.0f);
     glEnd();
 }
 
