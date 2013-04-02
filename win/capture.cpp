@@ -19,7 +19,6 @@
 #include <Mfreadwrite.h>
 #include <Mftransform.h>
 
-
 #include "capture.h"
 #include "stuff.h"
 //-----------------------------------------------------------------------------
@@ -35,7 +34,7 @@ void print(const GUID& guid, unsigned int width, unsigned int height, unsigned i
 class Sampler: public IMFSourceReaderCallback
 {
 public:
-    Sampler(Capture* c): cp(c),ref_count(0) {}
+    Sampler(const Capture& c): cp(c), ref_count(0) {}
     ~Sampler(){}
 
     // IUnknown
@@ -67,16 +66,16 @@ public:
     STDMETHODIMP OnFlush(DWORD) { return S_OK; }
     STDMETHODIMP OnReadSample(
         HRESULT hrStatus,
-        DWORD dwStreamIndex,
-        DWORD dwStreamFlags,
-        LONGLONG llTimestamp,
+        DWORD,
+        DWORD,
+        LONGLONG,
         IMFSample *pSample)
     {
         HRESULT hr = S_OK;
 
         if(SUCCEEDED(hrStatus))
         {
-            hr = cp->async_read();
+            hr = cp.async_read();
         }
 
         if (pSample)
@@ -97,7 +96,7 @@ public:
                     LONG pitch;
                     if (SUCCEEDED(buffer2D->Lock2D(&scanline0, &pitch)))
                     {
-                        cp->decode_padded_to_buffer(scanline0, pitch);
+                        cp.decode_padded_to_buffer(scanline0, pitch);
                         buffer2D->Unlock2D();
                     }
                 }
@@ -107,7 +106,7 @@ public:
                     DWORD length;
                     if (SUCCEEDED(buffer->Lock(&buf, NULL, &length)))
                     {
-                        cp->decode_to_buffer(buf, length);
+                        cp.decode_to_buffer(buf, length);
                         buffer->Unlock();
                     }
                 }
@@ -119,7 +118,7 @@ public:
 
 private:
     long ref_count;
-    Capture* cp;
+    const Capture& cp;
 };
 
 //-------------------------------------------------------------------
@@ -138,99 +137,86 @@ Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_nam
         throw runtime_error("Video device isn't found");
     }
 
-    // Create the media source for the device
-    CComPtr<IMFMediaSource> source;
-    hr = device->ActivateObject(__uuidof(IMFMediaSource), (void**)&source);
-    {
-        CComPtr<IMFAttributes> attributes;
-
-        hr = MFCreateAttributes(&attributes, 1);
-
-        hr = attributes->SetUnknown(MF_SOURCE_READER_ASYNC_CALLBACK, new Sampler(this));
+    {   // create the media source for the device
+        CComPtr<IMFMediaSource> source;
+        hr = device->ActivateObject(__uuidof(IMFMediaSource), (void**)&source);
         if(FAILED(hr)) throw hr;
 
-        hr = MFCreateSourceReaderFromMediaSource(source, attributes, &reader);
-        if(FAILED(hr)) throw hr;
-
-        CComPtr<IMFMediaType> selected;
-
-        int i=0;
-        while(hr != MF_E_NO_MORE_TYPES)
-        {
-            CComPtr<IMFMediaType> type;
-            hr = reader->GetNativeMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM, i, &type);
-            if (SUCCEEDED(hr))
-            {
-                GUID subtype;
-                type->GetGUID(MF_MT_SUBTYPE, &subtype);
-/*
-                UINT32 mode;
-                type->GetUINT32(MF_MT_INTERLACE_MODE, &mode);
-
-                UINT32 bitrate;
-                type->GetUINT32(MF_MT_AVG_BITRATE, &bitrate);
-
-
-                UINT32 fcc;
-                type->GetUINT32(MF_MT_ORIGINAL_4CC, &fcc);
-                
-
-                UINT32 yuv_matrix = 0;
-                type->GetUINT32(MF_MT_YUV_MATRIX, &yuv_matrix);
-                
-                std::cout << mode << ' ' << yuv_matrix << ' ';*/
-
-                UINT32 tmp = 0;
-                type->GetUINT32(MF_MT_DEFAULT_STRIDE, &tmp);
-                stride = static_cast<INT32>(tmp);
-
-                UINT32 width, height;
-                MFGetAttributeSize(type, MF_MT_FRAME_SIZE, &width, &height);
-
-                UINT32 numerator, denominator;
-                MFGetAttributeRatio(type, MF_MT_FRAME_RATE, &numerator, &denominator);
-                rate = numerator/denominator;
-
-                if( (covet_w == width && covet_h == height) && rate >=30.0 )
-                {
-                    if(BaseCapture::is_supported(subtype.Data1))
-                    {
-                        fourcc = subtype.Data1;
-                        selected = type;
-
-                        w = width;
-                        h = height;
-
-                        print(subtype, width, height, rate);
-                        break;
-                    }
-                }
-
-                i++;
-            }
+        {   // create source reader
+            CComPtr<IMFSourceReaderCallback> sampler = new Sampler(*this);
+            CComPtr<IMFAttributes> attributes;
+            hr = MFCreateAttributes(&attributes, 1);
+            if(FAILED(hr)) throw hr;
+            hr = attributes->SetUnknown(MF_SOURCE_READER_ASYNC_CALLBACK, sampler);
+            if(FAILED(hr)) throw hr;
+            hr = MFCreateSourceReaderFromMediaSource(source, attributes, &reader);
+            if(FAILED(hr)) throw hr;
         }
-
-        if(!selected)
-        {
-            throw runtime_error("no one supported video format");
-        }
-
-
-        hr = reader->SetCurrentMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM, NULL, selected);
-        if(FAILED(hr)) throw hr;
     }
 
-    /*
-    CComPtr<IMFAttributes> attributes;
+    CComPtr<IMFMediaType> selected;
 
-    hr = MFCreateAttributes(&attributes, 1);
-
-    CComPtr<IPropertyStore> props;
-
-    if (SUCCEEDED(hr))
+    int i=0;
+    while(hr != MF_E_NO_MORE_TYPES)
     {
-        hr = attributes->GetUnknown(MF_SOURCE_READER_MEDIASOURCE_CONFIG, __uuidof(props), (LPVOID*)&props);
-    }*/
+        CComPtr<IMFMediaType> type;
+        hr = reader->GetNativeMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM, i, &type);
+        if (SUCCEEDED(hr))
+        {
+            GUID subtype;
+            type->GetGUID(MF_MT_SUBTYPE, &subtype);
+/*
+            UINT32 mode;
+            type->GetUINT32(MF_MT_INTERLACE_MODE, &mode);
+
+            UINT32 bitrate;
+            type->GetUINT32(MF_MT_AVG_BITRATE, &bitrate);
+
+            UINT32 fcc;
+            type->GetUINT32(MF_MT_ORIGINAL_4CC, &fcc);
+
+            UINT32 yuv_matrix = 0;
+            type->GetUINT32(MF_MT_YUV_MATRIX, &yuv_matrix);
+
+            std::cout << mode << ' ' << yuv_matrix << ' ';*/
+
+            UINT32 tmp = 0;
+            type->GetUINT32(MF_MT_DEFAULT_STRIDE, &tmp);
+            stride = static_cast<INT32>(tmp);
+
+            UINT32 width, height;
+            MFGetAttributeSize(type, MF_MT_FRAME_SIZE, &width, &height);
+
+            UINT32 numerator, denominator;
+            MFGetAttributeRatio(type, MF_MT_FRAME_RATE, &numerator, &denominator);
+            rate = numerator/denominator;
+
+            if( (covet_w == width && covet_h == height) && rate >= 30 )
+            {
+                if(BaseCapture::is_supported(subtype.Data1))
+                {
+                    fourcc = subtype.Data1;
+                    selected = type;
+
+                    w = width;
+                    h = height;
+
+                    print(subtype, width, height, rate);
+                    break;
+                }
+            }
+
+            i++;
+        }
+    }
+
+    if(!selected)
+    {
+        throw runtime_error("no one supported video format");
+    }
+
+    hr = reader->SetCurrentMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM, NULL, selected);
+    if(FAILED(hr)) throw hr;
 }
 catch(HRESULT hr)
 {
@@ -279,7 +265,7 @@ bool Capture::set_buffer(unsigned char* buf, out_format fmt)
     return SUCCEEDED(hr);
 }
 
-HRESULT Capture::async_read()
+HRESULT Capture::async_read()const
 {
     return reader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM,
                                 0,
@@ -289,7 +275,7 @@ HRESULT Capture::async_read()
                                 NULL);
 }
 
-void Capture::decode_to_buffer(unsigned char* src, unsigned int length)
+void Capture::decode_to_buffer(unsigned char* src, unsigned int length)const
 {
     CriticalSection::Lock lock(cs);
 
@@ -299,7 +285,7 @@ void Capture::decode_to_buffer(unsigned char* src, unsigned int length)
     }
 }
 
-void Capture::decode_padded_to_buffer(unsigned char* scanline0, unsigned int pitch)
+void Capture::decode_padded_to_buffer(unsigned char* scanline0, unsigned int pitch)const
 {
     CriticalSection::Lock lock(cs);
 
