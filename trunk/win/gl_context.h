@@ -31,7 +31,6 @@ private:
 
     HDC     hdc;    // handler device context
     HGLRC   hrc;    // handler render context
-    HWND    hwnd;
 };
 
 namespace OpenGL

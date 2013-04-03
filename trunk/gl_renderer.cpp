@@ -30,7 +30,7 @@ GLRenderer::GLRenderer(NativeWindow* win):GLContext(win)
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
-    unsigned int width; 
+    unsigned int width;
     unsigned int height;
     win->get_size(&width, &height);
     reshape(width, height);
