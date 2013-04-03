@@ -60,9 +60,9 @@ namespace OpenGL
     }
 }
 //-----------------------------------------------------------------------------
-GLContext::GLContext(NativeWindow* win):hwnd(win->hwnd)
+GLContext::GLContext(NativeWindow* win)
 {
-    hdc = GetDC(hwnd);
+    hdc = GetDC(win->hwnd);
 
     PIXELFORMATDESCRIPTOR pfd;
 
@@ -85,9 +85,7 @@ GLContext::GLContext(NativeWindow* win):hwnd(win->hwnd)
     pfd.iLayerType = PFD_MAIN_PLANE;
 
     pfd.nVersion        = 1;
-/*  pfd.dwFlags         = 549;
-    pfd.iPixelType      = 0;
-    pfd.cColorBits      = 32;
+/*  pfd.cColorBits      = 32;
     pfd.cRedBits        = 8;
     pfd.cGreenBits      = 8;
     pfd.cBlueBits       = 8;
@@ -123,7 +121,7 @@ GLContext::~GLContext()
 {
     wglMakeCurrent(NULL, NULL);
     wglDeleteContext(hrc);
-    ReleaseDC(hwnd, hdc);
+    ReleaseDC(WindowFromDC(hdc), hdc);
 }
 
 bool GLContext::load_ogl()

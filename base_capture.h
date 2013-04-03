@@ -81,9 +81,9 @@ protected:
 
     const static struct Transform
     {
-        unsigned int fourcc;
-        size_t  bpp; // bits per pixel
-        encoder func[num];
+        const unsigned int fourcc;
+        const size_t  bpp; // bits per pixel
+        const encoder func[num];
     } encoders[];
 
     static const Transform& get_transform(unsigned int fourcc);

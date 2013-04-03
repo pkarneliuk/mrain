@@ -44,7 +44,7 @@ public:
         union   // T2F
         {
             struct{ GLfloat st[2]; };
-            struct{ GLfloat s,t;  };
+            struct{ GLfloat s,t;   };
         };
     };
 
