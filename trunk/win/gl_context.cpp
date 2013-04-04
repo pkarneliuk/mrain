@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // "Matrix Rain" - screensaver for X Server Systems
 // file name:   gl_context.cpp
-// copyright:   (C) 2008, 2009 by Pavel Karneliuk
+// copyright:   (C) 2008, 2009, 2013 by Pavel Karneliuk
 // license:     GNU General Public License v2
 // e-mail:      pavel_karneliuk@users.sourceforge.net
 //-----------------------------------------------------------------------------
@@ -15,9 +15,10 @@
 #include "native_window.h"
 //-----------------------------------------------------------------------------
 #ifdef _DEBUG
-#define PRINT_PROC(a) printf(#a "is %p at %p\n", (a), &(a))
+#define WGL_BIND(func) { *((PROC*)(& func )) = wglGetProcAddress( #func ); printf("%p: %s\n", (func), #func); }
+#else
+#define WGL_BIND(func) { *((PROC*)(& func )) = wglGetProcAddress( #func ); }
 #endif
-
 namespace OpenGL
 {
     namespace OGL
@@ -47,6 +48,11 @@ namespace OpenGL
         PFNGLUNIFORM1FPROC glUniform1f = NULL;
         PFNGLUNIFORM4FVPROC glUniform4fv = NULL;
         PFNGLUSEPROGRAMPROC glUseProgram = NULL;
+        // GL_VERSION_3_0
+        PFNGLBINDVERTEXARRAYPROC glBindVertexArray = NULL;
+        PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays = NULL;
+        PFNGLGENVERTEXARRAYSPROC glGenVertexArrays = NULL;
+        PFNGLISVERTEXARRAYPROC glIsVertexArray = NULL;
     }
 
     namespace Extensions
@@ -127,59 +133,35 @@ GLContext::~GLContext()
 bool GLContext::load_ogl()
 {
     // GL_VERSION_1_3
-    glActiveTexture       = (PFNGLACTIVETEXTUREARBPROC)     wglGetProcAddress("glActiveTexture");
-    glClientActiveTexture = (PFNGLCLIENTACTIVETEXTUREPROC)  wglGetProcAddress("glClientActiveTexture");
+    WGL_BIND(glActiveTexture);
+    WGL_BIND(glClientActiveTexture);
     // GL_VERSION_1_4
-    glMultiDrawArrays     = (PFNGLMULTIDRAWARRAYSPROC)      wglGetProcAddress("glMultiDrawArrays");
+    WGL_BIND(glMultiDrawArrays);
     // GL_VERSION_2_0
-    glAttachShader        = (PFNGLATTACHSHADERPROC)     wglGetProcAddress("glAttachShader");
-    glCompileShader       = (PFNGLCOMPILESHADERPROC)    wglGetProcAddress("glCompileShader");
-    glCreateProgram       = (PFNGLCREATEPROGRAMPROC)    wglGetProcAddress("glCreateProgram");
-    glCreateShader        = (PFNGLCREATESHADERPROC)     wglGetProcAddress("glCreateShader");
-    glDeleteProgram       = (PFNGLDELETEPROGRAMPROC)    wglGetProcAddress("glDeleteProgram");
-    glDeleteShader        = (PFNGLDELETESHADERPROC)     wglGetProcAddress("glDeleteShader");
-    glDetachShader        = (PFNGLDETACHSHADERPROC)     wglGetProcAddress("glDetachShader");
-    glGetProgramiv        = (PFNGLGETPROGRAMIVPROC)     wglGetProcAddress("glGetProgramiv");
-    glGetProgramInfoLog   = (PFNGLGETPROGRAMINFOLOGPROC)wglGetProcAddress("glGetProgramInfoLog");
-    glGetShaderInfoLog    = (PFNGLGETSHADERINFOLOGPROC) wglGetProcAddress("glGetShaderInfoLog");
-    glGetShaderiv         = (PFNGLGETSHADERIVPROC)      wglGetProcAddress("glGetShaderiv");
-    glGetUniformLocation  = (PFNGLGETUNIFORMLOCATIONPROC)wglGetProcAddress("glGetUniformLocation");
-    glLinkProgram         = (PFNGLLINKPROGRAMPROC)      wglGetProcAddress("glLinkProgram");
-    glShaderSource        = (PFNGLSHADERSOURCEPROC)     wglGetProcAddress("glShaderSource");
-    glValidateProgram     = (PFNGLVALIDATEPROGRAMPROC)  wglGetProcAddress("glValidateProgram");
-    glUniform1i           = (PFNGLUNIFORM1IPROC)        wglGetProcAddress("glUniform1i");
-    glUniform1f           = (PFNGLUNIFORM1FPROC)        wglGetProcAddress("glUniform1f");
-    glUniform4fv          = (PFNGLUNIFORM4FVPROC)       wglGetProcAddress("glUniform4fv");
-    glUseProgram          = (PFNGLUSEPROGRAMPROC)       wglGetProcAddress("glUseProgram");
-
-#ifdef _DEBUG
-    // GL_VERSION_1_3
-    PRINT_PROC(glActiveTexture);
-    PRINT_PROC(glClientActiveTexture);
-    // GL_VERSION_1_4
-    PRINT_PROC(glMultiDrawArrays);
-    // GL_VERSION_2_0
-    PRINT_PROC(glCreateShader);
-    PRINT_PROC(glDeleteShader);
-    PRINT_PROC(glShaderSource);
-    PRINT_PROC(glCreateProgram);
-    PRINT_PROC(glDeleteProgram);
-    PRINT_PROC(glAttachShader);
-    PRINT_PROC(glDetachShader);
-    PRINT_PROC(glUseProgram);
-    PRINT_PROC(glClientActiveTexture);
-    PRINT_PROC(glGetShaderiv);
-    PRINT_PROC(glCompileShader);
-    PRINT_PROC(glGetShaderInfoLog);
-    PRINT_PROC(glGetProgramiv);
-    PRINT_PROC(glLinkProgram);
-    PRINT_PROC(glGetProgramInfoLog);
-    PRINT_PROC(glValidateProgram);
-    PRINT_PROC(glGetUniformLocation);
-    PRINT_PROC(glUniform1i);
-    PRINT_PROC(glUniform1f);
-    PRINT_PROC(glUniform4fv);
-#endif
+    WGL_BIND(glAttachShader);
+    WGL_BIND(glCompileShader);
+    WGL_BIND(glCreateProgram);
+    WGL_BIND(glCreateShader);
+    WGL_BIND(glDeleteProgram);
+    WGL_BIND(glDeleteShader);
+    WGL_BIND(glDetachShader);
+    WGL_BIND(glGetProgramiv);
+    WGL_BIND(glGetProgramInfoLog);
+    WGL_BIND(glGetShaderInfoLog);
+    WGL_BIND(glGetShaderiv);
+    WGL_BIND(glGetUniformLocation);
+    WGL_BIND(glLinkProgram);
+    WGL_BIND(glShaderSource);
+    WGL_BIND(glValidateProgram);
+    WGL_BIND(glUniform1i);
+    WGL_BIND(glUniform1f);
+    WGL_BIND(glUniform4fv);
+    WGL_BIND(glUseProgram);
+    // GL_VERSION_3_0
+    WGL_BIND(glBindVertexArray);
+    WGL_BIND(glDeleteVertexArrays);
+    WGL_BIND(glGenVertexArrays);
+    WGL_BIND(glIsVertexArray);
 
     return true;
 }
@@ -191,13 +173,8 @@ bool GLContext::load_extensions()
 
 bool GLContext::load_wgl()
 {
-    wglSwapIntervalEXT    = (PFNWGLSWAPINTERVALEXTPROC)    wglGetProcAddress("wglSwapIntervalEXT");
-    wglGetSwapIntervalEXT = (PFNWGLGETSWAPINTERVALEXTPROC) wglGetProcAddress("wglGetSwapIntervalEXT");
-
-#ifdef _DEBUG
-    PRINT_PROC(wglSwapIntervalEXT);
-    PRINT_PROC(wglGetSwapIntervalEXT);
-#endif
+    WGL_BIND(wglSwapIntervalEXT);
+    WGL_BIND(wglGetSwapIntervalEXT);
 
     return true;
 }

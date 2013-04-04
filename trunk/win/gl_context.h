@@ -62,6 +62,11 @@ namespace OpenGL
         extern PFNGLUNIFORM1FPROC glUniform1f;
         extern PFNGLUNIFORM4FVPROC glUniform4fv;
         extern PFNGLUSEPROGRAMPROC glUseProgram;
+        // GL_VERSION_3_0
+        extern PFNGLBINDVERTEXARRAYPROC glBindVertexArray;
+        extern PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays;
+        extern PFNGLGENVERTEXARRAYSPROC glGenVertexArrays;
+        extern PFNGLISVERTEXARRAYPROC glIsVertexArray;
     }
 
     namespace Extensions

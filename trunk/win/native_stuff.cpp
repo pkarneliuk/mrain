@@ -103,7 +103,11 @@ int main(int argc, char **argv); // forvard declaration
 int WINAPI WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPSTR /*lpCmdLine*/, int /*nCmdShow*/)
 {
     // Redirect IO to console if it exist
-    if( /*AttachConsole(ATTACH_PARENT_PROCESS)*/ AllocConsole() != FALSE )
+    BOOL res = AttachConsole(ATTACH_PARENT_PROCESS);
+#ifdef _DEBUG
+    if( res == FALSE ) res = AllocConsole();
+#endif//_DEBUG
+    if( res != FALSE )
     {
         freopen("CONOUT$", "w", stdout);
         freopen("CONOUT$", "w", stderr);
