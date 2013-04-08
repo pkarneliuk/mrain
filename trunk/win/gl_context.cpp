@@ -28,14 +28,27 @@ namespace OpenGL
         PFNGLCLIENTACTIVETEXTUREPROC glClientActiveTexture = NULL;
         // GL_VERSION_1_4
         PFNGLMULTIDRAWARRAYSPROC glMultiDrawArrays = NULL;
+        // GL_VERSION_1_5
+        PFNGLBINDBUFFERPROC glBindBuffer = NULL;
+        PFNGLDELETEBUFFERSPROC glDeleteBuffers = NULL;
+        PFNGLGENBUFFERSPROC glGenBuffers = NULL;
+        PFNGLISBUFFERPROC glIsBuffer = NULL;
+        PFNGLBUFFERDATAPROC glBufferData = NULL;
+        PFNGLBUFFERSUBDATAPROC glBufferSubData = NULL;
+        PFNGLGETBUFFERSUBDATAPROC glGetBufferSubData = NULL;
+        PFNGLMAPBUFFERPROC glMapBuffer = NULL;
+        PFNGLUNMAPBUFFERPROC glUnmapBuffer = NULL;
         // GL_VERSION_2_0
         PFNGLATTACHSHADERPROC glAttachShader = NULL;
+        PFNGLBINDATTRIBLOCATIONPROC glBindAttribLocation = NULL;
         PFNGLCOMPILESHADERPROC glCompileShader = NULL;
         PFNGLCREATEPROGRAMPROC glCreateProgram = NULL;
         PFNGLCREATESHADERPROC glCreateShader = NULL;
         PFNGLDELETEPROGRAMPROC glDeleteProgram = NULL;
         PFNGLDELETESHADERPROC glDeleteShader = NULL;
         PFNGLDETACHSHADERPROC glDetachShader = NULL;
+        PFNGLDISABLEVERTEXATTRIBARRAYPROC glDisableVertexAttribArray = NULL;
+        PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray = NULL;
         PFNGLGETPROGRAMIVPROC glGetProgramiv = NULL;
         PFNGLGETPROGRAMINFOLOGPROC glGetProgramInfoLog = NULL;
         PFNGLGETSHADERINFOLOGPROC glGetShaderInfoLog = NULL;
@@ -47,7 +60,9 @@ namespace OpenGL
         PFNGLUNIFORM1IPROC glUniform1i = NULL;
         PFNGLUNIFORM1FPROC glUniform1f = NULL;
         PFNGLUNIFORM4FVPROC glUniform4fv = NULL;
+        PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv = NULL;
         PFNGLUSEPROGRAMPROC glUseProgram = NULL;
+        PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer = NULL;
         // GL_VERSION_3_0
         PFNGLBINDVERTEXARRAYPROC glBindVertexArray = NULL;
         PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays = NULL;
@@ -137,14 +152,27 @@ bool GLContext::load_ogl()
     WGL_BIND(glClientActiveTexture);
     // GL_VERSION_1_4
     WGL_BIND(glMultiDrawArrays);
+    // GL_VERSION_1_5
+    WGL_BIND(glBindBuffer);
+    WGL_BIND(glDeleteBuffers);
+    WGL_BIND(glGenBuffers);
+    WGL_BIND(glIsBuffer);
+    WGL_BIND(glBufferData);
+    WGL_BIND(glBufferSubData);
+    WGL_BIND(glGetBufferSubData);
+    WGL_BIND(glMapBuffer);
+    WGL_BIND(glUnmapBuffer);
     // GL_VERSION_2_0
     WGL_BIND(glAttachShader);
+    WGL_BIND(glBindAttribLocation);
     WGL_BIND(glCompileShader);
     WGL_BIND(glCreateProgram);
     WGL_BIND(glCreateShader);
     WGL_BIND(glDeleteProgram);
     WGL_BIND(glDeleteShader);
     WGL_BIND(glDetachShader);
+    WGL_BIND(glDisableVertexAttribArray);
+    WGL_BIND(glEnableVertexAttribArray);
     WGL_BIND(glGetProgramiv);
     WGL_BIND(glGetProgramInfoLog);
     WGL_BIND(glGetShaderInfoLog);
@@ -156,7 +184,9 @@ bool GLContext::load_ogl()
     WGL_BIND(glUniform1i);
     WGL_BIND(glUniform1f);
     WGL_BIND(glUniform4fv);
+    WGL_BIND(glUniformMatrix4fv);
     WGL_BIND(glUseProgram);
+    WGL_BIND(glVertexAttribPointer);
     // GL_VERSION_3_0
     WGL_BIND(glBindVertexArray);
     WGL_BIND(glDeleteVertexArrays);

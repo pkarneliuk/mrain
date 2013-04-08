@@ -9,6 +9,7 @@
 //-----------------------------------------------------------------------------
 #include <cstdio>
 #include <cstring>
+#include <memory>
 
 #include "gpu_program.h"
 //-----------------------------------------------------------------------------
@@ -24,11 +25,12 @@ void Shader::log()
 {
     GLint size = 0;
     glGetShaderiv(handle, GL_INFO_LOG_LENGTH, &size);
-    GLchar* info = new GLchar[size];
-    memset(info, '\0', sizeof(GLchar) * size);
-    glGetShaderInfoLog(handle, size, NULL, info );
-    fprintf(stderr, "Shader log:\n%s\n", info);
-    delete[] info;
+    if(size > 0)
+    {
+        std::unique_ptr<GLchar[]> info(new GLchar[size]);
+        glGetShaderInfoLog(handle, size, NULL, info.get());
+        fprintf(stderr, "Shader log: %s\n", info.get());
+    }
 }
 
 bool GPU_Program::link()
@@ -43,11 +45,12 @@ void GPU_Program::log()
 {
     GLint size = 0;
     glGetProgramiv(handle, GL_INFO_LOG_LENGTH, &size);
-    GLchar* info = new GLchar[size];
-    memset(info, '\0', sizeof(GLchar) * size);
-    glGetProgramInfoLog(handle, size, NULL, info );
-    fprintf(stderr, "Program log:\n%s\n", info);
-    delete[] info;
+    if(size > 0)
+    {
+        std::unique_ptr<GLchar[]> info(new GLchar[size]);
+        glGetProgramInfoLog(handle, size, NULL, info.get());
+        fprintf(stderr, "Program log: %s\n", info.get());
+    }
 }
 
 bool GPU_Program::validate()
@@ -79,6 +82,12 @@ void GPU_Program::set_uniform(const char* name, float a)
 void GPU_Program::set_uniform(const char* name, float a[4])
 {
     GLint location = glGetUniformLocation(handle, name);
-    glUniform4fv( location,1, a );
+    glUniform4fv( location, 1, a );
+}
+
+void GPU_Program::set_uniform_matrix(const char* name, float a[16])
+{
+    GLint location = glGetUniformLocation(handle, name);
+    glUniformMatrix4fv( location, 1, GL_FALSE, a);
 }
 //-----------------------------------------------------------------------------
