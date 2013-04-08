@@ -57,8 +57,8 @@ public:
     explicit Counter(unsigned int lim):limit(lim), count(0U){}
 
     inline unsigned int test(unsigned int delta)
-    {   // integer calculations !
-        // Worning ! There is an overflow !
+    {   // integer calculations!
+        // Warning! There is an overflow!
         count += delta;
         unsigned int uptimes = count/limit;
         count %= limit;

@@ -10,6 +10,7 @@
 #ifndef GL_RENDERER_H
 #define GL_RENDERER_H
 //-----------------------------------------------------------------------------
+#include "blas.h"
 #include "gl_context.h"
 #include "stuff.h"
 //-----------------------------------------------------------------------------
@@ -74,6 +75,9 @@ public:
     void reshape(unsigned int width, unsigned int height);
     unsigned int draw();
 
+    const matrix& get_projection()const { return projection; }
+    const matrix& get_modelview ()const { return modelview;  }
+
 private:
     GLRenderer(class NativeWindow* win);
     ~GLRenderer();
@@ -81,6 +85,8 @@ private:
     Version gl_version;
     class Triangle* triangle;
 
+    matrix projection;
+    matrix modelview;
 };
 //-----------------------------------------------------------------------------
 #endif//GL_RENDERER_H
