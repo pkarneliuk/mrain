@@ -223,12 +223,12 @@ catch(HRESULT hr)
     TCHAR text[1024];
 
     FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-    NULL,
-    hr,
-    MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
-    (LPTSTR)&text,
-    sizeof(text)/sizeof(text[0]),
-    NULL);
+                    NULL,
+                    hr,
+                    MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
+                    (LPTSTR)&text,
+                    sizeof(text)/sizeof(text[0]),
+                    NULL);
 
     throw runtime_error(text);
 }
