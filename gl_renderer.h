@@ -66,19 +66,21 @@ public:
         };
     };
 
-    inline void present(){ GLContext::swap_buffers(); }
-    unsigned int draw();
-    void reshape(unsigned int width, unsigned int height);
-
     inline const Version& version ()const   { return gl_version;              }
     inline const GLubyte* renderer()const   { return glGetString(GL_RENDERER);}
     inline const GLubyte* vendor  ()const   { return glGetString(GL_VENDOR);  }
+
+    inline void present(){ GLContext::swap_buffers(); }
+    void reshape(unsigned int width, unsigned int height);
+    unsigned int draw();
 
 private:
     GLRenderer(class NativeWindow* win);
     ~GLRenderer();
 
     Version gl_version;
+    class Triangle* triangle;
+
 };
 //-----------------------------------------------------------------------------
 #endif//GL_RENDERER_H

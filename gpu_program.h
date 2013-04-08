@@ -62,6 +62,11 @@ public:
         glDetachShader(handle, shader.handle);
     }
 
+    inline void bind(unsigned int index, const char* name)
+    {
+        glBindAttribLocation(handle, index, name);
+    }
+
     bool link();
     void log();
     bool validate();
@@ -70,6 +75,7 @@ public:
     void set_sampler(const char* name, int value);
     void set_uniform(const char* name, float a);
     void set_uniform(const char* name, float a[4]);
+    void set_uniform_matrix(const char* name, float a[16]);
 
     static inline void use_default(){ glUseProgram(0); }
 

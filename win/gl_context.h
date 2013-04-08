@@ -42,14 +42,27 @@ namespace OpenGL
         extern PFNGLCLIENTACTIVETEXTUREPROC glClientActiveTexture;
         // GL_VERSION_1_4
         extern PFNGLMULTIDRAWARRAYSPROC glMultiDrawArrays;
+        // GL_VERSION_1_5
+        extern PFNGLBINDBUFFERPROC glBindBuffer;
+        extern PFNGLDELETEBUFFERSPROC glDeleteBuffers;
+        extern PFNGLGENBUFFERSPROC glGenBuffers;
+        extern PFNGLISBUFFERPROC glIsBuffer;
+        extern PFNGLBUFFERDATAPROC glBufferData;
+        extern PFNGLBUFFERSUBDATAPROC glBufferSubData;
+        extern PFNGLGETBUFFERSUBDATAPROC glGetBufferSubData;
+        extern PFNGLMAPBUFFERPROC glMapBuffer;
+        extern PFNGLUNMAPBUFFERPROC glUnmapBuffer;
         // GL_VERSION_2_0
         extern PFNGLATTACHSHADERPROC glAttachShader;
+        extern PFNGLBINDATTRIBLOCATIONPROC glBindAttribLocation;
         extern PFNGLCOMPILESHADERPROC glCompileShader;
         extern PFNGLCREATEPROGRAMPROC glCreateProgram;
         extern PFNGLCREATESHADERPROC glCreateShader;
         extern PFNGLDELETEPROGRAMPROC glDeleteProgram;
         extern PFNGLDELETESHADERPROC glDeleteShader;
         extern PFNGLDETACHSHADERPROC glDetachShader;
+        extern PFNGLDISABLEVERTEXATTRIBARRAYPROC glDisableVertexAttribArray;
+        extern PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray;
         extern PFNGLGETPROGRAMIVPROC glGetProgramiv;
         extern PFNGLGETPROGRAMINFOLOGPROC glGetProgramInfoLog;
         extern PFNGLGETSHADERINFOLOGPROC glGetShaderInfoLog;
@@ -61,7 +74,9 @@ namespace OpenGL
         extern PFNGLUNIFORM1IPROC glUniform1i;
         extern PFNGLUNIFORM1FPROC glUniform1f;
         extern PFNGLUNIFORM4FVPROC glUniform4fv;
+        extern PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv;
         extern PFNGLUSEPROGRAMPROC glUseProgram;
+        extern PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer;
         // GL_VERSION_3_0
         extern PFNGLBINDVERTEXARRAYPROC glBindVertexArray;
         extern PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays;

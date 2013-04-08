@@ -115,7 +115,7 @@ bool NativeWindow::process_events()
 void NativeWindow::get_size(unsigned int* width, unsigned int* height)const
 {
     RECT rc={0};
-    GetWindowRect(hwnd, &rc);
+    GetClientRect(hwnd, &rc);
 
     *width  = rc.right-rc.left;
     *height = rc.bottom-rc.top;

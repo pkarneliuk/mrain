@@ -74,6 +74,7 @@ unsigned int Scene::draw()
     glLoadIdentity();
     glTranslatef(-32.0,26.0,-25.0f);
 
+//    renderer->draw();
     matrix->draw();
 //    screen->draw();
     return 0;
