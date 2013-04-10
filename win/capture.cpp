@@ -220,7 +220,7 @@ Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_nam
 }
 catch(HRESULT hr)
 {
-    TCHAR text[1024];
+    TCHAR text[1024]=TEXT("Unknown video capture error.");
 
     FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
                     NULL,
