@@ -159,5 +159,8 @@
     <ClInclude Include="..\..\video_buffer.h">
       <Filter>headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\buffer_object.h">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

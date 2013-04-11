@@ -249,6 +249,7 @@
     <ClInclude Include="..\..\stuff.h" />
     <ClInclude Include="..\..\texture_array.h" />
     <ClInclude Include="..\..\texture_atlas.h" />
+    <ClInclude Include="..\..\buffer_object.h" />
     <ClInclude Include="..\..\video_buffer.h" />
     <ClInclude Include="..\capture.h" />
     <ClInclude Include="..\glext.h" />

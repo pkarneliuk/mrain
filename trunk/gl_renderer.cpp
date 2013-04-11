@@ -14,8 +14,95 @@
 #include "blas.h"
 #include "native_window.h"
 #include "gl_renderer.h"
+#include "buffer_object.h"
 #include "gpu_program.h"
 //-----------------------------------------------------------------------------
+/*
+template<typename T, typename U>
+struct Type
+{
+    typedef T type;
+    typedef U next;
+    enum {
+        size   = sizeof(T) + U::size,
+        offset = U::offset + U::size,
+    };
+};
+
+template<typename U>
+struct Type<void, U>
+{
+    typedef void type;
+    enum {
+        size   = 0,
+        offset = 0,
+    };
+};
+
+template <typename M1=void,
+          typename M2=void,
+          typename M3=void,
+          typename M4=void,
+          typename M5=void,
+          typename M6=void,
+          typename M7=void,
+          typename M8=void>
+class Elements: public Type<M1, 
+                       Type<M2, 
+                       Type<M3, 
+                       Type<M4, 
+                       Type<M5, 
+                       Type<M6, 
+                       Type<M7, 
+                       Type<M8, 
+                       Type<void, void>  > > > >  > > > >
+{
+};
+
+*/
+
+
+template<typename T, typename U>
+struct Attrib
+{
+    typedef T type;
+    typedef U next;
+    enum {
+        size   = sizeof(T) + U::size,
+    };
+};
+
+template<typename U>
+struct Attrib<void, U>
+{
+    typedef void type;
+    enum {
+        size   = 0,
+    };
+};
+
+template <typename M1=void,
+          typename M2=void,
+          typename M3=void,
+          typename M4=void,
+          typename M5=void,
+          typename M6=void,
+          typename M7=void,
+          typename M8=void>
+class Elements: public Attrib<M1, 
+                       Attrib<M2, 
+                       Attrib<M3, 
+                       Attrib<M4, 
+                       Attrib<M5, 
+                       Attrib<M6, 
+                       Attrib<M7, 
+                       Attrib<M8, 
+                       Attrib<void, void>  > > > >  > > > >
+{
+};
+
+
+
 class Triangle
 {
 public:
@@ -32,6 +119,29 @@ public:
                               0.0f, 1.0f, 0.0f,
                               0.0f, 0.0f, 1.0f,
                             }; // color
+
+        ///!!!!!! type, offset, size, data
+
+        struct V : public Elements<GLRenderer::V3F,
+                                   GLRenderer::C3F,
+                                   GLRenderer::T2F>
+        {
+
+            typedef V Elements;
+            GLRenderer::V3F v;
+            GLRenderer::C3F c;
+            GLRenderer::T2F t;
+        };
+
+        const unsigned int num=3;
+        V data[num];
+
+
+
+        VBO_AoS<V> dummy;
+
+        dummy.create(num, data, GL_STATIC_DRAW);
+
 
         glGenVertexArrays(sizeof(vao)/sizeof(vao[0]), vao);
         glGenBuffers(sizeof(vbo)/sizeof(vbo[0]), vbo);
