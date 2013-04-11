@@ -42,28 +42,41 @@ public:
 
     struct T2F
     {
+        enum{ num=2, type=GL_FLOAT    };
         union   // T2F
         {
-            struct{ GLfloat st[2]; };
-            struct{ GLfloat s,t;   };
+            struct{ GLfloat st[num]; };
+            struct{ GLfloat s,t;     };
         };
     };
 
     struct V3F
     {
-        union   // V3F
+        enum{ num=3, type=GL_FLOAT    };
+        union
         {
-            struct{ GLfloat xyz[3]; };
-            struct{ GLfloat x,y,z;  };
+            struct{ GLfloat xyz[num]; };
+            struct{ GLfloat x,y,z;    };
+        };
+    };
+
+    struct C3F
+    {
+        enum{ num=3, type=GL_FLOAT    };
+        union
+        {
+            struct{ GLfloat rgb[num]; };
+            struct{ GLfloat r,g,b;    };
         };
     };
 
     struct C4F
     {
-        union   // C4F
+        enum{ num=4, type=GL_FLOAT     };
+        union
         {
-            struct{ GLfloat rgba[4]; };
-            struct{ GLfloat r,g,b,a; };
+            struct{ GLfloat rgba[num]; };
+            struct{ GLfloat r,g,b,a;   };
         };
     };
 
