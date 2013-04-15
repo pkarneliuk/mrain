@@ -70,24 +70,24 @@ bool GPU_Program::use()
 void GPU_Program::set_sampler(const char* name, int value)
 {
     GLint location = glGetUniformLocation(handle, name);
-    glUniform1i( location, value );
+    glUniform1i(location, value);
 }
 
 void GPU_Program::set_uniform(const char* name, float a)
 {
     GLint location = glGetUniformLocation(handle, name);
-    glUniform1f( location, a );
+    glUniform1f(location, a);
 }
 
-void GPU_Program::set_uniform(const char* name, float a[4])
+void GPU_Program::set_uniform(const char* name, const float a[4])
 {
     GLint location = glGetUniformLocation(handle, name);
-    glUniform4fv( location, 1, a );
+    glUniform4fv(location, 1, a);
 }
 
-void GPU_Program::set_uniform_matrix(const char* name, float a[16])
+void GPU_Program::set_uniform_matrix(const char* name, const float a[16])
 {
     GLint location = glGetUniformLocation(handle, name);
-    glUniformMatrix4fv( location, 1, GL_FALSE, a);
+    glUniformMatrix4fv(location, 1, GL_FALSE, a);
 }
 //-----------------------------------------------------------------------------

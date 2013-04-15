@@ -102,8 +102,10 @@ public:
         for(int i=0;i<4;++i)
             for(int j=0;j<4;++j)
             {
+                float tmp = 0.0f;
                 for(int k=0;k<4;++k)
-                    array[i*4+j] += a.array[i*4+k] * b.array[k*4+j];
+                    tmp += a.array[k*4+j] * b.array[i*4+k];
+                array[i*4+j] = tmp;
             }
     }
 
@@ -166,7 +168,7 @@ public:
         return ret;
     }
 
-    void projection(float fov, float aspect, float znear, float zfar)
+    void perspective(float fov, float aspect, float znear, float zfar)
     {
         const float pi = 3.14159265f;
 
@@ -181,29 +183,32 @@ public:
         array[12] = 0.0f;       array[13] =  0.0f; array[14] = -1;    array[15] =  0.0f;
     }
 
-    static matrix rotate(const vector& v) // create rotation
+    void translate(const vector& v)
+    {
+        array[12] = v.x;
+        array[13] = v.y;
+        array[14] = v.z;
+    }
+
+    void rotate(const vector& v)
     {
         vector rad = v * 0.01745329f;
-        matrix r;
-        r.identity();
 
         float sx = sin(rad.x), cx = cos(rad.x);
         float sy = sin(rad.y), cy = cos(rad.y);
         float sz = sin(rad.z), cz = cos(rad.z);
 
-        r.array[0] = cy*cz; 
-        r.array[1] = sx*sy*cz-cx*sz;
-        r.array[2] = cx*sy*cz+sx*sz;
+        array[0] = cy*cz;
+        array[1] = sx*sy*cz-cx*sz;
+        array[2] = cx*sy*cz+sx*sz;
 
-        r.array[4] = cy*sz; 
-        r.array[5] = sx*sy*sz+cx*cz;
-        r.array[6] = cx*sy*sz-sx*cz;
+        array[4] = cy*sz;
+        array[5] = sx*sy*sz+cx*cz;
+        array[6] = cx*sy*sz-sx*cz;
 
-        r.array[8] = -sy;
-        r.array[9] = sx*cy;
-        r.array[10]= cx*cy;
-
-        return r;
+        array[8] = -sy;
+        array[9] = sx*cy;
+        array[10]= cx*cy;
     }
 };
 

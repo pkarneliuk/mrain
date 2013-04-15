@@ -62,12 +62,8 @@ protected:
 
 typedef BufferObject<GL_ARRAY_BUFFER> VBO;
 
-
-template<typename T, bool NoHoles = (sizeof(T) == T::Elements::size)> class VBO_AoS;
-
-
 template<typename T>
-class VBO_AoS<T, true>: public VBO // Array of Structures 'T' in Vertex Buffer Object
+class VBO_AoS: public VBO // Array of Structures 'T' in Vertex Buffer Object
 {
 public:
     void create(const unsigned int num, const T* array, GLenum usage)
@@ -82,9 +78,11 @@ public:
 
     void set_data(const unsigned int offset, const unsigned int num, const T* data)
     {
-        VBO::set_data(offset * sizeof(T), num * * sizeof(T), data);
+        VBO::set_data(offset * sizeof(T), num * sizeof(T), data);
     }
 };
+
+struct NullType {};
 
 template<typename T>
 class VBO_SoA: public VBO // Structure 'T' of Arrays in Vertex Buffer Object
@@ -94,6 +92,22 @@ public:
     {
         alloc(num * T::size, usage);
       //  glBufferSubData(target, offset, size, data);
+    }
+
+    void set_attribs()
+    {
+        set_attrib<T>();
+      //  glBufferSubData(target, offset, size, data);
+    }
+
+protected:
+
+
+    template<typename A>
+    void set_attrib()
+    {
+        glVertexAttribPointer((GLuint)A::id, A::type::num, A::type::type, GL_FALSE, 0, 0);
+        set_attrib<A::next>();
     }
 };
 //-----------------------------------------------------------------------------

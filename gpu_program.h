@@ -74,8 +74,8 @@ public:
 
     void set_sampler(const char* name, int value);
     void set_uniform(const char* name, float a);
-    void set_uniform(const char* name, float a[4]);
-    void set_uniform_matrix(const char* name, float a[16]);
+    void set_uniform(const char* name, const float a[4]);
+    void set_uniform_matrix(const char* name, const float a[16]);
 
     static inline void use_default(){ glUseProgram(0); }
 
