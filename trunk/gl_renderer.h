@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // "Matrix Rain" - screensaver for X Server Systems
 // file name:   gl_renderer.h
-// copyright:   (C) 2008, 2009 by Pavel Karneliuk
+// copyright:   (C) 2008, 2009, 2013 by Pavel Karneliuk
 // license:     GNU General Public License v2
 // e-mail:      pavel_karneliuk@users.sourceforge.net
 //-----------------------------------------------------------------------------
@@ -13,6 +13,7 @@
 #include "blas.h"
 #include "gl_context.h"
 #include "stuff.h"
+#include "transform.h"
 //-----------------------------------------------------------------------------
 class GLRenderer:private GLContext
 {
@@ -88,18 +89,15 @@ public:
     void reshape(unsigned int width, unsigned int height);
     unsigned int draw();
 
-    const matrix& get_projection()const { return projection; }
-    const matrix& get_modelview ()const { return modelview;  }
+    const Transform& get_transform() { return transformation; }
 
 private:
     GLRenderer(class NativeWindow* win);
     ~GLRenderer();
 
     Version gl_version;
+    Transform transformation;
     class Triangle* triangle;
-
-    matrix projection;
-    matrix modelview;
 };
 //-----------------------------------------------------------------------------
 #endif//GL_RENDERER_H

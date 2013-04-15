@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // "Matrix Rain" - screensaver for X Server Systems
 // file name:   gl_renderer.cpp
-// copyright:   (C) 2008, 2009 by Pavel Karneliuk
+// copyright:   (C) 2008, 2009, 2013 by Pavel Karneliuk
 // license:     GNU General Public License v2
 // e-mail:      pavel_karneliuk@users.sourceforge.net
 //-----------------------------------------------------------------------------
@@ -17,50 +17,6 @@
 #include "buffer_object.h"
 #include "gpu_program.h"
 //-----------------------------------------------------------------------------
-/*
-template<typename T, typename U>
-struct Type
-{
-    typedef T type;
-    typedef U next;
-    enum {
-        size   = sizeof(T) + U::size,
-        offset = U::offset + U::size,
-    };
-};
-
-template<typename U>
-struct Type<void, U>
-{
-    typedef void type;
-    enum {
-        size   = 0,
-        offset = 0,
-    };
-};
-
-template <typename M1=void,
-          typename M2=void,
-          typename M3=void,
-          typename M4=void,
-          typename M5=void,
-          typename M6=void,
-          typename M7=void,
-          typename M8=void>
-class Elements: public Type<M1, 
-                       Type<M2, 
-                       Type<M3, 
-                       Type<M4, 
-                       Type<M5, 
-                       Type<M6, 
-                       Type<M7, 
-                       Type<M8, 
-                       Type<void, void>  > > > >  > > > >
-{
-};
-
-*/
-
 
 template<typename T, typename U>
 struct Attrib
@@ -68,27 +24,33 @@ struct Attrib
     typedef T type;
     typedef U next;
     enum {
-        size   = sizeof(T) + U::size,
+        size = sizeof(T) + U::size,
+        length = 1 + U::length,
+        id   = 1 + U::id,
     };
 };
+
+//struct NullType {};
 
 template<typename U>
-struct Attrib<void, U>
+struct Attrib<NullType, U>
 {
-    typedef void type;
+    typedef NullType type;
     enum {
         size   = 0,
+        length = 0,
+        id     = 0,
     };
 };
 
-template <typename M1=void,
-          typename M2=void,
-          typename M3=void,
-          typename M4=void,
-          typename M5=void,
-          typename M6=void,
-          typename M7=void,
-          typename M8=void>
+template <typename M1=NullType,
+          typename M2=NullType,
+          typename M3=NullType,
+          typename M4=NullType,
+          typename M5=NullType,
+          typename M6=NullType,
+          typename M7=NullType,
+          typename M8=NullType>
 class Elements: public Attrib<M1, 
                        Attrib<M2, 
                        Attrib<M3, 
@@ -97,16 +59,15 @@ class Elements: public Attrib<M1,
                        Attrib<M6, 
                        Attrib<M7, 
                        Attrib<M8, 
-                       Attrib<void, void>  > > > >  > > > >
+                       Attrib<NullType, NullType>  > > > >  > > > >
 {
 };
-
 
 
 class Triangle
 {
 public:
-    Triangle(const GLRenderer& renderer):transform(renderer.get_projection())
+    Triangle(const Transform& t):transform(t)
     {
         const GLfloat v[] = {
                               0.0f, 0.0f, 0.0f,
@@ -122,26 +83,16 @@ public:
 
         ///!!!!!! type, offset, size, data
 
-        struct V : public Elements<GLRenderer::V3F,
-                                   GLRenderer::C3F,
-                                   GLRenderer::T2F>
-        {
+        typedef Elements<GLRenderer::V3F, GLRenderer::C3F, GLRenderer::T2F> W;
 
-            typedef V Elements;
+       // W::
+
+        struct V
+        {
             GLRenderer::V3F v;
             GLRenderer::C3F c;
             GLRenderer::T2F t;
         };
-
-        const unsigned int num=3;
-        V data[num];
-
-
-
-        VBO_AoS<V> dummy;
-
-        dummy.create(num, data, GL_STATIC_DRAW);
-
 
         glGenVertexArrays(sizeof(vao)/sizeof(vao[0]), vao);
         glGenBuffers(sizeof(vbo)/sizeof(vbo[0]), vbo);
@@ -171,12 +122,13 @@ public:
         "in  vec3 position;"
         "in  vec3 color;"
         "uniform mat4 projectionMatrix;"
+        "uniform mat4 modelviewMatrix;"
+        "uniform mat4 worldMatrix;"
+        "uniform mat4 transformMatrix;"
         "out vec3 ex_Color;"
         "void main(void)"
         "{"
-        "    vec3 v = position;"
-                "    v.z -= 1.0;"
-        "    gl_Position = projectionMatrix * vec4(v, 1.0);"
+        "    gl_Position = transformMatrix * worldMatrix * vec4(position, 1.0);"
         "    ex_Color = color;"
         "}";
 
@@ -202,12 +154,13 @@ public:
         program.attach(fshader);
         program.bind(0, "position");
         program.bind(1, "color");
-//        program.bind(2, "projectionMatrix");
 
         program.link();
         program.validate();
         program.log();
 
+        world.identity();
+        world.translate(vector(0,0,-2));
     }
 
     ~Triangle()
@@ -224,7 +177,10 @@ public:
 
         program.use();
 
-        program.set_uniform_matrix("projectionMatrix", (float*)transform.array);
+        program.set_uniform_matrix("projectionMatrix",  transform.get_projection().array);
+        program.set_uniform_matrix("modelviewMatrix",  transform.get_modelview().array);
+        program.set_uniform_matrix("transformMatrix",  transform.get_transform().array);
+        program.set_uniform_matrix("worldMatrix",  world.array);
 
         glBindVertexArray(vao[0]);
         glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -237,7 +193,8 @@ public:
     GLuint vbo[2];
 
     GPU_Program program;
-    const matrix& transform;
+    matrix world;
+    const Transform& transform;
 };
 
 //-----------------------------------------------------------------------------
@@ -261,7 +218,7 @@ GLRenderer::GLRenderer(NativeWindow* win):GLContext(win),triangle(NULL)
     win->get_size(&width, &height);
     reshape(width, height);
 
-    triangle = new Triangle(*this);
+    triangle = new Triangle(get_transform());
 }
 
 GLRenderer::~GLRenderer()
@@ -279,8 +236,7 @@ void GLRenderer::reshape(unsigned int width, unsigned int height)
     const float znear = 1.0f;
     const float zfar  = 1000.0f;
 
-    projection.projection(fov, aspect, znear, zfar);
-    modelview.identity();
+    transformation.set_perspective(fov, aspect, znear, zfar);
 
     GLdouble b = znear * tan( fov / 360.0 * pi );
     GLdouble a = b * aspect;
