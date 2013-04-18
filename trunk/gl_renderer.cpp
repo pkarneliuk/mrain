@@ -15,104 +15,135 @@
 #include "native_window.h"
 #include "gl_renderer.h"
 #include "buffer_object.h"
+#include "vao.h"
 #include "gpu_program.h"
 //-----------------------------------------------------------------------------
-
-template<typename T, typename U>
-struct Attrib
+namespace Meta
 {
-    typedef T type;
-    typedef U next;
-    enum {
-        size = sizeof(T) + U::size,
-        length = 1 + U::length,
-        id   = 1 + U::id,
+    struct NullType;
+
+    template<typename T, typename U>
+    struct Node:public T, public U
+    {
+        typedef T element;
+        typedef U next;
+        enum {
+            size = sizeof(T) + U::size,
+            length = 1 + U::length,
+        };
     };
-};
 
-//struct NullType {};
-
-template<typename U>
-struct Attrib<NullType, U>
-{
-    typedef NullType type;
-    enum {
-        size   = 0,
-        length = 0,
-        id     = 0,
+    template<typename U>
+    struct Node<void, U>
+    {
+        typedef void element;
+        enum {
+            size   = 0,
+            length = 0,
+        };
     };
-};
 
-template <typename M1=NullType,
-          typename M2=NullType,
-          typename M3=NullType,
-          typename M4=NullType,
-          typename M5=NullType,
-          typename M6=NullType,
-          typename M7=NullType,
-          typename M8=NullType>
-class Elements: public Attrib<M1, 
-                       Attrib<M2, 
-                       Attrib<M3, 
-                       Attrib<M4, 
-                       Attrib<M5, 
-                       Attrib<M6, 
-                       Attrib<M7, 
-                       Attrib<M8, 
-                       Attrib<NullType, NullType>  > > > >  > > > >
-{
-};
+    template <typename M1=void,
+              typename M2=void,
+              typename M3=void,
+              typename M4=void,
+              typename M5=void,
+              typename M6=void,
+              typename M7=void,
+              typename M8=void>
+    class Structure
+    {
+    private:
+        typedef Node<M1,
+                Node<M2,
+                Node<M3,
+                Node<M4,
+                Node<M5,
+                Node<M6,
+                Node<M7,
+                Node<M8,
+                Node<void, void>  > > > >  > > > > list;
+
+
+        // Indexing types
+        template<typename List, unsigned int i> struct index;
+
+        template<typename T, typename U, unsigned int i>
+        struct index<Node<T, U>, i>
+        {
+            typedef typename index<U, i - 1>::type type;
+        };
+
+        template<typename T, typename U>
+        struct index<Node<T,U>, 0>
+        {
+            typedef T type;
+        };
+
+        // Bind
+        template<
+            typename List,       // list of data types in Nodes<T,U>
+            unsigned int Index,  // index of vertex attribute array
+            unsigned int Offset, // offset at begin of buffer object
+            unsigned int SizeOf  // size of structure
+        > struct bind;
+
+        template<typename T, typename U, unsigned int Index, unsigned int Offset, unsigned int SizeOf>
+        struct bind<Node<T, U>, Index, Offset, SizeOf>
+        {
+            static inline void bi(const GLuint number)
+            {
+                glVertexAttribPointer(Index, T::num, T::type, GL_FALSE, 0, (const GLvoid*)(number * Offset));
+                glEnableVertexAttribArray(Index);
+
+                bind<U, Index+1, Offset + sizeof(T), SizeOf>::bi(number); // recursive call template
+            }
+        };
+
+        template<typename U, unsigned int Index, unsigned int Offset, unsigned int SizeOf>
+        struct bind<Node<void, U>, Index, Offset, SizeOf>
+        {
+            static inline void bi(const GLuint /*number*/){}
+        };
+
+    public:
+        template <unsigned int i>
+        struct Index: index<list, i>
+        {
+        };
+
+        struct Bind: bind<list, 0, 0, sizeof(list)>
+        {
+        };
+    };
+
+} // Meta namespace
 
 
 class Triangle
 {
 public:
-    Triangle(const Transform& t):transform(t)
+    Triangle()
     {
-        const GLfloat v[] = {
-                              0.0f, 0.0f, 0.0f,
-                              0.0f, 1.0f, 0.0f,
-                              1.0f, 0.0f, 0.0f,
-                            }; // vertex
+        unsigned int num_vertices = 3;
+        const GLfloat vc[] = {
+                                // vertex
+                                0.0f, 0.0f, 0.0f,
+                                0.0f, 1.0f, 0.0f,
+                                1.0f, 0.0f, 0.0f,
+                                // color
+                                1.0f, 0.0f, 0.0f,
+                                0.0f, 1.0f, 0.0f,
+                                0.0f, 0.0f, 1.0f,
+                            };
 
-        const GLfloat c[] = {
-                              1.0f, 0.0f, 0.0f,
-                              0.0f, 1.0f, 0.0f,
-                              0.0f, 0.0f, 1.0f,
-                            }; // color
-
-        ///!!!!!! type, offset, size, data
-
-        typedef Elements<GLRenderer::V3F, GLRenderer::C3F, GLRenderer::T2F> W;
-
-       // W::
-
-        struct V
-        {
-            GLRenderer::V3F v;
-            GLRenderer::C3F c;
-            GLRenderer::T2F t;
-        };
-
-        glGenVertexArrays(sizeof(vao)/sizeof(vao[0]), vao);
-        glGenBuffers(sizeof(vbo)/sizeof(vbo[0]), vbo);
+        typedef Meta::Structure<GLRenderer::V3F, GLRenderer::C3F> V3F_C3F;
 
 
-        glBindVertexArray(vao[0]);
+        vbo.bind();
+        vbo.create(num_vertices, (V*) vc, GL_STATIC_DRAW);
 
-        glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(v), v, GL_STATIC_DRAW);
-        glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-        glEnableVertexAttribArray(0);
-
-        glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(c), c, GL_STATIC_DRAW);
-        glVertexAttribPointer((GLuint)1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-        glEnableVertexAttribArray(1);
-        
-        glBindVertexArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
+        vao.bind_buffer<V3F_C3F>(vbo, num_vertices);
 
 
 
@@ -162,33 +193,33 @@ public:
 
     ~Triangle()
     {
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDeleteBuffers(sizeof(vbo)/sizeof(vbo[0]), vbo);
-
-        glBindVertexArray(0);
-        glDeleteVertexArrays(sizeof(vao)/sizeof(vao[0]), vao);
     }
 
-    void draw()
+    void draw(const Transform& transform)
     {
 
         program.use();
 
         transform.bind_to(program, model);
 
-        glBindVertexArray(vao[0]);
+        vao.bind();
+
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
         GPU_Program::use_default();
     }
 
+    struct V
+    {
+        GLRenderer::V3F v;
+        GLRenderer::C3F c;
+    };
 
-    GLuint vao[1];
-    GLuint vbo[2];
+    VBO_AoS<V> vbo;
+    VAO vao;
 
     GPU_Program program;
     matrix model;
-    const Transform& transform;
 };
 
 //-----------------------------------------------------------------------------
@@ -212,7 +243,7 @@ GLRenderer::GLRenderer(NativeWindow* win):GLContext(win),triangle(NULL)
     win->get_size(&width, &height);
     reshape(width, height);
 
-    triangle = new Triangle(get_transform());
+    triangle = new Triangle();
 }
 
 GLRenderer::~GLRenderer()
@@ -246,9 +277,7 @@ unsigned int GLRenderer::draw()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glLoadIdentity();
-
-    triangle->draw();
+    triangle->draw(transformation);
 
     return 0;
 }
