@@ -81,35 +81,6 @@ public:
         VBO::set_data(offset * sizeof(T), num * sizeof(T), data);
     }
 };
-
-struct NullType {};
-
-template<typename T>
-class VBO_SoA: public VBO // Structure 'T' of Arrays in Vertex Buffer Object
-{
-public:
-    void set_data(unsigned int num, T& structure, GLenum usage)
-    {
-        alloc(num * T::size, usage);
-      //  glBufferSubData(target, offset, size, data);
-    }
-
-    void set_attribs()
-    {
-        set_attrib<T>();
-      //  glBufferSubData(target, offset, size, data);
-    }
-
-protected:
-
-
-    template<typename A>
-    void set_attrib()
-    {
-        glVertexAttribPointer((GLuint)A::id, A::type::num, A::type::type, GL_FALSE, 0, 0);
-        set_attrib<A::next>();
-    }
-};
 //-----------------------------------------------------------------------------
 #endif//BUFFER_OBJECT_H
 //-----------------------------------------------------------------------------

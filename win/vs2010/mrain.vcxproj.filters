@@ -168,5 +168,8 @@
     <ClInclude Include="..\..\transform.h">
       <Filter>headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\vao.h">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
