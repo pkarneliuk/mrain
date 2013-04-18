@@ -226,6 +226,7 @@
     <ClCompile Include="..\..\stuff.cpp" />
     <ClCompile Include="..\..\texture_array.cpp" />
     <ClCompile Include="..\..\texture_atlas.cpp" />
+    <ClCompile Include="..\..\transform.cpp" />
     <ClCompile Include="..\..\video_buffer.cpp" />
     <ClCompile Include="..\capture.cpp" />
     <ClCompile Include="..\gl_context.cpp" />

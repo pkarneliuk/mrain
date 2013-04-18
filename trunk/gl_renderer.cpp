@@ -121,14 +121,11 @@ public:
         "#version 130\n"
         "in  vec3 position;"
         "in  vec3 color;"
-        "uniform mat4 projectionMatrix;"
-        "uniform mat4 modelviewMatrix;"
-        "uniform mat4 worldMatrix;"
-        "uniform mat4 transformMatrix;"
+        "uniform mat4 transform;"
         "out vec3 ex_Color;"
         "void main(void)"
         "{"
-        "    gl_Position = transformMatrix * worldMatrix * vec4(position, 1.0);"
+        "    gl_Position = transform * vec4(position, 1.0);"
         "    ex_Color = color;"
         "}";
 
@@ -159,8 +156,8 @@ public:
         program.validate();
         program.log();
 
-        world.identity();
-        world.translate(vector(0,0,-2));
+        model.identity();
+        model.translate(vector(0,0,-2));
     }
 
     ~Triangle()
@@ -177,10 +174,7 @@ public:
 
         program.use();
 
-        program.set_uniform_matrix("projectionMatrix",  transform.get_projection().array);
-        program.set_uniform_matrix("modelviewMatrix",  transform.get_modelview().array);
-        program.set_uniform_matrix("transformMatrix",  transform.get_transform().array);
-        program.set_uniform_matrix("worldMatrix",  world.array);
+        transform.bind_to(program, model);
 
         glBindVertexArray(vao[0]);
         glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -193,7 +187,7 @@ public:
     GLuint vbo[2];
 
     GPU_Program program;
-    matrix world;
+    matrix model;
     const Transform& transform;
 };
 

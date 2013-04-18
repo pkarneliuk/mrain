@@ -11,8 +11,7 @@
 #define TRANSFORM_H
 //-----------------------------------------------------------------------------
 #include "blas.h"
-#include "gl_context.h"
-#include "stuff.h"
+#include "gpu_program.h"
 //-----------------------------------------------------------------------------
 class Transform
 {
@@ -20,9 +19,8 @@ public:
 
     Transform()
     {
-        projection.identity();
-        modelview.identity();
-        transform.identity();
+        proj.identity();
+        view.identity();
     }
     ~Transform(){}
 
@@ -31,31 +29,33 @@ public:
 
     void set_perspective(float fov, float aspect, float znear, float zfar)
     {
-        projection.perspective(fov, aspect, znear, zfar);
-        transform.mul(projection, modelview);
+        proj.perspective(fov, aspect, znear, zfar);
+        projview.mul(proj, view);
     }
 
     void set_translate(const vector& position)
     {
-        modelview.translate(position);
-        transform.mul(projection, modelview);
+        view.translate(position);
+        projview.mul(proj, view);
     }
 
     void set_rotate(const vector& orientation)
     {
-        modelview.rotate(orientation);
-        transform.mul(projection, modelview);
+        view.rotate(orientation);
+        projview.mul(proj, view);
     }
 
-    const matrix& get_projection()const { return projection; }
-    const matrix& get_modelview ()const { return modelview;  }
-    const matrix& get_transform ()const { return transform;  }
+    const matrix& get_proj()const { return proj; }
+    const matrix& get_view()const { return view; }
+    const matrix& get_projview()const { return projview; }
+
+    void bind_to(GPU_Program& program, const matrix& model)const;
 
 private:
 
-    matrix projection;
-    matrix modelview;
-    matrix transform;   // projection * modelview
+    matrix proj;
+    matrix view;
+    matrix projview; // proj * view
 };
 //-----------------------------------------------------------------------------
 #endif//TRANSFORM_H
