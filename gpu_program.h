@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // "Matrix Rain" - screensaver for X Server Systems
 // file name:   gpu_program.h
-// copyright:   (C) 2008, 2009 by Pavel Karneliuk
+// copyright:   (C) 2008, 2009, 2013 by Pavel Karneliuk
 // license:     GNU General Public License v2
 // e-mail:      pavel_karneliuk@users.sourceforge.net
 //-----------------------------------------------------------------------------
@@ -10,7 +10,7 @@
 #ifndef GPU_PROGRAM_H
 #define GPU_PROGRAM_H
 //-----------------------------------------------------------------------------
-#include "gl_renderer.h"
+#include "gl_context.h"
 //-----------------------------------------------------------------------------
 class Shader
 {

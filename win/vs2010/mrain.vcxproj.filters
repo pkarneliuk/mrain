@@ -88,6 +88,9 @@
     <ClCompile Include="..\..\base_capture.cpp">
       <Filter>sources</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\transform.cpp">
+      <Filter>sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\capture.h">
