@@ -39,8 +39,13 @@ public:
         glBindVertexArray(0);
     }
 
-    template <typename Layout, typename Buffer>
-    void bind_buffer(Buffer& vbo, unsigned int num_verticies)
+
+
+
+
+
+    template <typename Layout, bool Interleaved>
+    void bind_VBO(VBO<Layout, Interleaved>& /*unused*/, unsigned int num_verticies)
     {
         bind();
         Layout::Bind::bi(num_verticies);
