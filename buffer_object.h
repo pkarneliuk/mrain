@@ -60,25 +60,23 @@ protected:
     GLuint buffer;
 };
 
-typedef BufferObject<GL_ARRAY_BUFFER> VBO;
+typedef BufferObject<GL_ARRAY_BUFFER> VBOBase;
 
-template<typename T>
-class VBO_AoS: public VBO // Array of Structures 'T' in Vertex Buffer Object
+template<
+    typename T,
+    bool Interleaved=true // true - Array of Structures 'T' false - Structure 'T' of Arrays
+>
+class VBO: public VBOBase
 {
 public:
-    void create(const unsigned int num, const T* array, GLenum usage)
+    void create(const unsigned int num, const void* array, GLenum usage)
     {
-        VBO::create(num * sizeof(T), array, usage);
+        VBOBase::create(num * sizeof(T), array, usage);
     }
 
     void alloc(const unsigned int num, GLenum usage)
     {
-        VBO::alloc(num * sizeof(T), usage);
-    }
-
-    void set_data(const unsigned int offset, const unsigned int num, const T* data)
-    {
-        VBO::set_data(offset * sizeof(T), num * sizeof(T), data);
+        VBOBase::alloc(num * sizeof(T), usage);
     }
 };
 //-----------------------------------------------------------------------------

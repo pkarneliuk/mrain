@@ -20,28 +20,30 @@
 //-----------------------------------------------------------------------------
 namespace Meta
 {
-    struct NullType;
 
-    template<typename T, typename U>
-    struct Node:public T, public U
-    {
-        typedef T element;
-        typedef U next;
-        enum {
-            size = sizeof(T) + U::size,
-            length = 1 + U::length,
-        };
-    };
+            struct NullType;
 
-    template<typename U>
-    struct Node<void, U>
-    {
-        typedef void element;
-        enum {
-            size   = 0,
-            length = 0,
+        template<typename T, typename U>
+        struct Node:public T, public U
+        {
+            typedef T element;
+            typedef U next;
+            enum {
+                size = sizeof(T) + U::size,
+                length = 1 + U::length,
+            };
         };
-    };
+
+        template<typename U>
+        struct Node<void, U>
+        {
+            typedef void element;
+            enum {
+                size   = 0,
+                length = 0,
+            };
+        };
+
 
     template <typename M1=void,
               typename M2=void,
@@ -53,7 +55,14 @@ namespace Meta
               typename M8=void>
     class Structure
     {
-    private:
+
+    public:
+
+
+
+
+
+    public:
         typedef Node<M1,
                 Node<M2,
                 Node<M3,
@@ -64,6 +73,9 @@ namespace Meta
                 Node<M8,
                 Node<void, void>  > > > >  > > > > list;
 
+        char dummy[sizeof(list)]; // for valid sizeof
+    public:
+        Structure(); // undefiend
 
         // Indexing types
         template<typename List, unsigned int i> struct index;
@@ -80,6 +92,7 @@ namespace Meta
             typedef T type;
         };
 
+    public:
         // Bind
         template<
             typename List,       // list of data types in Nodes<T,U>
@@ -106,12 +119,11 @@ namespace Meta
             static inline void bi(const GLuint /*number*/){}
         };
 
-    public:
         template <unsigned int i>
         struct Index: index<list, i>
         {
         };
-
+        
         struct Bind: bind<list, 0, 0, sizeof(list)>
         {
         };
@@ -122,6 +134,8 @@ namespace Meta
 
 class Triangle
 {
+    typedef Meta::Structure<GLRenderer::V3F, GLRenderer::C3F> V3F_C3F;
+
 public:
     Triangle()
     {
@@ -137,15 +151,10 @@ public:
                                 0.0f, 0.0f, 1.0f,
                             };
 
-        typedef Meta::Structure<GLRenderer::V3F, GLRenderer::C3F> V3F_C3F;
-
-
         vbo.bind();
-        vbo.create(num_vertices, (V*) vc, GL_STATIC_DRAW);
+        vbo.create(num_vertices, vc, GL_STATIC_DRAW);
 
-        vao.bind_buffer<V3F_C3F>(vbo, num_vertices);
-
-
+        vao.bind_VBO(vbo, num_vertices);
 
         Shader vshader(Shader::Vertex);
         const GLchar* vertex_shader = 
@@ -189,6 +198,7 @@ public:
 
         model.identity();
         model.translate(vector(0,0,-2));
+
     }
 
     ~Triangle()
@@ -209,13 +219,7 @@ public:
         GPU_Program::use_default();
     }
 
-    struct V
-    {
-        GLRenderer::V3F v;
-        GLRenderer::C3F c;
-    };
-
-    VBO_AoS<V> vbo;
+    VBO<V3F_C3F> vbo;
     VAO vao;
 
     GPU_Program program;
