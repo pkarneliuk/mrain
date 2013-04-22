@@ -48,24 +48,43 @@ private:
     template<typename T, typename U>
     struct Bind
     {
-        static inline void func(GLuint index, GLuint number, size_t offset)
+        static inline void interlaced(GLsizei stride, GLuint index, size_t offset)
         {
-            glVertexAttribPointer(index, T::num, T::type, GL_FALSE, 0, (const GLvoid*)(number * offset));
+            glVertexAttribPointer(index, T::num, T::type, GL_FALSE, stride, (const GLvoid*)(offset));
             glEnableVertexAttribArray(index);
 
-            Bind<U::element, U::next>::func(index+1, number, offset + sizeof(T)); // recursive call template
+            Bind<U::element, U::next>::interlaced(stride, index+1, offset + sizeof(T)); // recursive call template
+        }
+
+        static inline void serial(GLuint number, GLuint index, size_t offset)
+        {
+            glVertexAttribPointer(index, T::num, T::type, GL_FALSE, 0, (const GLvoid*)(number*offset));
+            glEnableVertexAttribArray(index);
+
+            Bind<U::element, U::next>::serial(number, index+1, offset + sizeof(T));
         }
     };
 
-    template<typename U> struct Bind<void, U> { static inline void func(GLuint, GLuint, size_t){} };
+    template<typename U> struct Bind<void, U>
+    {
+        static inline void interlaced(GLsizei, GLuint, size_t){}
+        static inline void serial     (GLuint, GLuint, size_t){}
+    };
+
+    template<typename List> struct BindList:Bind<typename List::element, typename List::next>{};
 
 public:
 
-    template <typename Layout, bool Interleaved>
-    void bind(VBO<Layout, Interleaved>& /*unused*/, unsigned int num_verticies)
+    template <typename Layout> // interlaced placement in VBO f.e: (VNCVNCVNCVNC)
+    void bind(VBO<Layout, true>&, GLuint n, GLuint first_index)
     {
-        bind();
-        Bind<typename Layout::list::element, typename Layout::list::next>::func(0, num_verticies, 0);
+        BindList<Layout::list>::interlaced(sizeof(Layout), first_index, 0);
+    }
+
+    template <typename Layout> // serial placement in VBO f.e: (VVVVNNNNCCCC)
+    void bind(VBO<Layout, false>&, GLuint n, GLuint first_index)
+    {
+        BindList<Layout::list>::serial(n, first_index, 0);
     }
 
 protected:
