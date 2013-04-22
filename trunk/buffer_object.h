@@ -64,7 +64,7 @@ typedef BufferObject<GL_ARRAY_BUFFER> VBOBase;
 
 template<
     typename T,
-    bool Interleaved=true // true - Array of Structures 'T' false - Structure 'T' of Arrays
+    bool Interleaved=false // true - Array of Structures 'T' false - Structure 'T' of Arrays
 >
 class VBO: public VBOBase
 {

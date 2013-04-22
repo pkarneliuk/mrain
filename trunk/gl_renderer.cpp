@@ -36,7 +36,6 @@ public:
         typedef U next;
     };
 
-public:
     typedef Node<M1,
             Node<M2,
             Node<M3,
@@ -87,11 +86,17 @@ public:
                                 0.0f, 0.0f, 1.0f,
                             };
 
+        const GLfloat vc_interlaced[] = {
+                        // vertex           // color
+                        1.0f, 1.0f, 0.0f,   1.0f, 0.0f, 0.0f,
+                        0.0f, 1.0f, 0.0f,   0.0f, 1.0f, 0.0f,
+                        1.0f, 0.0f, 0.0f,   0.0f, 0.0f, 1.0f,
+                    };
+
         vbo.bind();
-        vbo.create(num_vertices, vc, GL_STATIC_DRAW);
-
-        vao.bind(vbo, num_vertices);
-
+        vbo.create(num_vertices, vc_interlaced, GL_STATIC_DRAW);
+        vao.bind();
+        vao.bind(vbo, num_vertices, 0);
         vao.unbind();
 
         Shader vshader(Shader::Vertex);
@@ -136,7 +141,6 @@ public:
 
         model.identity();
         model.translate(vector(0,0,-2));
-
     }
 
     ~Triangle()
@@ -145,19 +149,16 @@ public:
 
     void draw(const Transform& transform)
     {
-
         program.use();
 
         transform.bind_to(program, model);
-
         vao.bind();
-
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
         GPU_Program::use_default();
     }
 
-    VBO<V3F_C3F> vbo;
+    VBO<V3F_C3F, true> vbo;
     VAO vao;
 
     GPU_Program program;
