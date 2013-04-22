@@ -81,6 +81,16 @@ public:
         };
     };
 
+    struct C4UB
+    {
+        enum{ num=4, type=GL_UNSIGNED_BYTE };
+        union
+        {
+            struct{ GLubyte rgba[num]; };
+            struct{ GLubyte r,g,b,a;   };
+        };
+    };
+
     inline const Version& version ()const   { return gl_version;              }
     inline const GLubyte* renderer()const   { return glGetString(GL_RENDERER);}
     inline const GLubyte* vendor  ()const   { return glGetString(GL_VENDOR);  }
