@@ -171,5 +171,8 @@
     <ClInclude Include="..\..\vao.h">
       <Filter>headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\vertex_data.h">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

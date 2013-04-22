@@ -40,9 +40,6 @@ public:
     }
 
 
-
-
-
 private:
     // Bind
     template<typename T, typename U>
