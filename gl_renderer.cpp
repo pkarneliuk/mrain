@@ -18,123 +18,61 @@
 #include "vao.h"
 #include "gpu_program.h"
 //-----------------------------------------------------------------------------
-namespace Meta
+template <typename M1=void,
+          typename M2=void,
+          typename M3=void,
+          typename M4=void,
+          typename M5=void,
+          typename M6=void,
+          typename M7=void,
+          typename M8=void>
+class Structure
 {
-
-            struct NullType;
-
-        template<typename T, typename U>
-        struct Node:public T, public U
-        {
-            typedef T element;
-            typedef U next;
-            enum {
-                size = sizeof(T) + U::size,
-                length = 1 + U::length,
-            };
-        };
-
-        template<typename U>
-        struct Node<void, U>
-        {
-            typedef void element;
-            enum {
-                size   = 0,
-                length = 0,
-            };
-        };
-
-
-    template <typename M1=void,
-              typename M2=void,
-              typename M3=void,
-              typename M4=void,
-              typename M5=void,
-              typename M6=void,
-              typename M7=void,
-              typename M8=void>
-    class Structure
+public:
+    template<typename T, typename U>
+    struct Node
     {
-
-    public:
-
-
-
-
-
-    public:
-        typedef Node<M1,
-                Node<M2,
-                Node<M3,
-                Node<M4,
-                Node<M5,
-                Node<M6,
-                Node<M7,
-                Node<M8,
-                Node<void, void>  > > > >  > > > > list;
-
-        char dummy[sizeof(list)]; // for valid sizeof
-    public:
-        Structure(); // undefiend
-
-        // Indexing types
-        template<typename List, unsigned int i> struct index;
-
-        template<typename T, typename U, unsigned int i>
-        struct index<Node<T, U>, i>
-        {
-            typedef typename index<U, i - 1>::type type;
-        };
-
-        template<typename T, typename U>
-        struct index<Node<T,U>, 0>
-        {
-            typedef T type;
-        };
-
-    public:
-        // Bind
-        template<
-            typename List,       // list of data types in Nodes<T,U>
-            unsigned int Index,  // index of vertex attribute array
-            unsigned int Offset, // offset at begin of buffer object
-            unsigned int SizeOf  // size of structure
-        > struct bind;
-
-        template<typename T, typename U, unsigned int Index, unsigned int Offset, unsigned int SizeOf>
-        struct bind<Node<T, U>, Index, Offset, SizeOf>
-        {
-            static inline void bi(const GLuint number)
-            {
-                glVertexAttribPointer(Index, T::num, T::type, GL_FALSE, 0, (const GLvoid*)(number * Offset));
-                glEnableVertexAttribArray(Index);
-
-                bind<U, Index+1, Offset + sizeof(T), SizeOf>::bi(number); // recursive call template
-            }
-        };
-
-        template<typename U, unsigned int Index, unsigned int Offset, unsigned int SizeOf>
-        struct bind<Node<void, U>, Index, Offset, SizeOf>
-        {
-            static inline void bi(const GLuint /*number*/){}
-        };
-
-        template <unsigned int i>
-        struct Index: index<list, i>
-        {
-        };
-        
-        struct Bind: bind<list, 0, 0, sizeof(list)>
-        {
-        };
+        typedef T element;
+        typedef U next;
     };
 
-} // Meta namespace
+public:
+    typedef Node<M1,
+            Node<M2,
+            Node<M3,
+            Node<M4,
+            Node<M5,
+            Node<M6,
+            Node<M7,
+            Node<M8,
+            Node<void, void>  > > > >  > > > > list;
 
+
+private:
+    // Size
+    template<typename T, typename U>
+    struct size
+    {
+        enum {  value = sizeof(T) + size<typename U::element, typename U::next>::value };
+    };
+
+    template<typename U>
+    struct size<void, U>
+    {
+        enum { value = 0 };
+    };
+
+    typedef size<typename list::element, typename list::next> Size;
+
+    char dummy[Size::value]; // for valid sizeof(Structure)
+
+private:
+    Structure(); // undefiend
+};
 
 class Triangle
 {
-    typedef Meta::Structure<GLRenderer::V3F, GLRenderer::C3F> V3F_C3F;
+    typedef Structure<GLRenderer::V3F, GLRenderer::C3F> V3F_C3F;
 
 public:
     Triangle()
@@ -154,7 +92,9 @@ public:
         vbo.bind();
         vbo.create(num_vertices, vc, GL_STATIC_DRAW);
 
-        vao.bind_VBO(vbo, num_vertices);
+        vao.bind(vbo, num_vertices);
+
+        vao.unbind();
 
         Shader vshader(Shader::Vertex);
         const GLchar* vertex_shader = 
