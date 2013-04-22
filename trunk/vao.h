@@ -43,44 +43,29 @@ public:
 
 
 
-
+private:
     // Bind
-    template<
-        typename T,
-        typename U,
-        unsigned int Index,  // index of vertex attribute array
-        unsigned int Offset, // offset at begin of buffer object
-        unsigned int SizeOf  // size of structure
-    > struct Bind
+    template<typename T, typename U>
+    struct Bind
     {
-        static inline void func(const GLuint number)
+        static inline void func(GLuint index, GLuint number, size_t offset)
         {
-            glVertexAttribPointer(Index, T::num, T::type, GL_FALSE, 0, (const GLvoid*)(number * Offset));
-            glEnableVertexAttribArray(Index);
+            glVertexAttribPointer(index, T::num, T::type, GL_FALSE, 0, (const GLvoid*)(number * offset));
+            glEnableVertexAttribArray(index);
 
-            Bind<U::element, U::next, Index+1, Offset + sizeof(T), SizeOf>::func(number); // recursive call template
+            Bind<U::element, U::next>::func(index+1, number, offset + sizeof(T)); // recursive call template
         }
     };
 
-    template<
-        typename U,
-        unsigned int Index,  // index of vertex attribute array
-        unsigned int Offset, // offset at begin of buffer object
-        unsigned int SizeOf  // size of structure
-    >
-    struct Bind<void, U, Index, Offset, SizeOf>
-    {
-        static inline void func(const GLuint /*unused*/){}
-    };
+    template<typename U> struct Bind<void, U> { static inline void func(GLuint, GLuint, size_t){} };
 
+public:
 
     template <typename Layout, bool Interleaved>
     void bind(VBO<Layout, Interleaved>& /*unused*/, unsigned int num_verticies)
     {
         bind();
-    //    Layout::Bind::func(num_verticies);
-
-        Bind<typename Layout::list::element, typename Layout::list::next, 0, 0, sizeof(Layout)>::func(num_verticies);
+        Bind<typename Layout::list::element, typename Layout::list::next>::func(0, num_verticies, 0);
     }
 
 protected:

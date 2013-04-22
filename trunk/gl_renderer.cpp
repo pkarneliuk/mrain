@@ -53,7 +53,7 @@ private:
     template<typename T, typename U>
     struct size
     {
-        enum {  value = sizeof(T) + size<typename U::element, typename U::next>::value };
+        enum { value = sizeof(T) + size<typename U::element, typename U::next>::value };
     };
 
     template<typename U>
@@ -61,10 +61,7 @@ private:
     {
         enum { value = 0 };
     };
-
-    typedef size<typename list::element, typename list::next> Size;
-
-    char dummy[Size::value]; // for valid sizeof(Structure)
+    char dummy[size<typename list::element, typename list::next>::value]; // for valid sizeof(Structure)
 
 private:
     Structure(); // undefiend
@@ -77,6 +74,7 @@ class Triangle
 public:
     Triangle()
     {
+        static_assert(sizeof(V3F_C3F) == 24, "wrong sizeof");
         unsigned int num_vertices = 3;
         const GLfloat vc[] = {
                                 // vertex
