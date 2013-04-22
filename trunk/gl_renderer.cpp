@@ -41,7 +41,7 @@ public:
 
         const GLfloat vc_interlaced[] = {
                         // vertex           // color
-                        1.0f, 1.0f, 0.0f,   1.0f, 0.0f, 0.0f,
+                        0.0f, 0.0f, 0.0f,   1.0f, 0.0f, 0.0f,
                         0.0f, 1.0f, 0.0f,   0.0f, 1.0f, 0.0f,
                         1.0f, 0.0f, 0.0f,   0.0f, 0.0f, 1.0f,
                     };
@@ -96,10 +96,6 @@ public:
         model.translate(vector(0,0,-2));
     }
 
-    ~Triangle()
-    {
-    }
-
     void draw(const Transform& transform)
     {
         program.use();
@@ -118,7 +114,7 @@ public:
 };
 
 //-----------------------------------------------------------------------------
-GLRenderer::GLRenderer(NativeWindow* win):GLContext(win),triangle(NULL)
+GLRenderer::GLRenderer(NativeWindow* win):GLContext(win)
 {
     printf("GL version:\t%s\n", glGetString(GL_VERSION));
     printf("GLSL version:\t%s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
@@ -137,13 +133,10 @@ GLRenderer::GLRenderer(NativeWindow* win):GLContext(win),triangle(NULL)
     unsigned int height;
     win->get_size(&width, &height);
     reshape(width, height);
-
-    triangle = new Triangle();
 }
 
 GLRenderer::~GLRenderer()
 {
-    delete triangle;
 }
 
 void GLRenderer::reshape(unsigned int width, unsigned int height)
@@ -172,7 +165,8 @@ unsigned int GLRenderer::draw()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    triangle->draw(transformation);
+    static Triangle triangle;
+    triangle.draw(transformation);
 
     return 0;
 }

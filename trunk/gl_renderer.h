@@ -107,7 +107,6 @@ private:
 
     Version gl_version;
     Transform transformation;
-    class Triangle* triangle;
 };
 //-----------------------------------------------------------------------------
 #endif//GL_RENDERER_H
