@@ -14,61 +14,14 @@
 #include "blas.h"
 #include "native_window.h"
 #include "gl_renderer.h"
-#include "buffer_object.h"
-#include "vao.h"
 #include "gpu_program.h"
+#include "buffer_object.h"
+#include "vertex_data.h"
+#include "vao.h"
 //-----------------------------------------------------------------------------
-template <typename M1=void,
-          typename M2=void,
-          typename M3=void,
-          typename M4=void,
-          typename M5=void,
-          typename M6=void,
-          typename M7=void,
-          typename M8=void>
-class Structure
-{
-public:
-    template<typename T, typename U>
-    struct Node
-    {
-        typedef T element;
-        typedef U next;
-    };
-
-    typedef Node<M1,
-            Node<M2,
-            Node<M3,
-            Node<M4,
-            Node<M5,
-            Node<M6,
-            Node<M7,
-            Node<M8,
-            Node<void, void>  > > > >  > > > > list;
-
-
-private:
-    // Size
-    template<typename T, typename U>
-    struct size
-    {
-        enum { value = sizeof(T) + size<typename U::element, typename U::next>::value };
-    };
-
-    template<typename U>
-    struct size<void, U>
-    {
-        enum { value = 0 };
-    };
-    char dummy[size<typename list::element, typename list::next>::value]; // for valid sizeof(Structure)
-
-private:
-    Structure(); // undefiend
-};
-
 class Triangle
 {
-    typedef Structure<GLRenderer::V3F, GLRenderer::C3F> V3F_C3F;
+    typedef VertexData::Layout<VertexData::V3F, VertexData::C3F> V3F_C3F;
 
 public:
     Triangle()
@@ -117,7 +70,7 @@ public:
         vshader.log();
 
         Shader fshader(Shader::Fragment);
-        const GLchar* fertex_shader = 
+        const GLchar* fragment_shader = 
         "#version 130\n"
         "in  vec3 ex_Color;"
         "out vec4 out_Color;"
@@ -126,7 +79,7 @@ public:
         "    out_Color = vec4(ex_Color,1.0);"
         "}";
 
-        fshader.set_source(fertex_shader);
+        fshader.set_source(fragment_shader);
         fshader.compile();
         fshader.log();
 
@@ -150,7 +103,6 @@ public:
     void draw(const Transform& transform)
     {
         program.use();
-
         transform.bind_to(program, model);
         vao.bind();
         glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -224,5 +176,4 @@ unsigned int GLRenderer::draw()
 
     return 0;
 }
-
 //-----------------------------------------------------------------------------
