@@ -13,7 +13,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include "gl_context.h"
-#include "stuff.h"
 //-----------------------------------------------------------------------------
 class TextureArray
 {
