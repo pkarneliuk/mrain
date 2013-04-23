@@ -111,7 +111,7 @@ public:
 
     GPU_Program program;
     matrix model;
-};
+} * triangle = NULL;
 
 //-----------------------------------------------------------------------------
 GLRenderer::GLRenderer(NativeWindow* win):GLContext(win)
@@ -133,10 +133,13 @@ GLRenderer::GLRenderer(NativeWindow* win):GLContext(win)
     unsigned int height;
     win->get_size(&width, &height);
     reshape(width, height);
+
+    triangle = new Triangle();
 }
 
 GLRenderer::~GLRenderer()
 {
+    delete triangle;
 }
 
 void GLRenderer::reshape(unsigned int width, unsigned int height)
@@ -165,8 +168,7 @@ unsigned int GLRenderer::draw()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    static Triangle triangle;
-    triangle.draw(transformation);
+    triangle->draw(transformation);
 
     return 0;
 }
