@@ -12,6 +12,7 @@
 //-----------------------------------------------------------------------------
 #include <cmath>
 
+#include "capture.h"
 #include "gl_renderer.h"
 #include "matrix.h"
 #include "stuff.h"
@@ -38,7 +39,7 @@ private:
 class Scene
 {
 public:
-    Scene(GLRenderer* render, const Bitmap* video, const Options& options);
+    Scene(GLRenderer* render, Capture* capture, const Options& options);
     ~Scene();
 
     unsigned int draw();
@@ -47,11 +48,12 @@ public:
     void present(){ renderer->present(); }
 
     TextureAtlas atlas;
+    BaseCapture::Buffer frame;
 
-    const Bitmap* buffer;
     VideoBuffer* frames_stack;
     Matrix* matrix;
     VideoScreen* screen;
+
 
     GLRenderer* renderer;
 };

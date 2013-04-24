@@ -41,22 +41,25 @@ void VideoScreen::tick(unsigned long /*usec*/)
 {
 }
 
-Scene::Scene(GLRenderer* render, const Bitmap* video, const Options& options):atlas(1), buffer(video), frames_stack(NULL), matrix(NULL), screen(NULL), renderer(render)
+Scene::Scene(GLRenderer* render, Capture* capture, const Options& options):atlas(1), frame(capture, Capture::RGB), frames_stack(NULL), matrix(NULL), screen(NULL), renderer(render)
 {
-    if(buffer != NULL) // capturing enabled
-    {
-        frames_stack = new VideoBuffer(*buffer, 0, 10000);
+//    frame.load("test.bmp");
+//    frame.dump("tmp.bmp");
 
-//        screen = new VideoScreen(64,48);
-//        screen->set_video(frames_stack);
+    if(frame.data() != NULL) // capturing enabled
+    {
+        frames_stack = new VideoBuffer(frame, 0, 10000);
+
+        screen = new VideoScreen(64,48);
+        screen->set_video(frames_stack);
 
         if( options[Options::no_shaders] || renderer->version() <= "2.0")
         {
-            matrix = new MatrixVideo(128, 112, atlas[0], frames_stack, buffer->width(), buffer->height(), options[Options::vflip], options[Options::hflip]);
+            matrix = new MatrixVideo(128, 112, atlas[0], frames_stack, frame.width(), frame.height(), options[Options::vflip], options[Options::hflip]);
         }
         else
         {
-            matrix = new MatrixVideoFX(128, 112, atlas[0], frames_stack, buffer->width(), buffer->height(), options[Options::vflip], options[Options::hflip]);
+            matrix = new MatrixVideoFX(128, 112, atlas[0], frames_stack, frame.width(), frame.height(), options[Options::vflip], options[Options::hflip]);
         }
     }
     else matrix = new Matrix(128, 112, atlas[0]);
@@ -64,6 +67,7 @@ Scene::Scene(GLRenderer* render, const Bitmap* video, const Options& options):at
 
 Scene::~Scene()
 {
+    delete screen;
     delete frames_stack;
     delete matrix;
 }
@@ -76,7 +80,7 @@ unsigned int Scene::draw()
 
     renderer->draw();
 //    matrix->draw();
-//    screen->draw();
+    screen->draw();
     return 0;
 }
 
@@ -86,7 +90,7 @@ unsigned int Scene::tick(unsigned long usec)
 
     if(frames_stack)
     {
-        frames_stack->update(*buffer, usec);
+        frames_stack->update(frame, usec);
     }
 
     matrix->tick(usec);

@@ -64,17 +64,13 @@ int Application::run()
 {
     FPS counter(60);
 
-    GLRenderer* renderer = window->get_renderer();
 
-    BaseCapture::Buffer frame(capture, Capture::GRAY);
-
-    Scene scene(renderer, capture != NULL ? &frame : NULL, options);
+    Scene scene(window->get_renderer(), capture, options);
 
     while( running && window->process_events() )
     {
         unsigned long tick = counter.count_frame();
 
-   //     frame.dump("tmp.bmp");
         scene.draw();
         scene.tick(tick);
         scene.present();
