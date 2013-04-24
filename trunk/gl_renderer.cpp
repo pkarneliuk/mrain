@@ -123,7 +123,6 @@ GLRenderer::GLRenderer(NativeWindow* win):GLContext(win)
 
     gl_version = (const char*) glGetString(GL_VERSION);
 
-    glShadeModel(GL_SMOOTH);
     glEnable(GL_DEPTH_TEST);
     glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
 

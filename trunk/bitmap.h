@@ -29,9 +29,9 @@ public:
     {
         fprintf (stderr, "dump bitmap into %s\n", bmp_file);
 
-        unsigned int dob_width = (4 - (image_width & 0x3)) & 0x3; 
-        unsigned int rounded_width = image_width + dob_width; 
-        unsigned int data_size = rounded_width*image_height*3;  // bpp == 24
+        unsigned int dob_width = (4 - (image_width & 0x3)) & 0x3;
+        unsigned int rounded_width = image_width + dob_width;
+        unsigned int data_size = rounded_width*image_height*3; // bpp == 24
 
         BMP_FILEHEADER file;
         BMP_INFOHEADER info;
@@ -43,16 +43,16 @@ public:
         file.bfReserved2 = 0;
         file.bfOffBits = 0;
 
-        info.biSize = sizeof(info); 
+        info.biSize = sizeof(info);
         info.biWidth = image_width;
         info.biHeight = image_height;
-        info.biPlanes = 1; 
-        info.biBitCount = 24; 
-        info.biCompression =0; 
-        info.biSizeImage = 0; 
-        info.biXPelsPerMeter = 1; 
-        info. biYPelsPerMeter = 1; 
-        info.biClrUsed = 0; 
+        info.biPlanes = 1;
+        info.biBitCount = 24;
+        info.biCompression =0;
+        info.biSizeImage = 0;
+        info.biXPelsPerMeter = 1;
+        info. biYPelsPerMeter = 1;
+        info.biClrUsed = 0;
         info.biClrImportant = 0;
 
         size_t res = 0;
@@ -70,6 +70,43 @@ public:
             pixel -= fwrite(pixel, 3, image_width, mfd) * 3;
             res = fwrite(dummy, dob_width, sizeof(char), mfd);
         }
+        fclose(mfd);
+
+        return true;
+    }
+
+    bool load(const char* bmp_file)
+    {
+        BMP_FILEHEADER file = {0};
+        BMP_INFOHEADER info = {0};
+
+        size_t res = 0;
+
+        FILE* mfd = fopen(bmp_file, "rb");
+        if( mfd == NULL ) return false;
+
+        res = fread(&file, sizeof(file), 1, mfd);
+        res = fread(&info, sizeof(info), 1, mfd);
+
+        image_width = info.biWidth;
+        image_height= info.biHeight;
+
+        const size_t data_size = file.bfSize - (sizeof(file) + sizeof(info));
+        const size_t pixel_size = info.biBitCount / 8;
+        const size_t dob_width = (4 - (image_width & 0x3)) & 0x3;
+
+        buffer = new unsigned char[data_size];
+
+        // read from bottom to up
+        unsigned char* p = buffer + (image_height-1) * (image_width * pixel_size);
+
+        char dummy[4];
+        for(unsigned int i=0; i<image_height; i++)
+        {
+            p -= fread(p, pixel_size, image_width, mfd) * pixel_size;
+            res = fread(dummy, dob_width, sizeof(char), mfd);
+        }
+
         fclose(mfd);
 
         return true;
