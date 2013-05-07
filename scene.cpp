@@ -13,28 +13,90 @@
 //-----------------------------------------------------------------------------
 VideoScreen::VideoScreen(float w, float h):video(NULL), width(w), height(h)
 {
+    const unsigned int num_vertices = 4;
+    const float half_w = w / 2.0f;
+    const float half_h = h / 2.0f;
+
+    V2F_T2F vdata[num_vertices] = {
+        { -half_w, -half_h,   0.0f, 0.0f },
+        { -half_w,  half_h,   0.0f, 1.0f },
+        {  half_w, -half_h,   1.0f, 0.0f },
+        {  half_w,  half_h,   1.0f, 1.0f },
+    };
+
+    vbo.bind();
+    vbo.create(num_vertices, vdata, GL_STATIC_DRAW);
+        vao.bind();
+        vao.set_pointer<VertexData::V2F>(position_id, stride, 0);
+        vao.set_pointer<VertexData::T2F>(texcoord_id, stride, sizeof(VertexData::V2F));
+        vao.unbind();
+    vbo.unbind();
+
+    Shader vshader(Shader::Vertex);
+    const GLchar* vertex_shader = 
+    "#version 130\n"
+    "uniform mat4 transform;"
+    "in  vec2 position;"
+    "in  vec2 texcoord;"
+    "out vec2 ex_texcoord;"
+    "void main(void)"
+    "{"
+    "    gl_Position = transform * vec4(position, 0.0, 1.0);"
+    "    ex_texcoord = texcoord;"
+    "}";
+
+    vshader.set_source(vertex_shader);
+    vshader.compile();
+    vshader.log();
+
+    Shader fshader(Shader::Fragment);
+    const GLchar* fragment_shader = 
+    "#version 130\n"
+    "uniform sampler2D video;"
+    "in  vec2 ex_texcoord;"
+    "out vec4 fragment;"
+    "void main(void)"
+    "{"
+    "    fragment = texture2D(video, ex_texcoord);"
+    "}";
+
+    fshader.set_source(fragment_shader);
+    fshader.compile();
+    fshader.log();
+
+    program.attach(vshader);
+    program.attach(fshader);
+    program.bind(position_id, "position");
+    program.bind(texcoord_id, "texcoord");
+
+    program.link();
+    program.validate();
+    program.log();
+
+    model.identity();
+    model.translate(vector(0,0,-200));
 }
 
 VideoScreen::~VideoScreen()
 {
 }
 
-void VideoScreen::draw()
+void VideoScreen::draw(const Transform& transform)
 {
-    glTranslatef(-32.0f, -24.0f, -30.0f);
-
     if(video)
     {
         glActiveTexture(GL_TEXTURE0);
         glEnable(GL_TEXTURE_2D);
-        video->bind(GL_MODULATE);
+        video->bind(0);
     }
-    glBegin(GL_QUADS);
-        glTexCoord2f(video->s, video->t);    glVertex3f(0.0f, -height, 0.0f);
-        glTexCoord2f(video->s, 0.0f);        glVertex3f(0.0f, height, 0.0f);
-        glTexCoord2f(0.0f,      0.0f);       glVertex3f(width*2, height, 0.0f);
-        glTexCoord2f(0.0f,      video->t);   glVertex3f(width*2, -height, 0.0f);
-    glEnd();
+
+    program.use();
+        transform.bind_to(program, model);
+        program.set_sampler("video", 0);
+        vao.bind();
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        vao.unbind();
+    program.use_default();
 }
 
 void VideoScreen::tick(unsigned long /*usec*/)
@@ -50,8 +112,8 @@ Scene::Scene(GLRenderer* render, Capture* capture, const Options& options):atlas
     {
         frames_stack = new VideoBuffer(frame, 0, 10000);
 
-        screen = new VideoScreen(64,48);
-        screen->set_video(frames_stack);
+//        screen = new VideoScreen(frame.width(), frame.height());
+//        screen->set_video(frames_stack);
 
         if( options[Options::no_shaders] || renderer->version() <= "2.0")
         {
@@ -78,9 +140,9 @@ unsigned int Scene::draw()
     glLoadIdentity();
     glTranslatef(-32.0,26.0,-25.0f);
 
-    renderer->draw();
-//    matrix->draw();
-    screen->draw();
+//    renderer->draw();
+    matrix->draw();
+//    screen->draw(renderer->get_transform());
     return 0;
 }
 

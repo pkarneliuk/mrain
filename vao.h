@@ -84,6 +84,13 @@ public:
         BindList<Layout::list>::serial(n, first_index, 0);
     }
 
+    template<typename T>
+    inline void set_pointer(GLuint index, GLsizei stride, size_t offset)
+    {
+        glVertexAttribPointer(index, T::num, T::type, GL_FALSE, stride, (const GLvoid*)offset);
+        glEnableVertexAttribArray(index);
+    }
+
 protected:
     GLuint array;
 };

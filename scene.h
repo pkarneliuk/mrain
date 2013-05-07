@@ -18,22 +18,44 @@
 #include "stuff.h"
 #include "texture_atlas.h"
 #include "video_buffer.h"
+
+#include "buffer_object.h"
+#include "vao.h"
+#include "vertex_data.h"
 //-----------------------------------------------------------------------------
 class VideoScreen
 {
+    struct V2F_T2F
+    {
+        VertexData::V2F position;
+        VertexData::T2F texcoord;
+    };
+
+    enum {
+        position_id=0,
+        texcoord_id=1,
+        stride=sizeof(VertexData::V2F)+sizeof(VertexData::T2F),
+    };
+
 public:
     VideoScreen(float w, float h);
     ~VideoScreen();
 
     void set_video(const VideoBuffer* buffer){ video = buffer; }
 
-    void draw();
+    void draw(const Transform& transform);
     void tick(unsigned long usec);
 private:
 
     const VideoBuffer* video;
     float width;
     float height;
+
+    VBO<V2F_T2F> vbo;
+    VAO vao;
+
+    GPU_Program program;
+    matrix model;
 };
 
 class Scene
