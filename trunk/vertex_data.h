@@ -16,11 +16,31 @@ namespace VertexData
 {
     struct T2F
     {
-        enum{ num=2, type=GL_FLOAT    };
+        enum{ num=2, type=GL_FLOAT   };
         union
         {
             struct{ GLfloat st[num]; };
             struct{ GLfloat s,t;     };
+        };
+    };
+
+    struct T2US
+    {
+        enum{ num=2, type=GL_UNSIGNED_SHORT };
+        union
+        {
+            struct{ GLushort st[num]; };
+            struct{ GLushort s,t;     };
+        };
+    };
+
+    struct V2F
+    {
+        enum{ num=2, type=GL_FLOAT    };
+        union
+        {
+            struct{ GLfloat xy[num]; };
+            struct{ GLfloat x,y;     };
         };
     };
 
@@ -65,8 +85,9 @@ namespace VertexData
     };
 
 
-    // Example of usage:
+    // Examples of usage:
     // typedef Layout<V3F, V3F, T2F, C4UB> VervexNormalTexCoordColor;
+    // int offset = VervexNormalTexCoordColor::index<2>::offset;
     template <typename M1=void,
               typename M2=void,
               typename M3=void,
@@ -96,6 +117,24 @@ namespace VertexData
                 Node<void, void>  > > > >  > > > > list;
 
     private:
+        // Index
+        template<typename L, unsigned int Offset, unsigned int i>
+        struct Index
+        {
+        private:
+            typedef Index<typename L::next, Offset+sizeof(typename L::element), i-1> Next;
+        public:
+            enum { offset = Next::offset };
+            typedef typename Next::type type;
+        };
+
+        template<typename L, unsigned int Offset>
+        struct Index<L, Offset, 0>
+        {
+            enum { offset = Offset };
+            typedef typename L::element type;
+        };
+
         // Size
         template<typename T, typename U>
         struct size
@@ -111,6 +150,9 @@ namespace VertexData
         char dummy[size<typename list::element, typename list::next>::value]; //for valid sizeof(Layout)
 
         Layout(); // undefiend constructor
+
+    public:
+        template<unsigned int i> struct index:public Index<list, 0, i>{};
     };
 
 }// VertexData

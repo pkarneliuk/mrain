@@ -27,18 +27,7 @@ public:
     Triangle()
     {
         static_assert(sizeof(V3F_C3F) == 24, "wrong sizeof");
-        unsigned int num_vertices = 3;
-        const GLfloat vc[] = {
-                                // vertex
-                                0.0f, 0.0f, 0.0f,
-                                0.0f, 1.0f, 0.0f,
-                                1.0f, 0.0f, 0.0f,
-                                // color
-                                1.0f, 0.0f, 0.0f,
-                                0.0f, 1.0f, 0.0f,
-                                0.0f, 0.0f, 1.0f,
-                            };
-
+        const unsigned int num_vertices = 3;
         const GLfloat vc_interlaced[] = {
                         // vertex           // color
                         0.0f, 0.0f, 0.0f,   1.0f, 0.0f, 0.0f,
@@ -48,9 +37,10 @@ public:
 
         vbo.bind();
         vbo.create(num_vertices, vc_interlaced, GL_STATIC_DRAW);
-        vao.bind();
-        vao.bind(vbo, num_vertices, 0);
-        vao.unbind();
+            vao.bind();
+                vao.bind(vbo, num_vertices, 0);
+            vao.unbind();
+        vbo.unbind();
 
         Shader vshader(Shader::Vertex);
         const GLchar* vertex_shader = 
