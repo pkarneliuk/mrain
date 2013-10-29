@@ -92,6 +92,7 @@ public:
         transform.bind_to(program, model);
         vao.bind();
         glDrawArrays(GL_TRIANGLES, 0, 3);
+        vao.unbind();
 
         GPU_Program::use_default();
     }

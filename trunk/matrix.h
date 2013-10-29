@@ -20,9 +20,14 @@
 #include "matrix_img.h"
 #include "texture_atlas.h"
 #include "video_buffer.h"
+#include "buffer_object.h"
+#include "vertex_data.h"
+#include "vao.h"
 //-----------------------------------------------------------------------------
 class Matrix    // Simply Matrix effect
 {
+    typedef VertexData::Layout<VertexData::T2F, VertexData::V3F, VertexData::C4F> T2F_V3F_C4F;
+
 protected:
 
     class Twister
@@ -78,7 +83,7 @@ protected:
         //  key_points[7] = vector(xa, ya, za);
             key_points[8] = a;
 
-            vcache = new GLRenderer::V3F[nframes * 4];
+            vcache = new VertexData::V3F[nframes * 4];
 
             for(unsigned int i=0; i<nframes-1; i++)
             {
@@ -115,7 +120,7 @@ protected:
             delete[] vcache;
         }
 
-        inline void vertexcpy(GLRenderer::V3F* array, unsigned int num, unsigned int begin_frame)
+        inline void vertexcpy(VertexData::V3F* array, unsigned int num, unsigned int begin_frame)
         {
             assert(sizeof(vector) == sizeof(GLRenderer::V3F));
             memcpy(array, vcache+(begin_frame*4), sizeof(vector)*num );
@@ -140,14 +145,14 @@ protected:
         vector key_points[9];
         HSpline spline;
         Twister twister;
-        GLRenderer::V3F* vcache;
+        VertexData::V3F* vcache;
     };
 
 
     class Strip
     {
     public:
-        Strip(unsigned int n, GLRenderer::T2F* g, GLRenderer::V3F* v, GLRenderer::C4F* c,
+        Strip(unsigned int n, VertexData::T2F* g, VertexData::V3F* v, VertexData::C4F* c,
         GLfloat x, GLfloat y, GLfloat z, float h1, float h2, float r, float p, float q, float rotates);
         Animation& operator=(Animation&); //undefined
         ~Strip();
@@ -155,9 +160,9 @@ protected:
         void draw(GLint* first, GLsizei* count);
         void tick(unsigned long usec);
 
-        GLRenderer::T2F*    glyph_st;
-        GLRenderer::V3F*    vertexies;
-        GLRenderer::C4F*    colors;
+        VertexData::T2F*    glyph_st;
+        VertexData::V3F*    vertexies;
+        VertexData::C4F*    colors;
         GLfloat size;
 
         Animation animation;
@@ -183,7 +188,7 @@ public:
     Matrix(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture);
     virtual ~Matrix();
 
-    void draw();
+    void draw(const Transform& transform);
     void tick(unsigned long usec);
 
     virtual void pre_draw();
@@ -202,13 +207,18 @@ protected:
 
     TextureAtlas::Texture* letter;
 
-    GLRenderer::T2F*    glyph_st;
-    GLRenderer::V3F*    vertexies;
-    GLRenderer::C4F*    colors;
+    VertexData::T2F*    glyph_st;
+    VertexData::V3F*    vertexies;
+    VertexData::C4F*    colors;
 
     GLint*      firsts;
     GLsizei*    counts;
 
+    GLfloat*         data;
+    VBO<T2F_V3F_C4F> vbo;
+    VAO vao;
+    GPU_Program program;
+    matrix model;
 
     unsigned int nstrips;   // Number of strips
     unsigned int nglyphs;   // Number of glyphs
@@ -229,7 +239,7 @@ public:
     virtual void post_draw();
 
 protected:
-    GLRenderer::T2F* video_st;  // Texture coords
+    VertexData::T2F* video_st;  // Texture coords
     const VideoBuffer* video;   // Texture instance
 };
 

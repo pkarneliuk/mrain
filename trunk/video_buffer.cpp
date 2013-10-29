@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // "Matrix Rain" - screensaver for X Server Systems
 // file name:   video_buffer.cpp
-// copyright:   (C) 2008á 2009 by Pavel Karneliuk
+// copyright:   (C) 2008, 2009 by Pavel Karneliuk
 // license:     GNU General Public License v2
 // e-mail:      pavel_karneliuk@users.sourceforge.net
 //-----------------------------------------------------------------------------
@@ -20,13 +20,13 @@ VideoBuffer::VideoFrame::VideoFrame(unsigned char* data, unsigned int width, uns
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
-    glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE8, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
+    glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 //    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
 }
 
 void VideoBuffer::VideoFrame::update(unsigned char* data, unsigned int offset_x, unsigned int offset_y, unsigned int width, unsigned int height)
 {
-    glTexSubImage2D(GL_TEXTURE_2D, 0, offset_x, offset_y, width, height, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, offset_x, offset_y, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
 }
 
 VideoBuffer::VideoBuffer(const Bitmap& frame, int layers, unsigned long micsec_delay):TextureArray(layers+1 /*for current*/), top_index(0), last_time(micsec_delay), delay(micsec_delay)
@@ -53,8 +53,8 @@ void VideoBuffer::update(const Bitmap& frame, unsigned long usec)
     video->update(frame.data(), 0, 0, frame.width(), frame.height());
 }
 
-void VideoBuffer::bind(GLint texture_function)const
+void VideoBuffer::bind() const
 {
-    textures[top_index]->bind(texture_function);
+    textures[top_index]->bind();
 }
 //-----------------------------------------------------------------------------
