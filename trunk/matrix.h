@@ -122,7 +122,7 @@ protected:
 
         inline void vertexcpy(VertexData::V3F* array, unsigned int num, unsigned int begin_frame)
         {
-            assert(sizeof(vector) == sizeof(GLRenderer::V3F));
+            assert(sizeof(vector) == sizeof(VertexData::V3F));
             memcpy(array, vcache+(begin_frame*4), sizeof(vector)*num );
         }
 

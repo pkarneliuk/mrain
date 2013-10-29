@@ -92,6 +92,8 @@ namespace OpenGL
     {
         extern PFNWGLSWAPINTERVALEXTPROC    wglSwapIntervalEXT;
         extern PFNWGLGETSWAPINTERVALEXTPROC wglGetSwapIntervalEXT;
+        // WGL_ARB_create_context
+        extern PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB;
     }
 }
 

@@ -78,6 +78,8 @@ namespace OpenGL
     {
         PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = NULL;
         PFNWGLGETSWAPINTERVALEXTPROC wglGetSwapIntervalEXT = NULL;
+        // WGL_ARB_create_context
+        PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = NULL;
     }
 }
 //-----------------------------------------------------------------------------
@@ -134,6 +136,27 @@ GLContext::GLContext(NativeWindow* win)
 
     load_ogl();
     load_wgl();
+
+    if(wglCreateContextAttribsARB)
+    {
+        const int attributes[] =
+        {
+            WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
+            WGL_CONTEXT_MINOR_VERSION_ARB, 0,
+            WGL_CONTEXT_PROFILE_MASK_ARB,  WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+            WGL_CONTEXT_FLAGS_ARB,         WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+            0
+        };
+
+        if(HGLRC hrcattrib = wglCreateContextAttribsARB(hdc, 0, attributes))
+        {
+            if(wglMakeCurrent(hdc, hrcattrib))
+            {
+                wglDeleteContext(hrc);
+                hrc = hrcattrib;
+            }
+        }
+    }
 
     wglSwapIntervalEXT(0); // disable V-sync
 }
@@ -205,6 +228,8 @@ bool GLContext::load_wgl()
 {
     WGL_BIND(wglSwapIntervalEXT);
     WGL_BIND(wglGetSwapIntervalEXT);
+    // WGL_ARB_create_context
+    WGL_BIND(wglCreateContextAttribsARB);
 
     return true;
 }
