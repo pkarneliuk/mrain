@@ -29,7 +29,7 @@ void Shader::log()
     {
         std::unique_ptr<GLchar[]> info(new GLchar[size]);
         glGetShaderInfoLog(handle, size, NULL, info.get());
-        fprintf(stderr, "Shader log: %s\n", info.get());
+        fprintf(stderr, "Shader log: %s", info.get());
     }
 }
 
@@ -49,7 +49,7 @@ void GPU_Program::log()
     {
         std::unique_ptr<GLchar[]> info(new GLchar[size]);
         glGetProgramInfoLog(handle, size, NULL, info.get());
-        fprintf(stderr, "Program log: %s\n", info.get());
+        fprintf(stderr, "Program log: %s", info.get());
     }
 }
 

@@ -232,7 +232,7 @@ protected:
 class MatrixVideo:public Matrix // Matrix and Video effect
 {
 public:
-    MatrixVideo(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture, const VideoBuffer* buffer, int widht, int height, bool vflip, bool hflip);
+    MatrixVideo(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture, const VideoBuffer* buffer, int width, int height, bool vflip, bool hflip);
     ~MatrixVideo();
 
     virtual void pre_draw();
@@ -246,7 +246,7 @@ protected:
 class MatrixVideoFX:public MatrixVideo  // Matrix Video with Vertex Shader FX
 {
 public:
-    MatrixVideoFX(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture, const VideoBuffer* buffer, int widht, int height, bool vflip, bool hflip);
+    MatrixVideoFX(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture, const VideoBuffer* buffer, int width, int height, bool vflip, bool hflip);
     ~MatrixVideoFX();
 
     virtual void pre_draw();

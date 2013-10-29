@@ -33,9 +33,9 @@ Matrix::Matrix(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture)
     const size_t vsize = sizeof(T2F_V3F_C4F);
     data = new GLfloat[vsize/sizeof(GLfloat) * num_vertices];
 
-    glyph_st    = reinterpret_cast<VertexData::T2F*>(&data[0]);//new GLRenderer::T2F[nstrips * strip_pack];
-    vertexies   = reinterpret_cast<VertexData::V3F*>(&data[ sizeof(VertexData::T2F)/sizeof(GLfloat) * num_vertices]);//new GLRenderer::V3F[nstrips * strip_pack];
-    colors      = reinterpret_cast<VertexData::C4F*>(&data[ (sizeof(VertexData::T2F) + sizeof(VertexData::V3F))/sizeof(GLfloat) * num_vertices]);//new GLRenderer::C4F[nstrips * strip_pack];
+    glyph_st    = reinterpret_cast<VertexData::T2F*>(&data[0]);
+    vertexies   = reinterpret_cast<VertexData::V3F*>(&data[ sizeof(VertexData::T2F)/sizeof(GLfloat) * num_vertices]);
+    colors      = reinterpret_cast<VertexData::C4F*>(&data[ (sizeof(VertexData::T2F) + sizeof(VertexData::V3F))/sizeof(GLfloat) * num_vertices]);
 
     firsts = new GLint[nstrips];
     counts = new GLsizei[nstrips];
@@ -459,8 +459,8 @@ void MatrixVideo::post_draw()
     Matrix::post_draw();
 }
 
-MatrixVideoFX::MatrixVideoFX(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture, const VideoBuffer* buffer, int widht, int height, bool vflip, bool hflip)
-:MatrixVideo(ns, ng, texture, buffer, widht, height, vflip, hflip), program(NULL)
+MatrixVideoFX::MatrixVideoFX(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture, const VideoBuffer* buffer, int width, int height, bool vflip, bool hflip)
+:MatrixVideo(ns, ng, texture, buffer, width, height, vflip, hflip), program(NULL)
 {
     Shader vshader(Shader::Vertex);
 
