@@ -339,7 +339,7 @@ IMFActivate* Capture::find_device(const char* dev_name)
             wcstombs_s(NULL, tmp.get(), size, name, _TRUNCATE);
         }
 
-        if(SUCCEEDED(hr) && 0 == strncmp(tmp.get(), dev_name, size))
+        if(SUCCEEDED(hr) /*&& 0 == strncmp(tmp.get(), dev_name, size)*/)
         {
             device = devices[i];
         }

@@ -23,12 +23,12 @@ protected:
         Texture(GLuint arg_id, GLenum t):id(arg_id), type(t){}
         virtual ~Texture(){}
 
-        inline void bind(GLint texture_function=0)
+        inline void bind()
         {
-            glBindTexture (type, id);
+            glBindTexture(type, id);
         }
-    private:
 
+    private:
         GLuint id;
         GLenum type;
     };
