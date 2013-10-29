@@ -26,7 +26,6 @@ protected:
         inline void bind(GLint texture_function=0)
         {
             glBindTexture (type, id);
-            if(texture_function != 0) glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, texture_function);
         }
     private:
 

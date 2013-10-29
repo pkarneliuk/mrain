@@ -87,7 +87,7 @@ void VideoScreen::draw(const Transform& transform)
     {
         glActiveTexture(GL_TEXTURE0);
         glEnable(GL_TEXTURE_2D);
-        video->bind(0);
+        video->bind();
     }
 
     program.use();
@@ -137,11 +137,9 @@ Scene::~Scene()
 unsigned int Scene::draw()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glLoadIdentity();
-    glTranslatef(-32.0,26.0,-25.0f);
 
 //    renderer->draw();
-    matrix->draw();
+    matrix->draw(renderer->get_transform());
 //    screen->draw(renderer->get_transform());
     return 0;
 }

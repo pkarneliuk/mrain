@@ -12,11 +12,11 @@
 //-----------------------------------------------------------------------------
 #include "gl_renderer.h"
 //-----------------------------------------------------------------------------
-template <GLenum _target>
+template <GLenum Target>
 class BufferObject
 {
 protected:
-    enum{ target = _target };
+    enum{ target = Target };
 public:
     BufferObject(const BufferObject&);   // undefined
     void operator=(const BufferObject&); // undefined

@@ -24,7 +24,7 @@ TextureArray::TextureArray(unsigned int n):num_textures(n)
 TextureArray::~TextureArray()
 {
     for(unsigned int i=0; i<num_textures; i++)
-        delete textures[i];			
+        delete textures[i];
     delete[] textures;
 
     glDeleteTextures(num_textures, texture_id);
