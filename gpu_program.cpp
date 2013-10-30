@@ -1,14 +1,13 @@
 //-----------------------------------------------------------------------------
 // "Matrix Rain" - screensaver for X Server Systems
 // file name:   gpu_program.cpp
-// copyright:   (C) 2008, 2009 by Pavel Karneliuk
+// copyright:   (C) 2008, 2009, 2013 by Pavel Karneliuk
 // license:     GNU General Public License v2
 // e-mail:      pavel_karneliuk@users.sourceforge.net
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
-#include <cstdio>
-#include <cstring>
+#include <iostream>
 #include <memory>
 
 #include "gpu_program.h"
@@ -25,11 +24,11 @@ void Shader::log()
 {
     GLint size = 0;
     glGetShaderiv(handle, GL_INFO_LOG_LENGTH, &size);
-    if(size > 0)
+    if(size > 1/*'\0' - empty string*/)
     {
         std::unique_ptr<GLchar[]> info(new GLchar[size]);
         glGetShaderInfoLog(handle, size, NULL, info.get());
-        fprintf(stderr, "Shader log: %s", info.get());
+        std::cerr << "Shader log: " << info.get() << std::endl;
     }
 }
 
@@ -45,11 +44,11 @@ void GPU_Program::log()
 {
     GLint size = 0;
     glGetProgramiv(handle, GL_INFO_LOG_LENGTH, &size);
-    if(size > 0)
+    if(size > 1/*'\0' - empty string*/)
     {
         std::unique_ptr<GLchar[]> info(new GLchar[size]);
         glGetProgramInfoLog(handle, size, NULL, info.get());
-        fprintf(stderr, "Program log: %s", info.get());
+        std::cerr << "Program log: " << info.get() << std::endl;
     }
 }
 

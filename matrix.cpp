@@ -400,6 +400,7 @@ void Matrix::Strip::wave_tick(unsigned long usec)
 MatrixVideo::MatrixVideo(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture, const VideoBuffer* buffer, int /*width*/, int /*height*/, bool vflip, bool hflip)
     :Matrix(ns, ng, texture), video_st(NULL), video(NULL)
 {
+    /*
     video_st = new VertexData::T2F[ns * ng * 4];    // Vertex array for video texture unit
 
     video = buffer;
@@ -433,11 +434,74 @@ MatrixVideo::MatrixVideo(unsigned int ns, unsigned int ng, TextureAtlas::Texture
         {
             video_st[i].t = buffer->t+(vertexies[i].y/video_res[3]);
         }
+        */
+
+
+
+    Shader vshader(Shader::Vertex);
+    const GLchar* vertex_shader = 
+    "#version 130\n"
+    "uniform mat4 transform;"
+    "in  vec2 texcoord;"
+    "in  vec3 position;"
+    "in  vec4 color;"
+//    "in  vec2 texcoord1;"
+    "out vec4 ex_color;"
+    "out vec2 ex_texcoord;"
+//    "out vec2 ex_texcoord1;"
+    "void main(void)"
+    "{"
+//    "    position.z += color.r*1.4;"
+    "    gl_Position = transform * vec4(position, 1.0);"
+    "    ex_texcoord = texcoord;"
+//    "    ex_texcoord1 = texcoord1;"
+    "    ex_color = color;"
+    "}";
+
+    vshader.set_source(vertex_shader);
+    vshader.compile();
+    vshader.log();
+
+    Shader fshader(Shader::Fragment);
+    const GLchar* fragment_shader = 
+    "#version 130\n"
+    "uniform sampler2D glyphs;"
+    "in vec4 ex_color;"
+    "in  vec2 ex_texcoord;"
+//    "in  vec2 ex_texcoord1;"
+    "out vec4 fragment;"
+    "void main(void)"
+    "{"
+    "    vec4 t = texture(glyphs, ex_texcoord);"
+    "    if(t.r ==0) discard;"
+    "    vec4 c = ex_color;"
+//    "    c.a =  1 - ex_color.a;"
+//    "    ex_color.a = 1 - ex_color.a;"
+    "    fragment = c*t.r;"
+    "}";
+
+    fshader.set_source(fragment_shader);
+    fshader.compile();
+    fshader.log();
+/*
+    program.attach(vshader);
+    program.attach(fshader);
+    program.bind(0, "texcoord");
+    program.bind(1, "position");
+    program.bind(2, "color");
+
+    program.link();
+    program.validate();
+    program.log();*/
+
+    model.identity();
+    model.translate(vector(-32.0,26.0,-10.0f));
+
 }
 
 MatrixVideo::~MatrixVideo()
 {
-    delete[] video_st;
+//    delete[] video_st;
 }
 
 void MatrixVideo::pre_draw()
@@ -445,13 +509,13 @@ void MatrixVideo::pre_draw()
 //  Video & fixed pipeline
     Matrix::pre_draw();
 
-    glActiveTexture(GL_TEXTURE1);
-    glEnable(GL_TEXTURE_2D);
+//    glActiveTexture(GL_TEXTURE1);
+//    glEnable(GL_TEXTURE_2D);
 //    video->bind(GL_MODULATE);
 
-    glClientActiveTexture(GL_TEXTURE1);
-    glTexCoordPointer(2, GL_FLOAT, 0, &video_st[0].st);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+//    glClientActiveTexture(GL_TEXTURE1);
+//    glTexCoordPointer(2, GL_FLOAT, 0, &video_st[0].st);
+//    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 }
 
 void MatrixVideo::post_draw()
@@ -462,9 +526,10 @@ void MatrixVideo::post_draw()
 MatrixVideoFX::MatrixVideoFX(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture, const VideoBuffer* buffer, int width, int height, bool vflip, bool hflip)
 :MatrixVideo(ns, ng, texture, buffer, width, height, vflip, hflip), program(NULL)
 {
-    Shader vshader(Shader::Vertex);
+ /*   Shader vshader(Shader::Vertex);
 
     const GLchar* vertex_shader = 
+    "#version 130\n"
     "uniform sampler2D video;"
     "void main(void)"
     "{"
@@ -487,6 +552,65 @@ MatrixVideoFX::MatrixVideoFX(unsigned int ns, unsigned int ng, TextureAtlas::Tex
     program->link();
     program->validate();
     program->log();
+    */
+/*    Shader vshader(Shader::Vertex);
+    const GLchar* vertex_shader = 
+    "#version 130\n"
+    "uniform mat4 transform;"
+    "in  vec2 texcoord;"
+    "in  vec3 position;"
+    "in  vec4 color;"
+    "in  vec2 texcoord1;"
+    "out vec4 ex_color;"
+    "out vec2 ex_texcoord;"
+    "out vec2 ex_texcoord1;"
+    "void main(void)"
+    "{"
+//    "    position.z += color.r*1.4;"
+    "    gl_Position = transform * vec4(position, 1.0);"
+    "    ex_texcoord = texcoord;"
+    "    ex_texcoord1 = texcoord1;"
+    "    ex_color = color;"
+    "}";
+
+    vshader.set_source(vertex_shader);
+    vshader.compile();
+    vshader.log();
+
+    Shader fshader(Shader::Fragment);
+    const GLchar* fragment_shader = 
+    "#version 130\n"
+    "uniform sampler2D glyphs;"
+    "in vec4 ex_color;"
+    "in  vec2 ex_texcoord;"
+    "in  vec2 ex_texcoord1;"
+    "out vec4 fragment;"
+    "void main(void)"
+    "{"
+    "    vec4 t = texture(glyphs, ex_texcoord);"
+    "    if(t.r ==0) discard;"
+    "    vec4 c = ex_color;"
+//    "    c.a =  1 - ex_color.a;"
+//    "    ex_color.a = 1 - ex_color.a;"
+    "    fragment = c*t.r;"
+    "}";
+
+    fshader.set_source(fragment_shader);
+    fshader.compile();
+    fshader.log();
+
+    program.attach(vshader);
+    program.attach(fshader);
+    program.bind(0, "texcoord");
+    program.bind(1, "position");
+    program.bind(2, "color");
+
+    program.link();
+    program.validate();
+    program.log();
+
+    model.identity();
+    model.translate(vector(-32.0,26.0,-10.0f));*/
 }
 
 MatrixVideoFX::~MatrixVideoFX()
@@ -499,13 +623,13 @@ void MatrixVideoFX::pre_draw()
 //  Video & Vertex shader
     MatrixVideo::pre_draw();
 
-    program->use(); // Enable shader
-    program->set_sampler("video", 1);
+//    program->use(); // Enable shader
+//    program->set_sampler("video", 1);
 }
 
 void MatrixVideoFX::post_draw()
 {
-    GPU_Program::use_default(); // Disable shader, use fixed pipeline
+//    GPU_Program::use_default(); // Disable shader, use fixed pipeline
     MatrixVideo::post_draw();
 }
 //-----------------------------------------------------------------------------
