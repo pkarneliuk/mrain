@@ -136,21 +136,12 @@ void GLRenderer::reshape(unsigned int width, unsigned int height)
 {
     glViewport (0, 0, (GLint) width, (GLint) height);
 
-    const float pi = 3.14159265359f;
     const float fov = 80.0f;
     const float aspect = (float) width/(float) height;
     const float znear = 1.0f;
     const float zfar  = 1000.0f;
 
     transformation.set_perspective(fov, aspect, znear, zfar);
-
-    GLdouble b = znear * tan( fov / 360.0 * pi );
-    GLdouble a = b * aspect;
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glFrustum(-a, a, -b, b, znear, zfar);
-    glMatrixMode(GL_MODELVIEW);
 }
 
 

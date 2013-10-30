@@ -11,8 +11,7 @@
 #define GL_CONTEXT_H
 //-----------------------------------------------------------------------------
 #include <windows.h>
-#include <GL/gl.h>
-#include "glext.h"
+#include <GL/glcorearb.h>
 #include "wglext.h"
 
 #include "../stuff.h"
@@ -37,9 +36,25 @@ namespace OpenGL
 {
     namespace OGL
     {
+        // GL_VERSION_1_0
+        extern PFNGLTEXPARAMETERIPROC glTexParameteri;
+        extern PFNGLTEXIMAGE2DPROC glTexImage2D;
+        extern PFNGLCLEARPROC glClear;
+        extern PFNGLCLEARCOLORPROC glClearColor;
+        extern PFNGLDISABLEPROC glDisable;
+        extern PFNGLENABLEPROC glEnable;
+        extern PFNGLBLENDFUNCPROC glBlendFunc;
+        extern PFNGLGETERRORPROC glGetError;
+        extern PFNGLGETSTRINGPROC glGetString;
+        extern PFNGLVIEWPORTPROC glViewport;
+        // GL_VERSION_1_1
+        extern PFNGLDRAWARRAYSPROC glDrawArrays;
+        extern PFNGLTEXSUBIMAGE2DPROC glTexSubImage2D;
+        extern PFNGLBINDTEXTUREPROC glBindTexture;
+        extern PFNGLDELETETEXTURESPROC glDeleteTextures;
+        extern PFNGLGENTEXTURESPROC glGenTextures;
         // GL_VERSION_1_3
-        extern PFNGLACTIVETEXTUREARBPROC glActiveTexture;
-        extern PFNGLCLIENTACTIVETEXTUREPROC glClientActiveTexture;
+        extern PFNGLACTIVETEXTUREPROC glActiveTexture;
         // GL_VERSION_1_4
         extern PFNGLMULTIDRAWARRAYSPROC glMultiDrawArrays;
         // GL_VERSION_1_5
@@ -98,7 +113,7 @@ namespace OpenGL
 }
 
 using namespace OpenGL::OGL;
-//using namespace OpenGL::Extensions;
+using namespace OpenGL::Extensions;
 using namespace OpenGL::WGL;
 //-----------------------------------------------------------------------------
 #endif//GL_CONTEXT_H

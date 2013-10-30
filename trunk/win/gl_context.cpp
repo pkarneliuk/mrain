@@ -16,16 +16,34 @@
 //-----------------------------------------------------------------------------
 #ifdef _DEBUG
 #define WGL_BIND(func) { *((PROC*)(& func )) = wglGetProcAddress( #func ); printf("%p: %s\n", (func), #func); }
+#define LIB_LINK(func) { OpenGL::OGL:: func = :: func; printf("%p: %s\n", (OpenGL::OGL::func), #func); }
 #else
 #define WGL_BIND(func) { *((PROC*)(& func )) = wglGetProcAddress( #func ); }
+#define LIB_LINK(func) { OpenGL::OGL:: func = :: func; }
 #endif
 namespace OpenGL
 {
     namespace OGL
     {
+        // GL_VERSION_1_0
+        PFNGLTEXPARAMETERIPROC glTexParameteri = NULL;
+        PFNGLTEXIMAGE2DPROC glTexImage2D = NULL;
+        PFNGLCLEARPROC glClear = NULL;
+        PFNGLCLEARCOLORPROC glClearColor = NULL;
+        PFNGLDISABLEPROC glDisable = NULL;
+        PFNGLENABLEPROC glEnable = NULL;
+        PFNGLBLENDFUNCPROC glBlendFunc = NULL;
+        PFNGLGETERRORPROC glGetError = NULL;
+        PFNGLGETSTRINGPROC glGetString = NULL;
+        PFNGLVIEWPORTPROC glViewport = NULL;
+        // GL_VERSION_1_1
+        PFNGLDRAWARRAYSPROC glDrawArrays = NULL;
+        PFNGLTEXSUBIMAGE2DPROC glTexSubImage2D = NULL;
+        PFNGLBINDTEXTUREPROC glBindTexture = NULL;
+        PFNGLDELETETEXTURESPROC glDeleteTextures = NULL;
+        PFNGLGENTEXTURESPROC glGenTextures = NULL;
         // GL_VERSION_1_3
-        PFNGLACTIVETEXTUREARBPROC glActiveTexture = NULL;
-        PFNGLCLIENTACTIVETEXTUREPROC glClientActiveTexture = NULL;
+        PFNGLACTIVETEXTUREPROC glActiveTexture = NULL;
         // GL_VERSION_1_4
         PFNGLMULTIDRAWARRAYSPROC glMultiDrawArrays = NULL;
         // GL_VERSION_1_5
@@ -168,11 +186,78 @@ GLContext::~GLContext()
     ReleaseDC(WindowFromDC(hdc), hdc);
 }
 
+extern "C" {
+GLAPI void APIENTRY glCullFace (GLenum mode);
+GLAPI void APIENTRY glFrontFace (GLenum mode);
+GLAPI void APIENTRY glHint (GLenum target, GLenum mode);
+GLAPI void APIENTRY glLineWidth (GLfloat width);
+GLAPI void APIENTRY glPointSize (GLfloat size);
+GLAPI void APIENTRY glPolygonMode (GLenum face, GLenum mode);
+GLAPI void APIENTRY glScissor (GLint x, GLint y, GLsizei width, GLsizei height);
+GLAPI void APIENTRY glTexParameterf (GLenum target, GLenum pname, GLfloat param);
+GLAPI void APIENTRY glTexParameterfv (GLenum target, GLenum pname, const GLfloat *params);
+GLAPI void APIENTRY glTexParameteri (GLenum target, GLenum pname, GLint param);
+GLAPI void APIENTRY glTexParameteriv (GLenum target, GLenum pname, const GLint *params);
+GLAPI void APIENTRY glTexImage1D (GLenum target, GLint level, GLint internalformat, GLsizei width, GLint border, GLenum format, GLenum type, const GLvoid *pixels);
+GLAPI void APIENTRY glTexImage2D (GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels);
+GLAPI void APIENTRY glDrawBuffer (GLenum mode);
+GLAPI void APIENTRY glClear (GLbitfield mask);
+GLAPI void APIENTRY glClearColor (GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
+GLAPI void APIENTRY glClearStencil (GLint s);
+GLAPI void APIENTRY glClearDepth (GLdouble depth);
+GLAPI void APIENTRY glStencilMask (GLuint mask);
+GLAPI void APIENTRY glColorMask (GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
+GLAPI void APIENTRY glDepthMask (GLboolean flag);
+GLAPI void APIENTRY glDisable (GLenum cap);
+GLAPI void APIENTRY glEnable (GLenum cap);
+GLAPI void APIENTRY glFinish (void);
+GLAPI void APIENTRY glFlush (void);
+GLAPI void APIENTRY glBlendFunc (GLenum sfactor, GLenum dfactor);
+GLAPI void APIENTRY glLogicOp (GLenum opcode);
+GLAPI void APIENTRY glStencilFunc (GLenum func, GLint ref, GLuint mask);
+GLAPI void APIENTRY glStencilOp (GLenum fail, GLenum zfail, GLenum zpass);
+GLAPI void APIENTRY glDepthFunc (GLenum func);
+GLAPI void APIENTRY glPixelStoref (GLenum pname, GLfloat param);
+GLAPI void APIENTRY glPixelStorei (GLenum pname, GLint param);
+GLAPI void APIENTRY glReadBuffer (GLenum mode);
+GLAPI void APIENTRY glReadPixels (GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels);
+GLAPI void APIENTRY glGetBooleanv (GLenum pname, GLboolean *params);
+GLAPI void APIENTRY glGetDoublev (GLenum pname, GLdouble *params);
+GLAPI GLenum APIENTRY glGetError (void);
+GLAPI void APIENTRY glGetFloatv (GLenum pname, GLfloat *params);
+GLAPI void APIENTRY glGetIntegerv (GLenum pname, GLint *params);
+GLAPI const GLubyte * APIENTRY glGetString (GLenum name);
+GLAPI void APIENTRY glGetTexImage (GLenum target, GLint level, GLenum format, GLenum type, GLvoid *pixels);
+GLAPI void APIENTRY glGetTexParameterfv (GLenum target, GLenum pname, GLfloat *params);
+GLAPI void APIENTRY glGetTexParameteriv (GLenum target, GLenum pname, GLint *params);
+GLAPI void APIENTRY glGetTexLevelParameterfv (GLenum target, GLint level, GLenum pname, GLfloat *params);
+GLAPI void APIENTRY glGetTexLevelParameteriv (GLenum target, GLint level, GLenum pname, GLint *params);
+GLAPI GLboolean APIENTRY glIsEnabled (GLenum cap);
+GLAPI void APIENTRY glDepthRange (GLdouble near, GLdouble far);
+GLAPI void APIENTRY glViewport (GLint x, GLint y, GLsizei width, GLsizei height);
+}
+
 bool GLContext::load_ogl()
 {
+    // GL_VERSION_1_0
+    LIB_LINK(glTexParameteri);
+    LIB_LINK(glTexImage2D);
+    LIB_LINK(glClear);
+    LIB_LINK(glClearColor);
+    LIB_LINK(glDisable);
+    LIB_LINK(glEnable);
+    LIB_LINK(glBlendFunc);
+    LIB_LINK(glGetError);
+    LIB_LINK(glGetString);
+    LIB_LINK(glViewport);
+    // GL_VERSION_1_1
+    WGL_BIND(glDrawArrays);
+    WGL_BIND(glTexSubImage2D);
+    WGL_BIND(glBindTexture);
+    WGL_BIND(glDeleteTextures);
+    WGL_BIND(glGenTextures);
     // GL_VERSION_1_3
     WGL_BIND(glActiveTexture);
-    WGL_BIND(glClientActiveTexture);
     // GL_VERSION_1_4
     WGL_BIND(glMultiDrawArrays);
     // GL_VERSION_1_5
