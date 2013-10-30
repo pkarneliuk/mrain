@@ -115,14 +115,7 @@ Scene::Scene(GLRenderer* render, Capture* capture, const Options& options):atlas
 //        screen = new VideoScreen(frame.width(), frame.height());
 //        screen->set_video(frames_stack);
 
-        if( options[Options::no_shaders] || renderer->version() <= "2.0")
-        {
-            matrix = new MatrixVideo(128, 112, atlas[0], frames_stack, frame.width(), frame.height(), options[Options::vflip], options[Options::hflip]);
-        }
-        else
-        {
-            matrix = new MatrixVideoFX(128, 112, atlas[0], frames_stack, frame.width(), frame.height(), options[Options::vflip], options[Options::hflip]);
-        }
+        matrix = new MatrixVideo(128, 112, atlas[0], frames_stack, frame.width(), frame.height(), options[Options::vflip], options[Options::hflip]);
     }
     else matrix = new Matrix(128, 112, atlas[0]);
 }

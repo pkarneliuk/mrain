@@ -242,19 +242,6 @@ protected:
     VertexData::T2F* video_st;  // Texture coords
     const VideoBuffer* video;   // Texture instance
 };
-
-class MatrixVideoFX:public MatrixVideo  // Matrix Video with Vertex Shader FX
-{
-public:
-    MatrixVideoFX(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture, const VideoBuffer* buffer, int width, int height, bool vflip, bool hflip);
-    ~MatrixVideoFX();
-
-    virtual void pre_draw();
-    virtual void post_draw();
-
-protected:
-    class GPU_Program* program;
-};
 //-----------------------------------------------------------------------------
 #endif//MATRIX_H
 //-----------------------------------------------------------------------------

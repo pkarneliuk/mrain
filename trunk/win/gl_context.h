@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // "Matrix Rain" - screensaver for X Server Systems
 // file name:   gl_context.h
-// copyright:   (C) 2008, 2009 by Pavel Karneliuk
+// copyright:   (C) 2008, 2009, 2013 by Pavel Karneliuk
 // license:     GNU General Public License v2
 // e-mail:      pavel_karneliuk@users.sourceforge.net
 //-----------------------------------------------------------------------------
@@ -24,10 +24,6 @@ protected:
 
     inline void swap_buffers(){ SwapBuffers(hdc); }
 private:
-    bool load_ogl();
-    bool load_extensions();
-    bool load_wgl();
-
     HDC     hdc;    // handler device context
     HGLRC   hrc;    // handler render context
 };
@@ -105,6 +101,7 @@ namespace OpenGL
 
     namespace WGL
     {
+        // WGL_EXT_swap_control
         extern PFNWGLSWAPINTERVALEXTPROC    wglSwapIntervalEXT;
         extern PFNWGLGETSWAPINTERVALEXTPROC wglGetSwapIntervalEXT;
         // WGL_ARB_create_context
