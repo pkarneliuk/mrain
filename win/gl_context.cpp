@@ -7,24 +7,26 @@
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
-#include <cmath>
-#include <cstdio>
-#include <cstdlib>
+#include <iostream>
 
 #include "gl_context.h"
 #include "native_window.h"
 //-----------------------------------------------------------------------------
 #ifdef _DEBUG
-#define WGL_BIND(func) { *((PROC*)(& func )) = wglGetProcAddress( #func ); printf("%p: %s\n", (func), #func); }
-#define LIB_LINK(func) { OpenGL::OGL:: func = :: func; printf("%p: %s\n", (OpenGL::OGL::func), #func); }
+#define WGL_BIND(func) { *((PROC*)  (&func)) = wglGetProcAddress( #func ); \
+                        std::clog << (func) << ": " << #func << std::endl; }
+#define LIB_LINK(func) { OpenGL::OGL:: func = :: func;                     \
+           std::clog << (OpenGL::OGL::func) << ": " << #func << std::endl; }
 #else
 #define WGL_BIND(func) { *((PROC*)(& func )) = wglGetProcAddress( #func ); }
-#define LIB_LINK(func) { OpenGL::OGL:: func = :: func; }
+#define LIB_LINK(func) { OpenGL::OGL:: func = :: func;                     }
 #endif
 namespace OpenGL
 {
     namespace OGL
     {
+        bool load();
+
         // GL_VERSION_1_0
         PFNGLTEXPARAMETERIPROC glTexParameteri = NULL;
         PFNGLTEXIMAGE2DPROC glTexImage2D = NULL;
@@ -90,10 +92,14 @@ namespace OpenGL
 
     namespace Extensions
     {
+        bool load();
     }
 
     namespace WGL
     {
+        bool load();
+
+        // WGL_EXT_swap_control
         PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = NULL;
         PFNWGLGETSWAPINTERVALEXTPROC wglGetSwapIntervalEXT = NULL;
         // WGL_ARB_create_context
@@ -152,8 +158,8 @@ GLContext::GLContext(NativeWindow* win)
     hrc = wglCreateContext(hdc);
     wglMakeCurrent(hdc, hrc);
 
-    load_ogl();
-    load_wgl();
+    OpenGL::OGL::load();
+    OpenGL::WGL::load();
 
     if(wglCreateContextAttribsARB)
     {
@@ -237,7 +243,7 @@ GLAPI void APIENTRY glDepthRange (GLdouble near, GLdouble far);
 GLAPI void APIENTRY glViewport (GLint x, GLint y, GLsizei width, GLsizei height);
 }
 
-bool GLContext::load_ogl()
+bool OpenGL::OGL::load()
 {
     // GL_VERSION_1_0
     LIB_LINK(glTexParameteri);
@@ -304,13 +310,14 @@ bool GLContext::load_ogl()
     return true;
 }
 
-bool GLContext::load_extensions()
+bool OpenGL::Extensions::load()
 {
     return true;
 }
 
-bool GLContext::load_wgl()
+bool OpenGL::WGL::load()
 {
+    // WGL_EXT_swap_control
     WGL_BIND(wglSwapIntervalEXT);
     WGL_BIND(wglGetSwapIntervalEXT);
     // WGL_ARB_create_context
