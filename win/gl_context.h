@@ -37,6 +37,7 @@ namespace OpenGL
         extern PFNGLTEXIMAGE2DPROC glTexImage2D;
         extern PFNGLCLEARPROC glClear;
         extern PFNGLCLEARCOLORPROC glClearColor;
+        extern PFNGLDEPTHMASKPROC glDepthMask;
         extern PFNGLDISABLEPROC glDisable;
         extern PFNGLENABLEPROC glEnable;
         extern PFNGLBLENDFUNCPROC glBlendFunc;

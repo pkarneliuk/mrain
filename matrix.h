@@ -191,7 +191,8 @@ public:
     void draw(const Transform& transform);
     void tick(unsigned long usec);
 
-    virtual void pre_draw();
+    virtual void build_program();
+    virtual void pre_draw(const Transform& transform);
     virtual void post_draw();
 
 protected:
@@ -235,11 +236,11 @@ public:
     MatrixVideo(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture, const VideoBuffer* buffer, int width, int height, bool vflip, bool hflip);
     ~MatrixVideo();
 
-    virtual void pre_draw();
+    virtual void build_program();
+    virtual void pre_draw(const Transform& transform);
     virtual void post_draw();
 
 protected:
-    VertexData::T2F* video_st;  // Texture coords
     const VideoBuffer* video;   // Texture instance
 };
 //-----------------------------------------------------------------------------

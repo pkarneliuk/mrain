@@ -57,7 +57,7 @@ VideoScreen::VideoScreen(float w, float h):video(NULL), width(w), height(h)
     "out vec4 fragment;"
     "void main(void)"
     "{"
-    "    fragment = texture2D(video, ex_texcoord);"
+    "    fragment = texture(video, ex_texcoord);"
     "}";
 
     fshader.set_source(fragment_shader);
@@ -91,7 +91,7 @@ void VideoScreen::draw(const Transform& transform)
     }
 
     program.use();
-        transform.bind_to(program, model);
+        transform.bind_transform(program, model);
         program.set_sampler("video", 0);
         vao.bind();
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -118,6 +118,8 @@ Scene::Scene(GLRenderer* render, Capture* capture, const Options& options):atlas
         matrix = new MatrixVideo(128, 112, atlas[0], frames_stack, frame.width(), frame.height(), options[Options::vflip], options[Options::hflip]);
     }
     else matrix = new Matrix(128, 112, atlas[0]);
+
+    matrix->build_program();
 }
 
 Scene::~Scene()
@@ -132,8 +134,8 @@ unsigned int Scene::draw()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 //    renderer->draw();
-    matrix->draw(renderer->get_transform());
-//    screen->draw(renderer->get_transform());
+    if(matrix) matrix->draw(renderer->get_transform());
+    if(screen) screen->draw(renderer->get_transform());
     return 0;
 }
 
