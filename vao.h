@@ -45,12 +45,12 @@ private:
     template<typename T, typename U>
     struct Bind
     {
-        static inline void interlaced(GLsizei stride, GLuint index, size_t offset)
+        static inline void interleaved(GLsizei stride, GLuint index, size_t offset)
         {
             glVertexAttribPointer(index, T::num, T::type, GL_FALSE, stride, (const GLvoid*)(offset));
             glEnableVertexAttribArray(index);
 
-            Bind<U::element, U::next>::interlaced(stride, index+1, offset + sizeof(T)); // recursive call template
+            Bind<U::element, U::next>::interleaved(stride, index+1, offset + sizeof(T)); // recursive call template
         }
 
         static inline void serial(GLuint number, GLuint index, size_t offset)
@@ -64,18 +64,18 @@ private:
 
     template<typename U> struct Bind<void, U>
     {
-        static inline void interlaced(GLsizei, GLuint, size_t){}
-        static inline void serial     (GLuint, GLuint, size_t){}
+        static inline void interleaved(GLsizei, GLuint, size_t){}
+        static inline void serial     ( GLuint, GLuint, size_t){}
     };
 
     template<typename List> struct BindList:Bind<typename List::element, typename List::next>{};
 
 public:
 
-    template <typename Layout> // interlaced placement in VBO f.e: (VNCVNCVNCVNC)
+    template <typename Layout> // interleaved placement in VBO f.e: (VNCVNCVNCVNC)
     void bind(VBO<Layout, true>&, GLuint n, GLuint first_index)
     {
-        BindList<Layout::list>::interlaced(sizeof(Layout), first_index, 0);
+        BindList<Layout::list>::interleaved(sizeof(Layout), first_index, 0);
     }
 
     template <typename Layout> // serial placement in VBO f.e: (VVVVNNNNCCCC)

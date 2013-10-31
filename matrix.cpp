@@ -32,7 +32,7 @@ Matrix::Matrix(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture)
 
     const size_t vsize = sizeof(T2F_V3F_C4F);
     data = new GLfloat[vsize/sizeof(GLfloat) * num_vertices];
-
+    glyphs      = new VertexData::D4UB[nstrips * nglyphs];
     glyph_st    = reinterpret_cast<VertexData::T2F*>(&data[0]);
     vertexies   = reinterpret_cast<VertexData::V3F*>(&data[ sizeof(VertexData::T2F)/sizeof(GLfloat) * num_vertices]);
     colors      = reinterpret_cast<VertexData::C4F*>(&data[ (sizeof(VertexData::T2F) + sizeof(VertexData::V3F))/sizeof(GLfloat) * num_vertices]);
@@ -56,6 +56,7 @@ Matrix::Matrix(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture)
         vbo.create(num_vertices, data, GL_DYNAMIC_DRAW);
         vao.bind();
             vao.bind(vbo, num_vertices, 0);
+        //    vao.set_pointer(3, 
         vao.unbind();
     vbo.unbind();
 
@@ -73,6 +74,7 @@ Matrix::~Matrix()
     delete[] counts;
     delete[] firsts;
 
+    delete[] glyphs;
     delete[] data;
 }
 
@@ -158,7 +160,7 @@ void Matrix::draw(const Transform& transform)
         firsts[i] += (i * nglyphs<<2);
     }
 
-    //glMultiDrawArrays(GL_TRIANGLE_STRIP, firsts, counts, nstrips);
+//    glMultiDrawArrays(GL_TRIANGLE_STRIP, firsts, counts, nstrips);
     for(unsigned int i=0; i<nstrips; i++)
         glDrawArrays(GL_TRIANGLE_STRIP, firsts[i], counts[i]);
 
@@ -169,7 +171,7 @@ void Matrix::post_draw()
 {
     vao.unbind();
     GPU_Program::use_default();
-//    glDisable(GL_BLEND);
+    glDisable(GL_BLEND);
 //    glDepthMask(GL_TRUE);
 }
 

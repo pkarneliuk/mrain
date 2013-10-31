@@ -215,8 +215,9 @@ protected:
     GLint*      firsts;
     GLsizei*    counts;
 
-    GLfloat*         data;
-    VBO<T2F_V3F_C4F> vbo;
+    GLfloat*          data;
+    VertexData::D4UB* glyphs;
+    VBO<T2F_V3F_C4F>  vbo;
     VAO vao;
     GPU_Program program;
     matrix model;
