@@ -117,7 +117,6 @@ GLRenderer::GLRenderer(NativeWindow* win)
     gl_version = (const char*) glGetString(GL_VERSION);
 
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
     glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
