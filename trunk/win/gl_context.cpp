@@ -32,6 +32,7 @@ namespace OpenGL
         PFNGLTEXIMAGE2DPROC glTexImage2D = NULL;
         PFNGLCLEARPROC glClear = NULL;
         PFNGLCLEARCOLORPROC glClearColor = NULL;
+        PFNGLDEPTHMASKPROC glDepthMask = NULL;
         PFNGLDISABLEPROC glDisable = NULL;
         PFNGLENABLEPROC glEnable = NULL;
         PFNGLBLENDFUNCPROC glBlendFunc = NULL;
@@ -241,7 +242,7 @@ GLAPI void APIENTRY glGetTexLevelParameteriv (GLenum target, GLint level, GLenum
 GLAPI GLboolean APIENTRY glIsEnabled (GLenum cap);
 GLAPI void APIENTRY glDepthRange (GLdouble near, GLdouble far);
 GLAPI void APIENTRY glViewport (GLint x, GLint y, GLsizei width, GLsizei height);
-}
+} // extern "C"
 
 bool OpenGL::OGL::load()
 {
@@ -250,6 +251,7 @@ bool OpenGL::OGL::load()
     LIB_LINK(glTexImage2D);
     LIB_LINK(glClear);
     LIB_LINK(glClearColor);
+    LIB_LINK(glDepthMask);
     LIB_LINK(glDisable);
     LIB_LINK(glEnable);
     LIB_LINK(glBlendFunc);

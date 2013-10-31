@@ -48,7 +48,7 @@ void VideoBuffer::update(const Bitmap& frame, unsigned long usec)
         last_time += delay;
     }
 
-    VideoFrame* video = (VideoFrame*)textures[top_index];
+    VideoFrame* video = static_cast<VideoFrame*>(textures[top_index]);
     video->bind();
     video->update(frame.data(), 0, 0, frame.width(), frame.height());
 }

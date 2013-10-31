@@ -89,7 +89,7 @@ public:
     void draw(const Transform& transform)
     {
         program.use();
-        transform.bind_to(program, model);
+        transform.bind_transform(program, model);
         vao.bind();
         glDrawArrays(GL_TRIANGLES, 0, 3);
         vao.unbind();
@@ -105,7 +105,9 @@ public:
 } * triangle = NULL;
 
 //-----------------------------------------------------------------------------
-GLRenderer::GLRenderer(NativeWindow* win):GLContext(win)
+GLRenderer::GLRenderer(NativeWindow* win)
+    : GLContext(win)
+    , transformation(80.0f, 1.0f, 1000.0f)
 {
     printf("GL version:\t%s\n", glGetString(GL_VERSION));
     printf("GLSL version:\t%s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
@@ -115,6 +117,7 @@ GLRenderer::GLRenderer(NativeWindow* win):GLContext(win)
     gl_version = (const char*) glGetString(GL_VERSION);
 
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
     glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -136,12 +139,7 @@ void GLRenderer::reshape(unsigned int width, unsigned int height)
 {
     glViewport (0, 0, (GLint) width, (GLint) height);
 
-    const float fov = 80.0f;
-    const float aspect = (float) width/(float) height;
-    const float znear = 1.0f;
-    const float zfar  = 1000.0f;
-
-    transformation.set_perspective(fov, aspect, znear, zfar);
+    transformation.set_viewport(0, 0, width, height);
 }
 
 

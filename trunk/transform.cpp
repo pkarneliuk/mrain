@@ -9,10 +9,15 @@
 //-----------------------------------------------------------------------------
 #include "transform.h"
 //-----------------------------------------------------------------------------
-void Transform::bind_to(GPU_Program& program, const matrix& model)const
+void Transform::bind_transform(GPU_Program& program, const matrix& model) const
 {
     matrix tmp;
     tmp.mul(projview, model);
     program.set_uniform_matrix("transform", tmp.array);
+}
+
+void Transform::bind_viewport(GPU_Program& program) const
+{
+    program.set_uniform("viewport", viewport);
 }
 //-----------------------------------------------------------------------------
