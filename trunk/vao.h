@@ -47,14 +47,14 @@ private:
     {
         static inline void interleaved(GLsizei stride, GLuint index, size_t offset)
         {
-            if(T::type == GL_BYTE
-            || T::type == GL_UNSIGNED_BYTE
-            || T::type == GL_SHORT
-            || T::type == GL_UNSIGNED_SHORT
-            || T::type == GL_INT
-            || T::type == GL_UNSIGNED_INT )
+            if(T::type == GL_INT+GL_BYTE
+            || T::type == GL_INT+GL_UNSIGNED_BYTE
+            || T::type == GL_INT+GL_SHORT
+            || T::type == GL_INT+GL_UNSIGNED_SHORT
+            || T::type == GL_INT+GL_INT
+            || T::type == GL_INT+GL_UNSIGNED_INT )
             {
-                glVertexAttribIPointer(index, T::num, T::type, stride, (const GLvoid*)(offset));
+                glVertexAttribIPointer(index, T::num, T::type-GL_INT, stride, (const GLvoid*)(offset));
             }
             else
             {
@@ -67,20 +67,19 @@ private:
 
         static inline void serial(GLuint number, GLuint index, size_t offset)
         {
-            if(T::type == GL_BYTE
-            || T::type == GL_UNSIGNED_BYTE
-            || T::type == GL_SHORT
-            || T::type == GL_UNSIGNED_SHORT
-            || T::type == GL_INT
-            || T::type == GL_UNSIGNED_INT )
+            if(T::type == GL_INT+GL_BYTE
+            || T::type == GL_INT+GL_UNSIGNED_BYTE
+            || T::type == GL_INT+GL_SHORT
+            || T::type == GL_INT+GL_UNSIGNED_SHORT
+            || T::type == GL_INT+GL_INT
+            || T::type == GL_INT+GL_UNSIGNED_INT )
             {
-                glVertexAttribIPointer(index, T::num, T::type, 0, (const GLvoid*)(number*offset));
+                glVertexAttribIPointer(index, T::num, T::type-GL_INT, 0, (const GLvoid*)(number*offset));
             }
             else
             {
                 glVertexAttribPointer(index, T::num, T::type, GL_FALSE, 0, (const GLvoid*)(number*offset));
             }
-
             glEnableVertexAttribArray(index);
 
             Bind<U::element, U::next>::serial(number, index+1, offset + sizeof(T));
