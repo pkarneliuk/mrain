@@ -90,6 +90,8 @@ namespace OpenGL
         extern PFNGLUSEPROGRAMPROC glUseProgram;
         extern PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer;
         // GL_VERSION_3_0
+        extern PFNGLVERTEXATTRIBIPOINTERPROC glVertexAttribIPointer;
+        // GL_ARB_vertex_array_object
         extern PFNGLBINDVERTEXARRAYPROC glBindVertexArray;
         extern PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays;
         extern PFNGLGENVERTEXARRAYSPROC glGenVertexArrays;

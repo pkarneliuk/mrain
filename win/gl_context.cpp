@@ -85,6 +85,8 @@ namespace OpenGL
         PFNGLUSEPROGRAMPROC glUseProgram = NULL;
         PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer = NULL;
         // GL_VERSION_3_0
+        PFNGLVERTEXATTRIBIPOINTERPROC glVertexAttribIPointer = NULL;
+        // GL_ARB_vertex_array_object
         PFNGLBINDVERTEXARRAYPROC glBindVertexArray = NULL;
         PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays = NULL;
         PFNGLGENVERTEXARRAYSPROC glGenVertexArrays = NULL;
@@ -304,6 +306,8 @@ bool OpenGL::OGL::load()
     WGL_BIND(glUseProgram);
     WGL_BIND(glVertexAttribPointer);
     // GL_VERSION_3_0
+    WGL_BIND(glVertexAttribIPointer);
+    // GL_ARB_vertex_array_object
     WGL_BIND(glBindVertexArray);
     WGL_BIND(glDeleteVertexArrays);
     WGL_BIND(glGenVertexArrays);

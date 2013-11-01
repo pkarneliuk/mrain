@@ -17,7 +17,7 @@ const Matrix::spawn Matrix::spawners[]={&Matrix::spawn_a,
                                         &Matrix::spawn_d, };
 //-----------------------------------------------------------------------------
 Matrix::Matrix(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture): letter(texture),
-    glyph_st(NULL),
+    glyphs(NULL),
     vertexies(NULL),
     colors(NULL),
     firsts(NULL), counts(NULL),
@@ -28,14 +28,14 @@ Matrix::Matrix(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture)
 
     const unsigned int num_vertices = nstrips * strip_pack;
 
-    static_assert(sizeof(T2F_V3F_C4F) == 36, "wrong sizeof");
+    static_assert(sizeof(D4UB_V3F_C4F) == 32, "wrong sizeof");
 
-    const size_t vsize = sizeof(T2F_V3F_C4F);
+    const size_t vsize = sizeof(D4UB_V3F_C4F);
     data = new GLfloat[vsize/sizeof(GLfloat) * num_vertices];
-    glyphs      = new VertexData::D4UB[nstrips * nglyphs];
-    glyph_st    = reinterpret_cast<VertexData::T2F*>(&data[0]);
-    vertexies   = reinterpret_cast<VertexData::V3F*>(&data[ sizeof(VertexData::T2F)/sizeof(GLfloat) * num_vertices]);
-    colors      = reinterpret_cast<VertexData::C4F*>(&data[ (sizeof(VertexData::T2F) + sizeof(VertexData::V3F))/sizeof(GLfloat) * num_vertices]);
+
+    glyphs    = reinterpret_cast<VertexData::D4UB*>(&data[0]);
+    vertexies = reinterpret_cast<VertexData::V3F*>(&data[  sizeof(VertexData::D4UB)/sizeof(GLfloat) * num_vertices]);
+    colors    = reinterpret_cast<VertexData::C4F*>(&data[ (sizeof(VertexData::D4UB) + sizeof(VertexData::V3F))/sizeof(GLfloat) * num_vertices]);
 
     firsts = new GLint[nstrips];
     counts = new GLsizei[nstrips];
@@ -44,7 +44,7 @@ Matrix::Matrix(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture)
     for(unsigned int i=0; i<nstrips; i++)
     {
         strips[i] = new Strip( strip_pack,
-                        &glyph_st[i*strip_pack],
+                        &glyphs[i*strip_pack],
                         &vertexies[i*strip_pack],
                         &colors[i*strip_pack],
                         float(i)/2.0f, -grid_random(5.0f), 0,
@@ -53,10 +53,9 @@ Matrix::Matrix(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture)
     }
 
     vbo.bind();
-        vbo.create(num_vertices, data, GL_DYNAMIC_DRAW);
+        vbo.create(num_vertices, data, GL_STREAM_DRAW);
         vao.bind();
             vao.bind(vbo, num_vertices, 0);
-        //    vao.set_pointer(3, 
         vao.unbind();
     vbo.unbind();
 
@@ -74,7 +73,6 @@ Matrix::~Matrix()
     delete[] counts;
     delete[] firsts;
 
-    delete[] glyphs;
     delete[] data;
 }
 
@@ -84,16 +82,19 @@ void Matrix::build_program()
     const GLchar* vertex_shader = 
     "#version 130\n"
     "uniform mat4 transform;"
-    "in  vec2 texcoord;"
+    "in  uvec4 data;"
     "in  vec3 position;"
     "in  vec4 color;"
     "out vec4 ex_color;"
-    "out vec2 ex_texcoord;"
+    "out vec2 texcoord;"
     "void main(void)"
     "{"
     "    gl_Position = transform * vec4(position, 1.0);"
-    "    ex_texcoord = texcoord;"
     "    ex_color = color;"
+    // optimization of:
+    //"    texcoord.t = ((gl_VertexID % 4) < 2) ? 1.0 : 0.0;"
+    "    texcoord.t = (~gl_VertexID & 0x3) >> 1;"
+    "    texcoord.s = float(data.s +  uint(gl_VertexID & 0x1) )/32.0;"
     "}";
 
     vshader.set_source(vertex_shader);
@@ -105,11 +106,11 @@ void Matrix::build_program()
     "#version 130\n"
     "uniform sampler2D glyphs;"
     "in vec4 ex_color;"
-    "in  vec2 ex_texcoord;"
+    "in  vec2 texcoord;"
     "out vec4 fragment;"
     "void main(void)"
     "{"
-    "    vec4 t = texture(glyphs, ex_texcoord);"
+    "    vec4 t = texture(glyphs, texcoord);"
     "    if(t.r ==0) discard;"
     "    vec4 c = ex_color;"
 //    "    c.a =  1 - ex_color.a;"
@@ -123,7 +124,7 @@ void Matrix::build_program()
 
     program.attach(vshader);
     program.attach(fshader);
-    program.bind(0, "texcoord");
+    program.bind(0, "data");
     program.bind(1, "position");
     program.bind(2, "color");
 
@@ -190,7 +191,7 @@ void Matrix::tick(unsigned long usec)
     }
 
     vbo.bind();
-        vbo.set_data(0, nstrips * nglyphs * 4 * sizeof(T2F_V3F_C4F), data);
+        vbo.set_data(0, nstrips * nglyphs * 4 * sizeof(D4UB_V3F_C4F), data);
     vbo.unbind();
 }
 
@@ -249,20 +250,30 @@ void Matrix::spawn_d()
     }
 }
 
-Matrix::Strip::Strip(unsigned int n, VertexData::T2F* g, VertexData::V3F* v, VertexData::C4F* c,
-GLfloat x, GLfloat y, GLfloat z, float h1, float h2, float r, float p, float q, float rotates): 
-glyph_st(g), vertexies(v), colors(c), size(0.4f), animation(2048, size,
- vector(x, y, z), vector(32.0f, -35.0f, -35.0f), h1, h2, r, p, q, rotates), wave_waiter(100000 + grandom(40000U)), aframe_waiter(10000), n_glyphs(n/4), end_glyph(0), wavehead(0), adelay(0), aframe(0), arunning(false)
+Matrix::Strip::Strip(unsigned int n, VertexData::D4UB* g, VertexData::V3F* v, VertexData::C4F* c,
+GLfloat x, GLfloat y, GLfloat z, float h1, float h2, float r, float p, float q, float rotates)
+    : glyphs(g)
+    , vertexies(v)
+    , colors(c)
+    , size(0.4f)
+    , animation(2048, size, vector(x, y, z), vector(32.0f, -35.0f, -35.0f), h1, h2, r, p, q, rotates)
+    , wave_waiter(100000 + grandom(40000U))
+    , aframe_waiter(10000)
+    , n_glyphs(n/4)
+    , end_glyph(0)
+    , wavehead(0)
+    , adelay(0)
+    , aframe(0)
+    , arunning(false)
 {
     GLfloat yi = y;
     for(unsigned int i=0; i<n; i+= 4)
     {
-        GLfloat a = cosf(float((int(wavehead - (i/4))%80))*(3.1415926f/180.0f));
+        GLfloat a = cosf(float(( int(wavehead - (i/4)) %80))*(3.1415926f/180.0f));
 
-        GLfloat s = float(rand()%32)/32.0f;
+        GLubyte g = rand()%32;
 
-        glyph_st[i].s = s;
-        glyph_st[i].t = 1.0f;
+        glyphs[i].i = g;
         colors[i].r = 0.0f;
         colors[i].g = 1.0f;
         colors[i].b = 0.0f;
@@ -271,8 +282,7 @@ glyph_st(g), vertexies(v), colors(c), size(0.4f), animation(2048, size,
         vertexies[i].y = yi;
         vertexies[i].z = z;
 
-        glyph_st[i+1].s = s+1.0f/32.0f;
-        glyph_st[i+1].t = 1.0f;
+        glyphs[i+1].i = g;
         colors[i+1].r = 0.0f;
         colors[i+1].g = 1.0f;
         colors[i+1].b = 0.0f;
@@ -281,8 +291,7 @@ glyph_st(g), vertexies(v), colors(c), size(0.4f), animation(2048, size,
         vertexies[i+1].y = yi;
         vertexies[i+1].z = z;
 
-        glyph_st[i+2].s = s;
-        glyph_st[i+2].t = 0.0f;
+        glyphs[i+2].i = g;
         colors[i+2].r = 0.0f;
         colors[i+2].g = 1.0f;
         colors[i+2].b = 0.0f;
@@ -291,8 +300,7 @@ glyph_st(g), vertexies(v), colors(c), size(0.4f), animation(2048, size,
         vertexies[i+2].y = yi-size;
         vertexies[i+2].z = z;
 
-        glyph_st[i+3].s = s+1.0f/32.0f;
-        glyph_st[i+3].t = 0.0f;
+        glyphs[i+3].i = g;
         colors[i+3].r = 0.0f;
         colors[i+3].g = 1.0f;
         colors[i+3].b = 0.0f;
@@ -380,17 +388,12 @@ void Matrix::Strip::wave_tick(unsigned long usec)
             else
             {
                 // change glyph image
-                GLfloat sa = float(rand()%32)/32.0f;
-                GLfloat sb = sa+1.0f/32.0f;
+                GLubyte g = rand()%32;
 
-                glyph_st[index].s = sa;
-                glyph_st[index].t = 1.0f;
-                glyph_st[index+1].s = sb;
-                glyph_st[index+1].t = 1.0f;
-                glyph_st[index+2].s = sa;
-                glyph_st[index+2].t = 0.0f;
-                glyph_st[index+3].s = sb;
-                glyph_st[index+3].t = 0.0f;
+                glyphs[index+0].i = g;
+                glyphs[index+1].i = g;//(g+1)%32;
+                glyphs[index+2].i = g;
+                glyphs[index+3].i = g;//(g+1)%32;
 
                 colors[index+0].a = 0.0f;
                 colors[index+1].a = 0.0f;
@@ -449,16 +452,19 @@ void MatrixVideo::build_program()
     const GLchar* vertex_shader = 
     "#version 130\n"
     "uniform mat4 transform;"
-    "in  vec2 texcoord;"
+    "in  uvec4 data;"
     "in  vec3 position;"
     "in  vec4 color;"
     "out vec4 ex_color;"
-    "out vec2 ex_texcoord;"
+    "out vec2 texcoord;"
     "void main(void)"
     "{"
     "    gl_Position = transform * vec4(position, 1.0);"
-    "    ex_texcoord = texcoord;"
     "    ex_color = color;"
+    // optimization of:
+    //"    texcoord.t = ((gl_VertexID % 4) < 2) ? 1.0 : 0.0;"
+    "    texcoord.t = (~gl_VertexID & 0x3) >> 1;"
+    "    texcoord.s = float(data.s +  uint(gl_VertexID & 0x1) )/32.0;"
     "}";
 
     vshader.set_source(vertex_shader);
@@ -472,11 +478,11 @@ void MatrixVideo::build_program()
     "uniform sampler2D glyphs;"
     "uniform sampler2D video;"
     "in vec4 ex_color;"
-    "in  vec2 ex_texcoord;"
+    "in  vec2 texcoord;"
     "out vec4 fragment;"
     "void main(void)"
     "{"
-    "    vec4 t = texture(glyphs, ex_texcoord);"
+    "    vec4 t = texture(glyphs, texcoord);"
     "    if(t.r == 0) discard;"
 
     "    vec2 video_st = gl_FragCoord.xy/viewport.zw;"
@@ -494,7 +500,7 @@ void MatrixVideo::build_program()
 
     program.attach(vshader);
     program.attach(fshader);
-    program.bind(0, "texcoord");
+    program.bind(0, "data");
     program.bind(1, "position");
     program.bind(2, "color");
 
