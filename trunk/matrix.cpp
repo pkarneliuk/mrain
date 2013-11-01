@@ -489,7 +489,7 @@ void MatrixVideo::build_program()
     "    vec4 v = texture(video, video_st);"
 
     "    float gray = dot(v.rgb, vec3(0.2125, 0.7154, 0.0721));"
-    "    fragment = vec4(ex_color.rgb * t.r * gray, ex_color.a);"
+    "    fragment = vec4(ex_color.rgb * min(t.r, gray), ex_color.a);"
 //    "    fragment = vec4( mix(ex_color.rgb, v.rgb, t.r), ex_color.a);"
 //    "    fragment = vec4(v.rgb, ex_color.a);"
     "}";
@@ -519,7 +519,7 @@ void MatrixVideo::pre_draw(const Transform& transform)
     glActiveTexture(GL_TEXTURE1);
     program.set_sampler("video", 1);
 
-    video->bind();
+    video->frame()->bind();
 }
 
 void MatrixVideo::post_draw()
