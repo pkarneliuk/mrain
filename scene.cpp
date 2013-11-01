@@ -87,7 +87,7 @@ void VideoScreen::draw(const Transform& transform)
     {
         glActiveTexture(GL_TEXTURE0);
         glEnable(GL_TEXTURE_2D);
-        video->bind();
+        video->frame()->bind();
     }
 
     program.use();

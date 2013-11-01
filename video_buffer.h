@@ -26,11 +26,8 @@ public:
 
     VideoBuffer(const Bitmap& frame, int layers, unsigned long micsec_delay);
 
-    void update(const Bitmap& frame, unsigned long usec);
-    void bind() const;
-
-    float s;
-    float t;
+    inline VideoFrame* frame() const { return static_cast<VideoFrame*>(textures[top_index]); }
+    void update(const Bitmap& bitmap, unsigned long usec);
 
 protected:
     unsigned int top_index;

@@ -31,8 +31,8 @@ void VideoBuffer::VideoFrame::update(unsigned char* data, unsigned int offset_x,
 
 VideoBuffer::VideoBuffer(const Bitmap& frame, int layers, unsigned long micsec_delay):TextureArray(layers+1 /*for current*/), top_index(0), last_time(micsec_delay), delay(micsec_delay)
 {
-    s = 1.0f;//float(frame.width() ) / float(round_pow_2( frame.width()  ));
-    t = 1.0f;//float(frame.height()) / float(round_pow_2( frame.height() ));
+//    s = 1.0f;//float(frame.width() ) / float(round_pow_2( frame.width()  ));
+//    t = 1.0f;//float(frame.height()) / float(round_pow_2( frame.height() ));
 
     for(unsigned int i=0; i<num_textures; i++)
     {
@@ -48,13 +48,8 @@ void VideoBuffer::update(const Bitmap& frame, unsigned long usec)
         last_time += delay;
     }
 
-    VideoFrame* video = static_cast<VideoFrame*>(textures[top_index]);
+    VideoFrame* video = this->frame();
     video->bind();
     video->update(frame.data(), 0, 0, frame.width(), frame.height());
-}
-
-void VideoBuffer::bind() const
-{
-    textures[top_index]->bind();
 }
 //-----------------------------------------------------------------------------
