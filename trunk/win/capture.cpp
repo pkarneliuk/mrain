@@ -281,25 +281,44 @@ void Capture::decode_to_buffer(unsigned char* src, unsigned int length)const
 
     if(buffer && coder)
     {
-        (*coder)(src, src+length, buffer);
+//        (*coder)(src, src+length, buffer);
+
+        unsigned char * dst = buffer + ( h * w * bpp(format) );
+        size_t length = w * (BaseCapture::get_transform(fourcc)).bpp / 8;
+
+        for(unsigned int y=0; y<h; y++)  // fill lines from bottom to up
+        {
+            dst -= w * bpp(format);
+            (*coder)(src, src+length, dst);
+            src += length;
+        }
     }
 }
 
-void Capture::decode_padded_to_buffer(unsigned char* scanline0, unsigned int pitch)const
+void Capture::decode_padded_to_buffer(unsigned char* scanline0, long pitch)const
 {
     CriticalSection::Lock lock(cs);
 
     if(buffer && coder)
     {
         unsigned char * src = scanline0;
-        unsigned char * dst = buffer;
+        unsigned char * dst = buffer + ((h-1) * w * bpp(format) );
+        long dst_offset = 0;
+        if(pitch < 0) // might be negative, indicating that the image is oriented from the bottom up in memory
+        {
+            dst = buffer;
+            dst_offset = w * bpp(format);
+        }
+        else
+        {
+            dst_offset -= (w * bpp(format)); // fill lines from bottom to up
+        }
         size_t length = w * (BaseCapture::get_transform(fourcc)).bpp / 8;
 
         for(unsigned int y=0; y<h; y++)
         {
             (*coder)(src, src+length, dst);
-
-            dst += w * bpp(format);
+            dst += dst_offset; // fill lines from bottom to up
             src += pitch;
         }
     }
