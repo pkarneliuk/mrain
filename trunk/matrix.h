@@ -26,7 +26,7 @@
 //-----------------------------------------------------------------------------
 class Matrix    // Simply Matrix effect
 {
-    typedef VertexData::Layout<VertexData::T2F, VertexData::V3F, VertexData::C4F> T2F_V3F_C4F;
+    typedef VertexData::Layout<VertexData::D4UB, VertexData::V3F, VertexData::C4F> D4UB_V3F_C4F;
 
 protected:
 
@@ -152,7 +152,7 @@ protected:
     class Strip
     {
     public:
-        Strip(unsigned int n, VertexData::T2F* g, VertexData::V3F* v, VertexData::C4F* c,
+        Strip(unsigned int n, VertexData::D4UB* g, VertexData::V3F* v, VertexData::C4F* c,
         GLfloat x, GLfloat y, GLfloat z, float h1, float h2, float r, float p, float q, float rotates);
         Animation& operator=(Animation&); //undefined
         ~Strip();
@@ -160,7 +160,7 @@ protected:
         void draw(GLint* first, GLsizei* count);
         void tick(unsigned long usec);
 
-        VertexData::T2F*    glyph_st;
+        VertexData::D4UB*   glyphs;
         VertexData::V3F*    vertexies;
         VertexData::C4F*    colors;
         GLfloat size;
@@ -208,16 +208,15 @@ protected:
 
     TextureAtlas::Texture* letter;
 
-    VertexData::T2F*    glyph_st;
-    VertexData::V3F*    vertexies;
-    VertexData::C4F*    colors;
+    VertexData::D4UB* glyphs;
+    VertexData::V3F*  vertexies;
+    VertexData::C4F*  colors;
 
     GLint*      firsts;
     GLsizei*    counts;
 
     GLfloat*          data;
-    VertexData::D4UB* glyphs;
-    VBO<T2F_V3F_C4F>  vbo;
+    VBO<D4UB_V3F_C4F> vbo;
     VAO vao;
     GPU_Program program;
     matrix model;

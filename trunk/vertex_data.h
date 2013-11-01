@@ -14,6 +14,16 @@
 //-----------------------------------------------------------------------------
 namespace VertexData
 {
+    struct D1UB
+    {
+        enum{ num=1, type=GL_UNSIGNED_BYTE };
+        union
+        {
+            struct{ GLubyte data[num]; };
+            struct{ GLubyte i;         };
+        };
+    };
+
     struct D4UB
     {
         enum{ num=4, type=GL_UNSIGNED_BYTE };
