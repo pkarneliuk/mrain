@@ -480,13 +480,19 @@ void MatrixVideo::build_program()
     "in vec4 ex_color;"
     "in  vec2 texcoord;"
     "out vec4 fragment;"
+
     "void main(void)"
     "{"
     "    vec4 t = texture(glyphs, texcoord);"
     "    if(t.r == 0) discard;"
 
-    "    vec2 video_st = gl_FragCoord.xy/viewport.zw;"
+    "    vec2 factor = viewport.zw/textureSize(video, 0);"
+
+    "    vec2 r = textureSize(video, 0) * max(factor.x, factor.y);"
+
+    "    vec2 video_st = (gl_FragCoord.xy - viewport.zw / 2 + r* 1.5)    /r;"
     "    vec4 v = texture(video, video_st);"
+
 
     "    float gray = dot(v.rgb, vec3(0.2125, 0.7154, 0.0721));"
     "    fragment = vec4(ex_color.rgb * min(t.r, gray), ex_color.a);"
@@ -517,6 +523,9 @@ void MatrixVideo::pre_draw(const Transform& transform)
     transform.bind_viewport(program);
 
     glActiveTexture(GL_TEXTURE1);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
     program.set_sampler("video", 1);
 
     video->frame()->bind();
