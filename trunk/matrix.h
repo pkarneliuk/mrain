@@ -233,7 +233,7 @@ protected:
 class MatrixVideo:public Matrix // Matrix and Video effect
 {
 public:
-    MatrixVideo(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture, const VideoBuffer* buffer, int width, int height, bool vflip, bool hflip);
+    MatrixVideo(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture, const VideoBuffer* buffer, int width, int height, bool vertical_flip, bool horizontal_flip);
     ~MatrixVideo();
 
     virtual void build_program();
@@ -242,6 +242,8 @@ public:
 
 protected:
     const VideoBuffer* video;   // Texture instance
+    bool vflip;
+    bool hflip;
 };
 //-----------------------------------------------------------------------------
 #endif//MATRIX_H
