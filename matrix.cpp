@@ -112,10 +112,7 @@ void Matrix::build_program()
     "{"
     "    vec4 t = texture(glyphs, texcoord);"
     "    if(t.r ==0) discard;"
-    "    vec4 c = ex_color;"
-//    "    c.a =  1 - ex_color.a;"
-//    "    ex_color.a = 1 - ex_color.a;"
-    "    fragment = c*t.r;"
+    "    fragment = ex_color*t.r;"
     "}";
 
     fshader.set_source(fragment_shader);
@@ -460,10 +457,13 @@ void MatrixVideo::build_program()
     "in  vec4 color;"
     "out vec4 ex_color;"
     "out vec2 texcoord;"
+    "out vec2 vcoord;"
     "void main(void)"
     "{"
     "    gl_Position = transform * vec4(position, 1.0);"
     "    ex_color = color;"
+    "    const vec2 d = vec2(1/64.0, 1/48.0);"
+    "    vcoord = vec2(1,1) + position.xy*d;"
     // optimization of:
     //"    texcoord.t = ((gl_VertexID % 4) < 2) ? 1.0 : 0.0;"
     "    texcoord.t = (~gl_VertexID & 0x3) >> 1;"
@@ -477,23 +477,26 @@ void MatrixVideo::build_program()
     Shader fshader(Shader::Fragment);
     const GLchar* fragment_shader = 
     "#version 130\n"
-    "uniform vec4 viewport;"
+//    "uniform vec4 viewport;"
     "uniform sampler2D glyphs;"
     "uniform sampler2D video;"
     "in vec4 ex_color;"
     "in  vec2 texcoord;"
+    "in  vec2 vcoord;"
     "out vec4 fragment;"
 
     "void main(void)"
     "{"
     "    vec4 t = texture(glyphs, texcoord);"
     "    if(t.r == 0) discard;"
-
+/*
     "    vec2 factor = viewport.zw/textureSize(video, 0);"
     "    vec2 r = textureSize(video, 0) * max(factor.x, factor.y);"
 
-    "    vec2 video_st = (gl_FragCoord.xy - viewport.zw / 2 + r* 1.5)    /r;"
+    "    vec2 video_st = (gl_FragCoord.xy - viewport.zw / 2 + r* 1.5) /r;"
     "    vec4 v = texture(video, video_st);"
+    */
+    "    vec4 v = texture(video, vcoord);"
 
     "    float gray = dot(v.rgb, vec3(0.2125, 0.7154, 0.0721));"
     "    fragment = vec4(ex_color.rgb * min(t.r, gray), ex_color.a);"
