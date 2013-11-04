@@ -31,9 +31,6 @@ void VideoBuffer::VideoFrame::update(unsigned char* data, unsigned int offset_x,
 
 VideoBuffer::VideoBuffer(const Bitmap& frame, int layers, unsigned long micsec_delay):TextureArray(layers+1 /*for current*/), top_index(0), last_time(micsec_delay), delay(micsec_delay)
 {
-//    s = 1.0f;//float(frame.width() ) / float(round_pow_2( frame.width()  ));
-//    t = 1.0f;//float(frame.height()) / float(round_pow_2( frame.height() ));
-
     for(unsigned int i=0; i<num_textures; i++)
     {
         textures[i] = new VideoFrame(frame.data(), frame.width(), frame.height(), texture_id[i]);

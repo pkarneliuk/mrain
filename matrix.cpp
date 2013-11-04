@@ -404,8 +404,11 @@ void Matrix::Strip::wave_tick(unsigned long usec)
     }
 }
 
-MatrixVideo::MatrixVideo(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture, const VideoBuffer* buffer, int /*width*/, int /*height*/, bool vflip, bool hflip)
-    :Matrix(ns, ng, texture), video(buffer)
+MatrixVideo::MatrixVideo(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture, const VideoBuffer* buffer, int /*width*/, int /*height*/, bool vertical_flip, bool horizontal_flip)
+    : Matrix(ns, ng, texture)
+    , video(buffer)
+    , vflip(vertical_flip)
+    , hflip(horizontal_flip)
 {
     /*
     video_st = new VertexData::T2F[ns * ng * 4];    // Vertex array for video texture unit
@@ -487,12 +490,10 @@ void MatrixVideo::build_program()
     "    if(t.r == 0) discard;"
 
     "    vec2 factor = viewport.zw/textureSize(video, 0);"
-
     "    vec2 r = textureSize(video, 0) * max(factor.x, factor.y);"
 
     "    vec2 video_st = (gl_FragCoord.xy - viewport.zw / 2 + r* 1.5)    /r;"
     "    vec4 v = texture(video, video_st);"
-
 
     "    float gray = dot(v.rgb, vec3(0.2125, 0.7154, 0.0721));"
     "    fragment = vec4(ex_color.rgb * min(t.r, gray), ex_color.a);"
@@ -523,8 +524,8 @@ void MatrixVideo::pre_draw(const Transform& transform)
     transform.bind_viewport(program);
 
     glActiveTexture(GL_TEXTURE1);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, vflip ? GL_MIRRORED_REPEAT : GL_REPEAT);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, hflip ? GL_MIRRORED_REPEAT : GL_REPEAT);
 
     program.set_sampler("video", 1);
 
