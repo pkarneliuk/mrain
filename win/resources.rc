@@ -37,10 +37,6 @@ BEGIN
     CONTROL         "Vertical flip",IDC_VFLIP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,41,51,10
     CONTROL         "Horisontal flip",IDC_HFLIP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,55,59,10
     PUSHBUTTON      "Register",IDC_REGISTER,115,68,50,14,WS_DISABLED
-    PUSHBUTTON      "Activate",IDC_ACTIVATE,57,139,50,14,WS_DISABLED
-    EDITTEXT        IDC_AKEY,90,115,72,14,ES_UPPERCASE | ES_AUTOHSCROLL
-    PUSHBUTTON      "Take activation key",IDC_SUBMIT,6,115,72,14
-    LTEXT           "Press 'Take activation key' and put key in the field. Just make sure you are connected to the Internet",IDC_STATIC,6,92,163,20
 END
 
 /////////////////////////////////////////////////////////////////////////////

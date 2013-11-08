@@ -34,9 +34,6 @@
     <ClCompile Include="..\gl_context.cpp">
       <Filter>sources</Filter>
     </ClCompile>
-    <ClCompile Include="..\license.cpp">
-      <Filter>sources</Filter>
-    </ClCompile>
     <ClCompile Include="..\native_stuff.cpp">
       <Filter>sources</Filter>
     </ClCompile>
@@ -100,9 +97,6 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="..\glext.h">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\license.h">
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="..\native_stuff.h">

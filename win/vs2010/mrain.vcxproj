@@ -230,7 +230,6 @@
     <ClCompile Include="..\..\video_buffer.cpp" />
     <ClCompile Include="..\capture.cpp" />
     <ClCompile Include="..\gl_context.cpp" />
-    <ClCompile Include="..\license.cpp" />
     <ClCompile Include="..\native_stuff.cpp" />
     <ClCompile Include="..\native_window.cpp" />
   </ItemGroup>
@@ -258,7 +257,6 @@
     <ClInclude Include="..\capture.h" />
     <ClInclude Include="..\glext.h" />
     <ClInclude Include="..\gl_context.h" />
-    <ClInclude Include="..\license.h" />
     <ClInclude Include="..\native_stuff.h" />
     <ClInclude Include="..\native_window.h" />
     <ClInclude Include="..\resource.h" />
