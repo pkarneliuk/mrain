@@ -16,26 +16,23 @@ const Matrix::spawn Matrix::spawners[]={&Matrix::spawn_a,
                                         &Matrix::spawn_c,
                                         &Matrix::spawn_d, };
 //-----------------------------------------------------------------------------
-Matrix::Matrix(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture): letter(texture),
-    glyphs(NULL),
-    vertexies(NULL),
-    colors(NULL),
-    firsts(NULL), counts(NULL),
-    nstrips(ns), nglyphs(ng),
-    strips(NULL), grid_random(324467), animation_period(100000000 + grandom(50000000U))
+Matrix::Matrix(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture)
+    : letter(texture)
+    , firsts(NULL)
+    , counts(NULL)
+    , nstrips(ns)
+    , nglyphs(ng)
+    , strips(NULL)
+    , grid_random(324467)
+    , animation_period(100000000 + grandom(50000000U))
 {
-    unsigned int strip_pack = nglyphs * 4;
+    const unsigned int strip_pack = nglyphs * 4;
 
     const unsigned int num_vertices = nstrips * strip_pack;
 
     static_assert(sizeof(D4UB_V3F_C4F) == 32, "wrong sizeof");
 
     const size_t vsize = sizeof(D4UB_V3F_C4F);
-    data = new GLfloat[vsize/sizeof(GLfloat) * num_vertices];
-
-    glyphs    = reinterpret_cast<VertexData::D4UB*>(&data[0]);
-    vertexies = reinterpret_cast<VertexData::V3F*>(&data[  sizeof(VertexData::D4UB)/sizeof(GLfloat) * num_vertices]);
-    colors    = reinterpret_cast<VertexData::C4F*>(&data[ (sizeof(VertexData::D4UB) + sizeof(VertexData::V3F))/sizeof(GLfloat) * num_vertices]);
 
     firsts = new GLint[nstrips];
     counts = new GLsizei[nstrips];
@@ -43,20 +40,30 @@ Matrix::Matrix(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture)
 
     vector twister_pos(64.0f, -70.0f, -40.0f);
 
-    for(unsigned int i=0; i<nstrips; i++)
-    {
-        strips[i] = new Strip( strip_pack,
-                        &glyphs[i*strip_pack],
-                        &vertexies[i*strip_pack],
-                        &colors[i*strip_pack],
-                        float(i), 2.5f-grid_random(5.0f), 0.0f,
-                        twister_pos,
-                        -60.0f, 60.0f, grid_random(10.0f)+2.0f,
-                        grid_random(20.0f)+30.0f, grid_random(2.0f)+10.0f, grid_random(20.0f)+20.0f);
-    }
-
     vbo.bind();
-        vbo.create(num_vertices, data, GL_STREAM_DRAW);
+        vbo.alloc(num_vertices, GL_STREAM_DRAW);
+        {
+            VBO<D4UB_V3F_C4F>::Map map(GL_WRITE_ONLY);
+            GLfloat* data = reinterpret_cast<GLfloat*>(map.address);
+
+            VertexData::D4UB* glyphs    = reinterpret_cast<VertexData::D4UB*>(&data[0]);
+            VertexData::V3F*  vertexies = reinterpret_cast<VertexData::V3F*>(&data[  sizeof(VertexData::D4UB)/sizeof(GLfloat) * num_vertices]);
+            VertexData::C4F*  colors    = reinterpret_cast<VertexData::C4F*>(&data[ (sizeof(VertexData::D4UB) + sizeof(VertexData::V3F))/sizeof(GLfloat) * num_vertices]);
+
+
+            for(unsigned int i=0; i<nstrips; i++)
+            {
+                strips[i] = new Strip( strip_pack,
+                                &glyphs[i*strip_pack],
+                                &vertexies[i*strip_pack],
+                                &colors[i*strip_pack],
+                                float(i), 2.5f-grid_random(5.0f), 0.0f,
+                                twister_pos,
+                                -60.0f, 60.0f, grid_random(10.0f)+2.0f,
+                                grid_random(20.0f)+30.0f, grid_random(2.0f)+10.0f, grid_random(20.0f)+20.0f);
+            }
+        }
+
         vao.bind();
             vao.bind(vbo, num_vertices, 0);
         vao.unbind();
@@ -75,8 +82,6 @@ Matrix::~Matrix()
     delete[] strips;
     delete[] counts;
     delete[] firsts;
-
-    delete[] data;
 }
 
 void Matrix::build_program()
@@ -185,13 +190,26 @@ void Matrix::tick(unsigned long usec)
         (this->*Matrix::spawners[index])();
     }
 
-    for(unsigned int i=0; i<nstrips; i++)
-    {
-        strips[i]->tick(usec);
-    }
+    const unsigned int strip_pack = nglyphs * 4;
+
+    const unsigned int num_vertices = nstrips * strip_pack;
 
     vbo.bind();
-        vbo.set_data(0, nstrips * nglyphs * 4 * sizeof(D4UB_V3F_C4F), data);
+    {
+        VBO<D4UB_V3F_C4F>::Map map(GL_WRITE_ONLY);
+        GLfloat* data = reinterpret_cast<GLfloat*>(map.address);//new GLfloat[vsize/sizeof(GLfloat) * num_vertices];
+
+        VertexData::D4UB* glyphs    = reinterpret_cast<VertexData::D4UB*>(&data[0]);
+        VertexData::V3F*  vertexies = reinterpret_cast<VertexData::V3F*>(&data[  sizeof(VertexData::D4UB)/sizeof(GLfloat) * num_vertices]);
+        VertexData::C4F*  colors    = reinterpret_cast<VertexData::C4F*>(&data[ (sizeof(VertexData::D4UB) + sizeof(VertexData::V3F))/sizeof(GLfloat) * num_vertices]);
+
+        for(unsigned int i=0; i<nstrips; i++)
+        {
+            strips[i]->tick(&glyphs[i*strip_pack],
+                            &vertexies[i*strip_pack],
+                            &colors[i*strip_pack], usec);
+        }
+    }
     vbo.unbind();
 }
 
@@ -250,12 +268,9 @@ void Matrix::spawn_d()
     }
 }
 
-Matrix::Strip::Strip(unsigned int n, VertexData::D4UB* g, VertexData::V3F* v, VertexData::C4F* c,
+Matrix::Strip::Strip(unsigned int n, VertexData::D4UB* glyphs, VertexData::V3F* vertexies, VertexData::C4F* colors,
 GLfloat x, GLfloat y, GLfloat z, const vector& ac, float h1, float h2, float r, float p, float q, float rotates)
-    : glyphs(g)
-    , vertexies(v)
-    , colors(c)
-    , size(0.8f)
+    : size(0.8f)
     , animation(2048, size, vector(x, y, z), ac, h1, h2, r, p, q, rotates)
     , wave_waiter(100000 + grandom(40000U))
     , aframe_waiter(10000)
@@ -323,9 +338,9 @@ void Matrix::Strip::draw(GLint* first, GLsizei* count)
     *count = end_glyph*4;
 }
 
-void Matrix::Strip::tick(unsigned long usec)
+void Matrix::Strip::tick(VertexData::D4UB* glyphs, VertexData::V3F* vertexies, VertexData::C4F* colors, unsigned long usec)
 {
-    wave_tick(usec);
+    wave_tick(glyphs, vertexies,  colors, usec);
 
     if(arunning)
     {
@@ -356,7 +371,7 @@ void Matrix::Strip::tick(unsigned long usec)
     }
 }
 
-void Matrix::Strip::wave_tick(unsigned long usec)
+void Matrix::Strip::wave_tick(VertexData::D4UB* glyphs, VertexData::V3F* vertexies, VertexData::C4F* colors, unsigned long usec)
 {
     if( unsigned int inc = wave_waiter.test(usec) )
     {
