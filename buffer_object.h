@@ -75,6 +75,13 @@ public:
         glBufferSubData(target, offset, size, data);
     }
 
+    GLint size() const
+    {
+        GLint value = 0;
+        glGetBufferParameteriv(target, GL_BUFFER_SIZE, &value);
+        return value;
+    }
+
 protected:
     GLuint buffer;
 };
@@ -88,6 +95,27 @@ template<
 class VBO: public VBOBase
 {
 public:
+    class Map : public VBOBase::Map
+    {
+    public:
+        Map(GLenum access) : VBOBase::Map(access)
+        {
+        }
+
+        ~Map()
+        {
+        }
+
+        template<typename MemberType, unsigned int index>
+        MemberType* const address_of(size_t size)
+        {
+            return reinterpret_cast<MemberType* const>(((char*)address) + T::index<index>::offset * size);
+        }
+
+        Map(const Map&);            // undefined
+        Map& operator=(const Map&); // undefined
+    };
+
     void create(const unsigned int num, const void* array, GLenum usage)
     {
         VBOBase::create(num * sizeof(T), array, usage);
@@ -96,6 +124,11 @@ public:
     void alloc(const unsigned int num, GLenum usage)
     {
         VBOBase::alloc(num * sizeof(T), usage);
+    }
+
+    unsigned int size() const
+    {
+        return VBOBase::size() / sizeof(T);
     }
 };
 //-----------------------------------------------------------------------------

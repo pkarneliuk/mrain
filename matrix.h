@@ -28,6 +28,8 @@ class Matrix    // Simply Matrix effect
 {
     typedef VertexData::Layout<VertexData::D4UB, VertexData::V3F, VertexData::C4F> D4UB_V3F_C4F;
 
+    static_assert(sizeof(D4UB_V3F_C4F) == 32, "wrong sizeof");
+
 protected:
 
     class Twister
@@ -160,13 +162,12 @@ protected:
         void draw(GLint* first, GLsizei* count);
         void tick(VertexData::D4UB* glyphs, VertexData::V3F* vertexies, VertexData::C4F* colors, unsigned long usec);
 
-        GLfloat size;
-
         Animation animation;
 
         Counter wave_waiter;    // a wave`s lifecycle
         Counter aframe_waiter;  // an animation frame`s lifecycle
 
+        const GLfloat size;
 
         unsigned int n_glyphs;  // total glyphs
         unsigned int end_glyph; // last glyph
@@ -225,7 +226,7 @@ protected:
 class MatrixVideo:public Matrix // Matrix and Video effect
 {
 public:
-    MatrixVideo(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture, const VideoBuffer* buffer, int width, int height, bool vertical_flip, bool horizontal_flip);
+    MatrixVideo(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture, const VideoBuffer* buffer, bool vertical_flip, bool horizontal_flip);
     ~MatrixVideo();
 
     virtual void build_program();
