@@ -152,17 +152,14 @@ protected:
     class Strip
     {
     public:
-        Strip(unsigned int n, VertexData::D4UB* g, VertexData::V3F* v, VertexData::C4F* c,
+        Strip(unsigned int n, VertexData::D4UB* glyphs, VertexData::V3F* vertexies, VertexData::C4F* colors,
         GLfloat x, GLfloat y, GLfloat z, const vector& ac, float h1, float h2, float r, float p, float q, float rotates);
         Animation& operator=(Animation&); //undefined
         ~Strip();
 
         void draw(GLint* first, GLsizei* count);
-        void tick(unsigned long usec);
+        void tick(VertexData::D4UB* glyphs, VertexData::V3F* vertexies, VertexData::C4F* colors, unsigned long usec);
 
-        VertexData::D4UB*   glyphs;
-        VertexData::V3F*    vertexies;
-        VertexData::C4F*    colors;
         GLfloat size;
 
         Animation animation;
@@ -180,7 +177,7 @@ protected:
         bool arunning;          // animation running
 
     private:
-        void wave_tick(unsigned long usec);
+        void wave_tick(VertexData::D4UB* glyphs, VertexData::V3F* vertexies, VertexData::C4F* colors, unsigned long usec);
     };
 
 
@@ -208,14 +205,9 @@ protected:
 
     TextureAtlas::Texture* letter;
 
-    VertexData::D4UB* glyphs;
-    VertexData::V3F*  vertexies;
-    VertexData::C4F*  colors;
-
     GLint*      firsts;
     GLsizei*    counts;
 
-    GLfloat*          data;
     VBO<D4UB_V3F_C4F> vbo;
     VAO vao;
     GPU_Program program;
