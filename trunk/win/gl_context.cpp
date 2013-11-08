@@ -59,6 +59,7 @@ namespace OpenGL
         PFNGLGETBUFFERSUBDATAPROC glGetBufferSubData = NULL;
         PFNGLMAPBUFFERPROC glMapBuffer = NULL;
         PFNGLUNMAPBUFFERPROC glUnmapBuffer = NULL;
+        PFNGLGETBUFFERPARAMETERIVPROC glGetBufferParameteriv = NULL;
         // GL_VERSION_2_0
         PFNGLATTACHSHADERPROC glAttachShader = NULL;
         PFNGLBINDATTRIBLOCATIONPROC glBindAttribLocation = NULL;
@@ -280,6 +281,7 @@ bool OpenGL::OGL::load()
     WGL_BIND(glGetBufferSubData);
     WGL_BIND(glMapBuffer);
     WGL_BIND(glUnmapBuffer);
+    WGL_BIND(glGetBufferParameteriv);
     // GL_VERSION_2_0
     WGL_BIND(glAttachShader);
     WGL_BIND(glBindAttribLocation);

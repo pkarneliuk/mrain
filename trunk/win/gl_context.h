@@ -64,6 +64,7 @@ namespace OpenGL
         extern PFNGLGETBUFFERSUBDATAPROC glGetBufferSubData;
         extern PFNGLMAPBUFFERPROC glMapBuffer;
         extern PFNGLUNMAPBUFFERPROC glUnmapBuffer;
+        extern PFNGLGETBUFFERPARAMETERIVPROC glGetBufferParameteriv;
         // GL_VERSION_2_0
         extern PFNGLATTACHSHADERPROC glAttachShader;
         extern PFNGLBINDATTRIBLOCATIONPROC glBindAttribLocation;

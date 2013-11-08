@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // "Matrix Rain" - screensaver for X Server Systems
 // file name:   matrix.cpp
-// copyright:   (C) 2008, 2009 by Pavel Karneliuk
+// copyright:   (C) 2008, 2009, 2013 by Pavel Karneliuk
 // license:     GNU General Public License v2
 // e-mail:      pavel_karneliuk@users.sourceforge.net
 //-----------------------------------------------------------------------------
@@ -30,10 +30,6 @@ Matrix::Matrix(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture)
 
     const unsigned int num_vertices = nstrips * strip_pack;
 
-    static_assert(sizeof(D4UB_V3F_C4F) == 32, "wrong sizeof");
-
-    const size_t vsize = sizeof(D4UB_V3F_C4F);
-
     firsts = new GLint[nstrips];
     counts = new GLsizei[nstrips];
     strips = new Strip*[nstrips];
@@ -44,12 +40,10 @@ Matrix::Matrix(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture)
         vbo.alloc(num_vertices, GL_STREAM_DRAW);
         {
             VBO<D4UB_V3F_C4F>::Map map(GL_WRITE_ONLY);
-            GLfloat* data = reinterpret_cast<GLfloat*>(map.address);
 
-            VertexData::D4UB* glyphs    = reinterpret_cast<VertexData::D4UB*>(&data[0]);
-            VertexData::V3F*  vertexies = reinterpret_cast<VertexData::V3F*>(&data[  sizeof(VertexData::D4UB)/sizeof(GLfloat) * num_vertices]);
-            VertexData::C4F*  colors    = reinterpret_cast<VertexData::C4F*>(&data[ (sizeof(VertexData::D4UB) + sizeof(VertexData::V3F))/sizeof(GLfloat) * num_vertices]);
-
+            VertexData::D4UB* glyphs    = map.address_of<VertexData::D4UB, 0>(num_vertices);
+            VertexData::V3F*  vertexies = map.address_of<VertexData::V3F, 1>(num_vertices);
+            VertexData::C4F*  colors    = map.address_of<VertexData::C4F, 2>(num_vertices);
 
             for(unsigned int i=0; i<nstrips; i++)
             {
@@ -197,17 +191,14 @@ void Matrix::tick(unsigned long usec)
     vbo.bind();
     {
         VBO<D4UB_V3F_C4F>::Map map(GL_WRITE_ONLY);
-        GLfloat* data = reinterpret_cast<GLfloat*>(map.address);//new GLfloat[vsize/sizeof(GLfloat) * num_vertices];
 
-        VertexData::D4UB* glyphs    = reinterpret_cast<VertexData::D4UB*>(&data[0]);
-        VertexData::V3F*  vertexies = reinterpret_cast<VertexData::V3F*>(&data[  sizeof(VertexData::D4UB)/sizeof(GLfloat) * num_vertices]);
-        VertexData::C4F*  colors    = reinterpret_cast<VertexData::C4F*>(&data[ (sizeof(VertexData::D4UB) + sizeof(VertexData::V3F))/sizeof(GLfloat) * num_vertices]);
+        VertexData::D4UB* glyphs    = map.address_of<VertexData::D4UB, 0>(num_vertices);
+        VertexData::V3F*  vertexies = map.address_of<VertexData::V3F, 1>(num_vertices);
+        VertexData::C4F*  colors    = map.address_of<VertexData::C4F, 2>(num_vertices);
 
         for(unsigned int i=0; i<nstrips; i++)
         {
-            strips[i]->tick(&glyphs[i*strip_pack],
-                            &vertexies[i*strip_pack],
-                            &colors[i*strip_pack], usec);
+            strips[i]->tick(&glyphs[i*strip_pack], &vertexies[i*strip_pack], &colors[i*strip_pack], usec);
         }
     }
     vbo.unbind();
@@ -419,7 +410,7 @@ void Matrix::Strip::wave_tick(VertexData::D4UB* glyphs, VertexData::V3F* vertexi
     }
 }
 
-MatrixVideo::MatrixVideo(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture, const VideoBuffer* buffer, int /*width*/, int /*height*/, bool vertical_flip, bool horizontal_flip)
+MatrixVideo::MatrixVideo(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture, const VideoBuffer* buffer, bool vertical_flip, bool horizontal_flip)
     : Matrix(ns, ng, texture)
     , video(buffer)
     , vflip(vertical_flip)
@@ -461,7 +452,6 @@ void MatrixVideo::build_program()
     Shader fshader(Shader::Fragment);
     const GLchar* fragment_shader = 
     "#version 130\n"
-//    "uniform vec4 viewport;"
     "uniform sampler2D glyphs;"
     "uniform sampler2D video;"
     "in vec4 ex_color;"
@@ -507,8 +497,6 @@ void MatrixVideo::pre_draw(const Transform& transform)
 {
 //  Video & fixed pipeline
     Matrix::pre_draw(transform);
-
-    transform.bind_viewport(program);
 
     glActiveTexture(GL_TEXTURE1);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, vflip ? GL_MIRRORED_REPEAT : GL_REPEAT);
