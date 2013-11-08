@@ -107,7 +107,7 @@ public:
 //-----------------------------------------------------------------------------
 GLRenderer::GLRenderer(NativeWindow* win)
     : GLContext(win)
-    , transformation(80.0f, 1.0f, 1000.0f)
+    , transformation(30.0f, 1.0f, 100.0f)
 {
     printf("GL version:\t%s\n", glGetString(GL_VERSION));
     printf("GLSL version:\t%s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));

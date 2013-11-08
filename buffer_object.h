@@ -18,8 +18,27 @@ class BufferObject
 protected:
     enum{ target = Target };
 public:
-    BufferObject(const BufferObject&);   // undefined
-    void operator=(const BufferObject&); // undefined
+
+    class Map
+    {
+    public:
+        Map(GLenum access) : address(glMapBuffer(target, access))
+        {
+        }
+
+        ~Map()
+        {
+            glUnmapBuffer(target);
+        }
+
+        Map(const Map&);            // undefined
+        Map& operator=(const Map&); // undefined
+
+        void * const address;
+    };
+
+    BufferObject(const BufferObject&);            // undefined
+    BufferObject& operator=(const BufferObject&); // undefined
 
     BufferObject()
     {
