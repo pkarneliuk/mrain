@@ -153,7 +153,7 @@ protected:
     {
     public:
         Strip(unsigned int n, VertexData::D4UB* g, VertexData::V3F* v, VertexData::C4F* c,
-        GLfloat x, GLfloat y, GLfloat z, float h1, float h2, float r, float p, float q, float rotates);
+        GLfloat x, GLfloat y, GLfloat z, const vector& ac, float h1, float h2, float r, float p, float q, float rotates);
         Animation& operator=(Animation&); //undefined
         ~Strip();
 

@@ -41,15 +41,18 @@ Matrix::Matrix(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture)
     counts = new GLsizei[nstrips];
     strips = new Strip*[nstrips];
 
+    vector twister_pos(64.0f, -70.0f, -40.0f);
+
     for(unsigned int i=0; i<nstrips; i++)
     {
         strips[i] = new Strip( strip_pack,
                         &glyphs[i*strip_pack],
                         &vertexies[i*strip_pack],
                         &colors[i*strip_pack],
-                        float(i)/2.0f, -grid_random(5.0f), 0,
-                        -48.0f, 35.0f, grid_random(5.0f)+2.0f,
-                        grid_random(10.0f)+15.0f, grid_random(1.0f)+5.0f, grid_random(10.0f)+10.0f);
+                        float(i), 2.5f-grid_random(5.0f), 0.0f,
+                        twister_pos,
+                        -60.0f, 60.0f, grid_random(10.0f)+2.0f,
+                        grid_random(20.0f)+30.0f, grid_random(2.0f)+10.0f, grid_random(20.0f)+20.0f);
     }
 
     vbo.bind();
@@ -60,7 +63,7 @@ Matrix::Matrix(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture)
     vbo.unbind();
 
     model.identity();
-    model.translate(vector(-32.0,26.0,-10.0f));
+    model.translate(vector(- float(nstrips/2), float(nglyphs/2) * 0.8f, -65.0f));
 }
 
 Matrix::~Matrix()
@@ -248,12 +251,12 @@ void Matrix::spawn_d()
 }
 
 Matrix::Strip::Strip(unsigned int n, VertexData::D4UB* g, VertexData::V3F* v, VertexData::C4F* c,
-GLfloat x, GLfloat y, GLfloat z, float h1, float h2, float r, float p, float q, float rotates)
+GLfloat x, GLfloat y, GLfloat z, const vector& ac, float h1, float h2, float r, float p, float q, float rotates)
     : glyphs(g)
     , vertexies(v)
     , colors(c)
-    , size(0.4f)
-    , animation(2048, size, vector(x, y, z), vector(32.0f, -35.0f, -35.0f), h1, h2, r, p, q, rotates)
+    , size(0.8f)
+    , animation(2048, size, vector(x, y, z), ac, h1, h2, r, p, q, rotates)
     , wave_waiter(100000 + grandom(40000U))
     , aframe_waiter(10000)
     , n_glyphs(n/4)
@@ -407,39 +410,6 @@ MatrixVideo::MatrixVideo(unsigned int ns, unsigned int ng, TextureAtlas::Texture
     , vflip(vertical_flip)
     , hflip(horizontal_flip)
 {
-    /*
-    video_st = new VertexData::T2F[ns * ng * 4];    // Vertex array for video texture unit
-
-    float video_res[4];
-    video_res[0] = 64.0f;
-    video_res[1] = 48.0f;
-    video_res[2] = video_res[0]/buffer->s;
-    video_res[3] = video_res[1]/buffer->t;
-
-    const unsigned int n = nstrips * nglyphs * 4;
-
-    if(vflip)
-        for(unsigned int i=0; i<n; i++)
-        {
-            video_st[i].s = (video_res[0] - vertexies[i].x)/video_res[2];
-        }
-    else
-        for(unsigned int i=0; i<n; i++)
-        {
-            video_st[i].s = vertexies[i].x/video_res[2];
-        }
-
-    if(hflip)
-        for(unsigned int i=0; i<n; i++)
-        {
-            video_st[i].t = -(vertexies[i].y/video_res[3]);
-        }
-    else
-        for(unsigned int i=0; i<n; i++)
-        {
-            video_st[i].t = buffer->t+(vertexies[i].y/video_res[3]);
-        }
-        */
 }
 
 MatrixVideo::~MatrixVideo()
@@ -456,18 +426,17 @@ void MatrixVideo::build_program()
     "in  vec3 position;"
     "in  vec4 color;"
     "out vec4 ex_color;"
-    "out vec2 texcoord;"
+    "out vec2 tcoord;"
     "out vec2 vcoord;"
     "void main(void)"
     "{"
     "    gl_Position = transform * vec4(position, 1.0);"
     "    ex_color = color;"
-    "    const vec2 d = vec2(1/64.0, 1/48.0);"
-    "    vcoord = vec2(1,1) + position.xy*d;"
+    "    vcoord = vec2(1,1) + position.xy/vec2(128.0, 96.0*0.8);"
     // optimization of:
     //"    texcoord.t = ((gl_VertexID % 4) < 2) ? 1.0 : 0.0;"
-    "    texcoord.t = (~gl_VertexID & 0x3) >> 1;"
-    "    texcoord.s = float(data.s +  uint(gl_VertexID & 0x1) )/32.0;"
+    "    tcoord.t = (~gl_VertexID & 0x3) >> 1;"
+    "    tcoord.s = float(data.s +  uint(gl_VertexID & 0x1) )/32.0;"
     "}";
 
     vshader.set_source(vertex_shader);
@@ -481,13 +450,12 @@ void MatrixVideo::build_program()
     "uniform sampler2D glyphs;"
     "uniform sampler2D video;"
     "in vec4 ex_color;"
-    "in  vec2 texcoord;"
+    "in  vec2 tcoord;"
     "in  vec2 vcoord;"
     "out vec4 fragment;"
-
     "void main(void)"
     "{"
-    "    vec4 t = texture(glyphs, texcoord);"
+    "    vec4 t = texture(glyphs, tcoord);"
     "    if(t.r == 0) discard;"
 /*
     "    vec2 factor = viewport.zw/textureSize(video, 0);"
@@ -500,6 +468,7 @@ void MatrixVideo::build_program()
 
     "    float gray = dot(v.rgb, vec3(0.2125, 0.7154, 0.0721));"
     "    fragment = vec4(ex_color.rgb * min(t.r, gray), ex_color.a);"
+
 //    "    fragment = vec4( mix(ex_color.rgb, v.rgb, t.r), ex_color.a);"
 //    "    fragment = vec4(v.rgb, ex_color.a);"
     "}";
