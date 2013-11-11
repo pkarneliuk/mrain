@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // "Matrix Rain" - screensaver for X Server Systems
 // file name:   native_stuff.cpp
-// copyright:   (C) 2008, 2009 by Pavel Karneliuk
+// copyright:   (C) 2008, 2009, 2013 by Pavel Karneliuk
 // license:     GNU General Public License v2
 // e-mail:      pavel_karneliuk@users.sourceforge.net
 //-----------------------------------------------------------------------------
@@ -98,85 +98,27 @@ unsigned int inhome_path(char* buffer, size_t size, const char* file_name)
     return len < size ? len : 0;
 }
 
-int main(int argc, char **argv); // forvard declaration
-
-int WINAPI WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPSTR /*lpCmdLine*/, int /*nCmdShow*/)
+static class WinConsole
 {
-    // Redirect IO to console if it exist
-    BOOL res = AttachConsole(ATTACH_PARENT_PROCESS);
-#ifdef _DEBUG
-    if( res == FALSE ) res = AllocConsole();
-#endif//_DEBUG
-    if( res != FALSE )
+public:
+    WinConsole()
     {
-        freopen("CONOUT$", "w", stdout);
-        freopen("CONOUT$", "w", stderr);
-        freopen("CONIN$",  "r", stdin );
-    }
-
-    char* argv[16]={NULL};
-    int argc = 0;
-
-    {
-        // Parse commandline
-        // For example: app.exe --abc abc ""   "abc abc"   "abc" " a b c "   abc="trhrthrthe erge "
-        // Fill argc and argv
-        char* cmd = GetCommandLine();
-
-        // My little state-machine
-        enum state{SPACE, STRING, DQUOTES};
-        state s = SPACE;
-
-        while(*cmd && argc < sizeof(argv)/sizeof(argv[0]))
+        // Redirect IO to console if it exist
+        BOOL res = AttachConsole(ATTACH_PARENT_PROCESS);
+    #ifdef _DEBUG
+        if( res == FALSE ) res = AllocConsole();
+    #endif//_DEBUG
+        if( res != FALSE )
         {
-            switch(s)
-            {
-                case SPACE:
-                    if(isspace(*cmd)) *cmd = '\0';
-                    else
-                    {
-                        argv[argc++] = cmd;
-                        if(*cmd == '"')
-                        {
-                            cmd[0] = cmd[1];   // shift one left
-                            s = DQUOTES;
-                        }
-                        else
-                        {
-                            s = STRING;
-                        }
-                    }
-                break;
-
-                case STRING:
-                    if(isspace(*cmd))
-                    {
-                        *cmd = '\0';
-                        s = SPACE;
-                    }
-                    else if(*cmd == '"')
-                    {
-                        cmd[0] = cmd[1];   // shift one left
-                        s = DQUOTES;
-                    }
-                break;
-
-                case DQUOTES:
-                    if(*cmd == '"')
-                    {
-                        *cmd = '\0';
-                        if(cmd[-1] == '"') cmd[-1] = '\0';
-                        s = SPACE;
-                    }
-                    else cmd[0] = cmd[1]; // shift one left
-                break;
-            };
-            cmd++;
+            freopen("CONOUT$", "w", stdout);
+            freopen("CONOUT$", "w", stderr);
+            freopen("CONIN$",  "r", stdin );
         }
     }
 
-    int ret = main(argc, argv);
-    FreeConsole();
-    return ret;
-}
+    ~WinConsole()
+    {
+        FreeConsole();
+    }
+} console;  // initialization stdin and etc in static object may be dangerous
 //-----------------------------------------------------------------------------

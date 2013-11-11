@@ -17,7 +17,6 @@
 #include "blas.h"
 #include "gl_renderer.h"
 #include "gpu_program.h"
-#include "matrix_img.h"
 #include "texture_atlas.h"
 #include "video_buffer.h"
 #include "buffer_object.h"
