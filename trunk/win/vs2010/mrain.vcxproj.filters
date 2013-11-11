@@ -96,9 +96,6 @@
     <ClInclude Include="..\gl_context.h">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\glext.h">
-      <Filter>headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\native_stuff.h">
       <Filter>headers</Filter>
     </ClInclude>
