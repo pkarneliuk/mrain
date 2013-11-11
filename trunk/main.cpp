@@ -1,17 +1,14 @@
 //-----------------------------------------------------------------------------
 // "Matrix Rain" - screensaver for X Server Systems
 // file name:   main.cpp
-// copyright:   (C) 2008, 2009 by Pavel Karneliuk
+// copyright:   (C) 2008, 2009, 2013 by Pavel Karneliuk
 // license:     GNU General Public License v2
 // e-mail:      pavel_karneliuk@users.sourceforge.net
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
-#include <cstdio>
-
 #include "application.h"
 #include "app_window.h"
-#include "stuff.h"
 //-----------------------------------------------------------------------------
 int main(int argc, char **argv)
 {
