@@ -259,7 +259,6 @@
     <ClInclude Include="..\..\vertex_data.h" />
     <ClInclude Include="..\..\video_buffer.h" />
     <ClInclude Include="..\capture.h" />
-    <ClInclude Include="..\glext.h" />
     <ClInclude Include="..\gl_context.h" />
     <ClInclude Include="..\native_stuff.h" />
     <ClInclude Include="..\native_window.h" />
