@@ -74,7 +74,7 @@ VideoScreen::VideoScreen(float w, float h):video(NULL), width(w), height(h)
     program.log();
 
     model.identity();
-    model.translate(vector(0,0,-200));
+    model.translate(vector(0,0,-400));
 }
 
 VideoScreen::~VideoScreen()

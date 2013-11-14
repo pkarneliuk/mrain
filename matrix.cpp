@@ -428,6 +428,7 @@ void MatrixVideo::build_program()
     const GLchar* vertex_shader = 
     "#version 130\n"
     "uniform mat4 transform;"
+    "uniform sampler2D video;"
     "in  uvec4 data;"
     "in  vec3 position;"
     "in  vec4 color;"
@@ -436,9 +437,12 @@ void MatrixVideo::build_program()
     "out vec2 vcoord;"
     "void main(void)"
     "{"
-    "    gl_Position = transform * vec4(position, 1.0);"
+//    "    gl_Position = transform * vec4(position, 1.0);"
     "    ex_color = color;"
-    "    vcoord = vec2(1,1) + position.xy/vec2(128.0, 96.0*0.8);"
+    "    vcoord = vec2(1,0) + position.xy/vec2(128.0, 96.0*0.8);"
+    "    vec4 v = texture(video, vcoord);"
+    "    float gray = dot(v.rgb, vec3(0.2125, 0.7154, 0.0721));"
+    "    gl_Position = transform * vec4(position.x, position.y, position.z - gray * 3, 1.0);"
     // optimization of:
     //"    texcoord.t = ((gl_VertexID % 4) < 2) ? 1.0 : 0.0;"
     "    tcoord.t = (~gl_VertexID & 0x3) >> 1;"
