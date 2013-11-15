@@ -40,7 +40,7 @@ protected:
         {
             float p = vertical_form(t) * radius;
             float s = sigmoid(t, a);
-            float m = sigmoid(t, b);		
+            float m = sigmoid(t, b);
             float r = phi(m, c);
             float x = p * sinf(r);
             float y = s * height;
@@ -67,7 +67,7 @@ protected:
     {
     public:
 
-        Animation( unsigned int n, float size, const vector& a, const vector& b, float h1, float h2, float r, float p, float q, float rotates)
+        Animation(unsigned int n, float size, const vector& a, const vector& b, float h1, float h2, float r, float p, float q, float rotates)
         :nframes(n), spline(key_points, 7), twister(r, h2, p, q, rotates)
         {
             key_points[0] = a;
@@ -155,18 +155,18 @@ protected:
     public:
         Strip(unsigned int n, VertexData::D4UB* glyphs, VertexData::V3F* vertexies, VertexData::C4F* colors,
         GLfloat x, GLfloat y, GLfloat z, const vector& ac, float h1, float h2, float r, float p, float q, float rotates);
-        Animation& operator=(Animation&); //undefined
+
         ~Strip();
 
         void draw(GLint* first, GLsizei* count);
         void tick(VertexData::D4UB* glyphs, VertexData::V3F* vertexies, VertexData::C4F* colors, unsigned long usec);
 
+        const GLfloat size;
+
         Animation animation;
 
         Counter wave_waiter;    // a wave`s lifecycle
         Counter aframe_waiter;  // an animation frame`s lifecycle
-
-        const GLfloat size;
 
         unsigned int n_glyphs;  // total glyphs
         unsigned int end_glyph; // last glyph
