@@ -14,18 +14,20 @@
 //-----------------------------------------------------------------------------
 const char* NativeWindow::win_class_name="MatrixRainWinClass";
 
-NativeWindow::NativeWindow(BaseWindow::Mode mode, unsigned int parent_id, int width, int height):BaseWindow(mode),hwnd(0)
+NativeWindow::NativeWindow(BaseWindow::Mode mode, unsigned int parent_id, int width, int height)
+    : BaseWindow(mode)
+    , hwnd(0)
 {
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc;
-    wc.style        = CS_VREDRAW | CS_HREDRAW | CS_SAVEBITS | CS_DBLCLKS;
+    wc.style        = CS_VREDRAW | CS_HREDRAW | CS_OWNDC | CS_DBLCLKS;
     wc.lpfnWndProc  = (WNDPROC)ScreenSaverProc;
     wc.cbClsExtra   = 0;
     wc.cbWndExtra   = 8;
     wc.hInstance    = hInstance;
     wc.hIcon        = LoadIcon(NULL, IDI_APPLICATION);
     wc.hCursor      = LoadCursor(NULL,IDC_ARROW);
-    wc.hbrBackground= (HBRUSH) GetStockObject(BLACK_BRUSH);
+    wc.hbrBackground= NULL;
     wc.lpszMenuName = NULL;
     wc.lpszClassName= NativeWindow::win_class_name;
 
@@ -89,7 +91,6 @@ NativeWindow::~NativeWindow()
         ShowCursor(TRUE);
     }
     KillTimer(hwnd, BREAK_TIMER_ID);
-    SetWindowLongPtr(hwnd, GWLP_USERDATA, 0);
     DestroyWindow(hwnd);
     UnregisterClass(NativeWindow::win_class_name, GetModuleHandle(NULL));
 }
@@ -97,7 +98,7 @@ NativeWindow::~NativeWindow()
 bool NativeWindow::process_events()
 {
     MSG msg;
-    if(PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+    while(PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
     {
         if(msg.message == WM_QUIT) return false;
         // break too long event processing
@@ -107,18 +108,8 @@ bool NativeWindow::process_events()
         }*/
         TranslateMessage(&msg);
         DispatchMessage (&msg);
- 
     }
     return true;
-}
-
-void NativeWindow::get_size(unsigned int* width, unsigned int* height)const
-{
-    RECT rc={0};
-    GetClientRect(hwnd, &rc);
-
-    *width  = rc.right-rc.left;
-    *height = rc.bottom-rc.top;
 }
 
 LRESULT NativeWindow::ScreenSaverProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -133,6 +124,9 @@ LRESULT NativeWindow::ScreenSaverProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
             win = (NativeWindow*)cs->lpCreateParams;
             SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)win);
             GetCursorPos(&win->start_point);
+            win->hwnd = hWnd;
+
+            win->renderer = new GLRenderer(win);
         }
         break;
 
@@ -145,6 +139,22 @@ LRESULT NativeWindow::ScreenSaverProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
         case WM_SIZE:
             win->resize(LOWORD(lParam), HIWORD(lParam));
         break;
+
+        case WM_ERASEBKGND:
+            win->repaint();
+            return TRUE;
+        break;
+
+        case WM_PAINT:
+            win->repaint();
+            ValidateRect(win->hwnd, NULL);
+            return FALSE;
+        break;
+
+        case WM_MOVING:
+        if(win->mode == BaseWindow::standalone) return TRUE;
+        break;
+
 
         case WM_MOUSEMOVE:
         {
@@ -160,31 +170,32 @@ LRESULT NativeWindow::ScreenSaverProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 
         if(wParam != VK_ESCAPE && win->mode != BaseWindow::screensaver) break;
         case WM_CLOSE:
+            delete win->renderer;
             PostQuitMessage(0);
         break;
 
- /*       case WM_TIMER:
-        printf("WM_TIMER\n");
+        case WM_TIMER:
+            win->repaint();
         break;
-        */
-        case WM_PAINT:
-          //  win->paint();
-        break;
-
-        case WM_MOVING:
-        if(win->mode == BaseWindow::standalone) return TRUE;
-        break;
+        
 
 /*      case WM_SETCURSOR:
         SetCursor(NULL);
         ShowCursor(FALSE);
         return TRUE;
 */
-//      case WM_DESTROY: PostMessage(hWnd, WM_CLOSE, 0, 0); break;
+        //case WM_DESTROY:
+        //break;
 
         case WM_SYSCOMMAND:
         if( SC_SCREENSAVE == wParam )
+        {
             return FALSE;
+        }
+        else if( SC_MONITORPOWER == wParam ) // Monitor Trying To Enter Powersave?
+        {
+            return 0;// Prevent From Happening
+        }
 
         default:
         return DefWindowProc(hWnd, msg, wParam, lParam);
@@ -192,7 +203,8 @@ LRESULT NativeWindow::ScreenSaverProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
     return 0;
 }
 
-Config::Config(Options& opts):options(opts),registration(false)
+Config::Config(Options& opts)
+    : options(opts)
 {
 }
 

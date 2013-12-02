@@ -7,12 +7,9 @@
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
-#include <cstdio>
-#include <cmath>
-#include <cstdlib>
+#include <iostream>
 
 #include "blas.h"
-#include "native_window.h"
 #include "gl_renderer.h"
 #include "gpu_program.h"
 #include "buffer_object.h"
@@ -105,14 +102,15 @@ public:
 } * triangle = NULL;
 
 //-----------------------------------------------------------------------------
-GLRenderer::GLRenderer(NativeWindow* win)
+GLRenderer::GLRenderer(class NativeWindow* win)
     : GLContext(win)
     , transformation(30.0f, 1.0f, 100.0f)
 {
-    printf("GL version:\t%s\n", glGetString(GL_VERSION));
-    printf("GLSL version:\t%s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
-    printf("GL renderer:\t%s\n", glGetString(GL_RENDERER));
-    printf("GL vendor:\t%s\n", glGetString(GL_VENDOR));
+    std::clog
+    << "GL version:\t"   << glGetString(GL_VERSION)                  << '\n'
+    << "GLSL version:\t" << glGetString(GL_SHADING_LANGUAGE_VERSION) << '\n'
+    << "GL renderer:\t"  << glGetString(GL_RENDERER)                 << '\n'
+    << "GL vendor:\t"    << glGetString(GL_VENDOR)                   << std::endl;
 
     gl_version = (const char*) glGetString(GL_VERSION);
 
@@ -120,34 +118,21 @@ GLRenderer::GLRenderer(NativeWindow* win)
     glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-
-    unsigned int width;
-    unsigned int height;
-    win->get_size(&width, &height);
-    reshape(width, height);
-
-    triangle = new Triangle();
 }
 
 GLRenderer::~GLRenderer()
 {
-    delete triangle;
 }
 
 void GLRenderer::reshape(unsigned int width, unsigned int height)
 {
-    glViewport (0, 0, (GLint) width, (GLint) height);
-
+    glViewport(0, 0, (GLint) width, (GLint) height);
     transformation.set_viewport(0, 0, width, height);
 }
-
 
 unsigned int GLRenderer::draw()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    triangle->draw(transformation);
-
     return 0;
 }
 //-----------------------------------------------------------------------------

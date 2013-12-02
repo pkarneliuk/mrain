@@ -18,7 +18,11 @@ public:
     enum Mode{ preview, standalone, screensaver };
 
 protected:
-    inline BaseWindow(Mode md):mode(md),renderer(NULL){}
+    inline BaseWindow(Mode md)
+        : mode(md)
+        , renderer(NULL)
+    {
+    }
 
     BaseWindow(BaseWindow&);            //undefined
     BaseWindow& operator=(BaseWindow&); //undefined
@@ -28,7 +32,7 @@ protected:
         if(renderer) renderer->reshape(width, height);
     }
 
-    inline void paint()
+    virtual void repaint()
     {
         if(renderer)
         {

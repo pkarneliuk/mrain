@@ -13,31 +13,39 @@
 #include <stdexcept>
 
 #include "gl_renderer.h"
+#include "application.h"
 #include "app_window.h"
 #include "options.h"
 //-----------------------------------------------------------------------------
-AppWindow::AppWindow():NativeWindow(BaseWindow::screensaver, 0, 0, 0)
+AppWindow::AppWindow(Application* app)
+    : NativeWindow(BaseWindow::screensaver, 0, 0, 0)
+    , application(app)
 {
-    renderer = new GLRenderer(this);
 }
 
-AppWindow::AppWindow(unsigned int parent_id):NativeWindow(BaseWindow::preview, parent_id, 0, 0)
+AppWindow::AppWindow(Application* app, unsigned int parent_id)
+    : NativeWindow(BaseWindow::preview, parent_id, 0, 0)
+    , application(app)
 {
-    renderer = new GLRenderer(this);
 }
 
-AppWindow::AppWindow(int width, int height):NativeWindow(BaseWindow::standalone, 0, width, height)
+AppWindow::AppWindow(Application* app, int width, int height)
+    : NativeWindow(BaseWindow::standalone, 0, width, height)
+    , application(app)
 {
-    renderer = new GLRenderer(this);
 }
 
 AppWindow::~AppWindow()
 {
-    delete renderer;
 }
 
 bool AppWindow::process_events()
 {
     return NativeWindow::process_events();
+}
+
+void AppWindow::repaint()
+{
+    application->do_frame();
 }
 //-----------------------------------------------------------------------------

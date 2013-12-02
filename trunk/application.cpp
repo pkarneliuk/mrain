@@ -14,23 +14,34 @@
 #include "capture.h"
 #include "scene.h"
 //-----------------------------------------------------------------------------
-Application* Application::sig_handler = NULL;
+static Application* instance = NULL;
 
-Application::Application(const Options& opts):options(opts),window(NULL),capture(NULL),running(true)
+void Application::signal_handler(int sig)
+{
+    if(instance) instance->running = false;
+}
+
+Application::Application(const Options& opts)
+    : options(opts)
+    , window (NULL)
+    , capture(NULL)
+    , scene  (NULL)
+    , fps    (60)
+    , running(true)
 {
     if( options[Options::scrsvr_mode] )
     {
-        window = new AppWindow();
+        window = new AppWindow(this);
     }
     else if( int id = options[Options::window_id] )
     {
-        window = new AppWindow(id);
+        window = new AppWindow(this, id);
     }
     else
     {
         int width  = options[Options::width];
         int height = options[Options::height];
-        window = new AppWindow(width, height);
+        window = new AppWindow(this, width, height);
     }
 
     try
@@ -42,40 +53,43 @@ Application::Application(const Options& opts):options(opts),window(NULL),capture
         fprintf(stderr, "capture error: %s\n", error.what() );
     }
 
-    Application::sig_handler = this;
+    instance = this;
 
     #ifdef UNIX
     struct sigaction action;
-    action.sa_handler = &handler;
+    action.sa_handler = &Application::signal_handler;
     sigemptyset(&action.sa_mask);
     action.sa_flags = 0;
 
     sigaction(SIGTERM, &action, NULL);
     #endif//UNIX
+
+    scene = new Scene(window->get_renderer(), capture, options);
 }
 
 Application::~Application()
 {
+    delete scene;
     delete capture;
     delete window;
 }
 
 int Application::run()
 {
-    FPS counter(60);
-
-
-    Scene scene(window->get_renderer(), capture, options);
-
     while( running && window->process_events() )
     {
-        unsigned long tick = counter.count_frame();
-
-        scene.draw();
-        scene.tick(tick);
-        scene.present();
+        do_frame();
     }
 
     return 0;
+}
+
+void Application::do_frame()
+{
+    const unsigned long tick = fps.count_frame();
+
+    scene->draw();
+    scene->tick(tick);
+    scene->present();
 }
 //-----------------------------------------------------------------------------

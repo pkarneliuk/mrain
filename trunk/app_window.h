@@ -12,17 +12,23 @@
 //-----------------------------------------------------------------------------
 #include "native_window.h"
 //-----------------------------------------------------------------------------
-class AppWindow:private NativeWindow
+class AppWindow : private NativeWindow
 {
 public:
-    AppWindow();
-    AppWindow(unsigned int parent_id);
-    AppWindow(int width, int height);
+    AppWindow(class Application* app);
+    AppWindow(class Application* app, unsigned int parent_id);
+    AppWindow(class Application* app, int width, int height);
     ~AppWindow();
 
     bool process_events();
 
     inline GLRenderer* get_renderer(){ return renderer; }
+
+protected:
+    virtual void repaint();
+
+private:
+    class Application* application;
 };
 //-----------------------------------------------------------------------------
 #endif//APP_WINDOW_H

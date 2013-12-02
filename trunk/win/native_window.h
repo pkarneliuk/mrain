@@ -24,7 +24,6 @@ public:
     ~NativeWindow();
 
     bool process_events();
-    void get_size(unsigned int* width, unsigned int* height)const;
 
 private:
 
@@ -50,7 +49,6 @@ private:
     static INT_PTR CALLBACK DialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
     Options&  options;
-    bool registration;
 };
 //-----------------------------------------------------------------------------
 #endif//NATIVE_WINDOW_H
