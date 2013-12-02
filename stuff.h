@@ -86,8 +86,45 @@ public:
     bool operator>=(const char* str);
 
 private:
-    unsigned int iversion; 
+    unsigned int iversion;
 };
+
+class FPS
+{
+public:
+    FPS(unsigned int limit):lim((limit == 0) ? 0 : (1000000/limit)),the_sec(0),fps(0),curr_fps(0){}
+    FPS(FPS&);              //undefined
+    FPS& operator=(FPS&);   //undefined
+
+    unsigned long count_frame()
+    {
+        curr_fps++;
+        unsigned long compute_time = timer.tick();
+        if(compute_time < lim)
+        {
+            sleeep(lim - compute_time);
+        }
+        unsigned long frame_time = compute_time + timer.tick();
+        the_sec += frame_time;
+        if( the_sec > 1000000 )
+        {
+            the_sec -= 1000000;
+            fps = curr_fps; // save count per frame
+            curr_fps = 0;
+        //    printf("FPS: %i\n", fps);
+        }
+        return frame_time;
+    }
+        
+    operator unsigned int()const{ return fps; }
+private:
+    Timer timer;
+    const unsigned int lim;
+    unsigned int the_sec;
+    unsigned int fps;
+    unsigned int curr_fps;
+};
+
 
 struct BMP_INFOHEADER
 {

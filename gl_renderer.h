@@ -17,12 +17,12 @@
 //-----------------------------------------------------------------------------
 class GLRenderer:private GLContext
 {
-    friend class AppWindow;
+    friend class NativeWindow;
 public:
 
-    inline const Version& version ()const   { return gl_version;              }
-    inline const GLubyte* renderer()const   { return glGetString(GL_RENDERER);}
-    inline const GLubyte* vendor  ()const   { return glGetString(GL_VENDOR);  }
+    inline const Version& version () const { return gl_version;              }
+    inline const GLubyte* renderer() const { return glGetString(GL_RENDERER);}
+    inline const GLubyte* vendor  () const { return glGetString(GL_VENDOR);  }
 
     inline void present(){ GLContext::swap_buffers(); }
     void reshape(unsigned int width, unsigned int height);
