@@ -162,5 +162,14 @@
     <None Include="..\icon.ico">
       <Filter>resources</Filter>
     </None>
+    <None Include="..\custom_ui.wxs">
+      <Filter>resources</Filter>
+    </None>
+    <None Include="..\installer.wxs">
+      <Filter>resources</Filter>
+    </None>
+    <None Include="..\license.rtf">
+      <Filter>resources</Filter>
+    </None>
   </ItemGroup>
 </Project>
