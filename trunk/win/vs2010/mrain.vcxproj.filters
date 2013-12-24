@@ -15,19 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\icon.ico">
-      <Filter>resources</Filter>
-    </None>
-    <None Include="..\installer.wxs">
-      <Filter>resources</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="..\resources.rc">
-      <Filter>resources</Filter>
-    </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="..\capture.cpp">
       <Filter>sources</Filter>
     </ClCompile>
@@ -102,9 +89,6 @@
     <ClInclude Include="..\native_window.h">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\resource.h">
-      <Filter>headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\app_window.h">
       <Filter>headers</Filter>
     </ClInclude>
@@ -165,5 +149,18 @@
     <ClInclude Include="..\..\vertex_data.h">
       <Filter>headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\resource.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\resources.rc">
+      <Filter>resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\icon.ico">
+      <Filter>resources</Filter>
+    </None>
   </ItemGroup>
 </Project>
