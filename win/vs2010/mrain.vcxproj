@@ -9,14 +9,6 @@
       <Configuration>debug</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="release-installer|Win32">
-      <Configuration>release-installer</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="release-installer|x64">
-      <Configuration>release-installer</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="release|Win32">
       <Configuration>release</Configuration>
       <Platform>Win32</Platform>
@@ -54,12 +46,6 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='release-installer|Win32'">
-    <CharacterSet>MultiByte</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='release-installer|x64'" Label="Configuration">
-    <CharacterSet>MultiByte</CharacterSet>
-  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
@@ -90,19 +76,13 @@
     <LinkIncremental>false</LinkIncremental>
     <OutDir>..\..\out\</OutDir>
     <IntDir>..\..\out\</IntDir>
+    <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>..\..\out\</OutDir>
     <IntDir>..\..\out\</IntDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='release-installer|x64'">
-    <OutDir>..\..\out\</OutDir>
-    <IntDir>..\..\out\</IntDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='release-installer|Win32'">
-    <OutDir>..\..\out\</OutDir>
-    <IntDir>..\..\out\</IntDir>
+    <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='debug|Win32'">
     <ClCompile>
@@ -111,7 +91,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\;..\;D:\win-sdk\Samples\Multimedia\DirectShow\BaseClasses</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\;..\</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -129,7 +109,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\;..\;D:\win-sdk\Samples\Multimedia\DirectShow\BaseClasses</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\;..\</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -149,7 +129,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\;..\;D:\win-sdk\Samples\Multimedia\DirectShow\BaseClasses</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\;..\</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -161,6 +141,15 @@
       <AdditionalDependencies>Gdi32.lib;opengl32.lib;Mfuuid.lib;Mfplat.lib;Mf.lib;Mfreadwrite.lib</AdditionalDependencies>
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
     </Link>
+    <CustomBuildStep>
+      <Message>Create installer by WIX toolkit</Message>
+      <Command>copy /B /Y $(OutDir)$(TargetName)$(TargetExt) $(OutDir)$(TargetName).sCr
+candle.exe -nologo -ext WixUIExtension -ext WiXUtilExtension -out $(OutDir)installer.wixobj ..\installer.wxs
+candle.exe -nologo -ext WixUIExtension -ext WiXUtilExtension -out $(OutDir)custom_ui.wixobj ..\custom_ui.wxs
+light.exe  -nologo -ext WixUIExtension -ext WiXUtilExtension -b $(OutDir) -pdbout $(OutDir)installer.wixpdb -out $(OutDir)$(TargetName).msi $(OutDir)installer.wixobj $(OutDir)custom_ui.wixobj</Command>
+      <Outputs>$(OutDir)$(TargetName).msi</Outputs>
+      <Inputs>$(OutDir)$(TargetName)$(TargetExt);..\installer.wxs;..\custom_ui.wxs</Inputs>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='release|x64'">
     <ClCompile>
@@ -171,7 +160,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\;..\;D:\win-sdk\Samples\Multimedia\DirectShow\BaseClasses</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\;..\</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -183,34 +172,16 @@
       <AdditionalDependencies>Gdi32.lib;opengl32.lib;Mfuuid.lib;Mfplat.lib;Mf.lib;Mfreadwrite.lib</AdditionalDependencies>
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
     </Link>
+    <CustomBuildStep>
+      <Message>Create installer by WIX toolkit</Message>
+      <Command>copy /B /Y $(OutDir)$(TargetName)$(TargetExt) $(OutDir)$(TargetName).sCr
+candle.exe -nologo -ext WixUIExtension -ext WiXUtilExtension -out $(OutDir)installer.wixobj ..\installer.wxs
+candle.exe -nologo -ext WixUIExtension -ext WiXUtilExtension -out $(OutDir)custom_ui.wixobj ..\custom_ui.wxs
+light.exe  -nologo -ext WixUIExtension -ext WiXUtilExtension -b $(OutDir) -pdbout $(OutDir)installer.wixpdb -out $(OutDir)$(TargetName).msi $(OutDir)installer.wixobj $(OutDir)custom_ui.wixobj</Command>
+      <Outputs>$(OutDir)$(TargetName).msi</Outputs>
+      <Inputs>$(OutDir)$(TargetName)$(TargetExt);..\installer.wxs;..\custom_ui.wxs</Inputs>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='release-installer|Win32'">
-    <ClCompile>
-      <AdditionalIncludeDirectories>..\..\;..\;D:\win-sdk\Samples\Multimedia\DirectShow\BaseClasses</AdditionalIncludeDirectories>
-    </ClCompile>
-    <Link>
-      <AdditionalLibraryDirectories>..\..\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Gdi32.lib;opengl32.lib;Mfuuid.lib;Mfplat.lib;Mf.lib;Mfreadwrite.lib</AdditionalDependencies>
-      <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='release-installer|x64'">
-    <ClCompile>
-      <AdditionalIncludeDirectories>..\..\;..\;D:\win-sdk\Samples\Multimedia\DirectShow\BaseClasses</AdditionalIncludeDirectories>
-    </ClCompile>
-    <Link>
-      <AdditionalLibraryDirectories>..\..\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Gdi32.lib;opengl32.lib;Mfuuid.lib;Mfplat.lib;Mf.lib;Mfreadwrite.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemGroup>
-    <None Include="..\icon.ico" />
-    <None Include="..\installer.wxs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="..\resources.rc" />
-  </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\application.cpp" />
     <ClCompile Include="..\..\app_window.cpp" />
@@ -259,6 +230,12 @@
     <ClInclude Include="..\native_stuff.h" />
     <ClInclude Include="..\native_window.h" />
     <ClInclude Include="..\resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\resources.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\icon.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

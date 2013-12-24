@@ -1,22 +1,24 @@
 <?xml version='1.0'?>
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi' xmlns:util='http://schemas.microsoft.com/wix/UtilExtension'>
+
     <Product Id='C77C8079-9D52-4ce1-84EA-9116A633EE97' UpgradeCode='B0D471BA-888E-4578-A368-2F6E166A3CBB' 
-             Version='0.5.0.1' Manufacturer='Mad Hedgehogs' Name='Matrix Rain Screensaver' Language='1033' >
+             Version='0.6.0.0' Manufacturer='Mad Hedgehogs' Name='Matrix Rain Screensaver' Language='1033' >
         <Package Description='Matrix Rain Installer package'
                  Comments='This is a screensaver for Windows Desktops'
                  Manufacturer='Mad Hedgehogs' InstallerVersion='200' Compressed='yes' />
 
-		<Condition Message='This application only runs on Windows 2000/XP/Server 2003/Vista.'>
-			VersionNT >= 500 
-		</Condition>
+        <Condition Message='This application only runs on Windows Vista/Windows 7/Windows 8.'>
+            VersionNT >= 600
+        </Condition>
 
-		<Condition Message="You need to be an administrator to install this product.">
-			Privileged
-		</Condition>
+        <Condition Message="You need to be an administrator to install this product.">
+            Privileged
+        </Condition>
 
+        <WixVariable Id="WixUILicenseRtf" Value="..\win\license.rtf" />
 
         <Media Id='1' Cabinet='mrain.cab' EmbedCab='yes' />
- 
+
         <Directory Id='TARGETDIR' Name='SourceDir'>
             <Directory Id="SystemFolder"/>
 
@@ -31,7 +33,7 @@
         <DirectoryRef Id="SystemFolder">
             <Component Id="mrain.sCr" Guid="6C654D56-2DB9-4cfa-B234-27E58B484303" Permanent="no">
                 <File Id="mrain.sCr" Source="mrain.exe" Name="mrain.sCr" ReadOnly="yes" KeyPath="yes" Checksum="yes"/>
-		<RemoveFile Id="config" Property="LocalAppDataFolder" Name="*.mrainrc" On="uninstall"/>
+        <RemoveFile Id="config" Property="LocalAppDataFolder" Name="*.mrainrc" On="uninstall"/>
             </Component>
         </DirectoryRef>
 
@@ -49,16 +51,16 @@
         <DirectoryRef Id='ApplicationProgramsFolder'>
             <Component Id='ApplicationShortcut' Guid='D1A41D1E-53AC-478E-A125-AF5A8BC8B36B'>
                 <Shortcut Id="ApplicationStartMenuShortcut"
-                          Name="Screensaver Properties"                  
-                          Description="Matrix Rain Screensaver Configuration"               
-                          Target="[SystemFolder]cmd.exe"                   
+                          Name="Screensaver Properties"
+                          Description="Matrix Rain Screensaver Configuration"
+                          Target="[SystemFolder]cmd.exe"
                           Arguments="/C start /B [SystemFolder]mrain.sCr /c:-1"
                           Icon="icon.ico"
                           Show="minimized"/>
                 <util:InternetShortcut Id="OnlineDocumentationShortcut"
                                        Name="Matrix Rain Online Homepage"
                                        Target="http://mrain.sourceforge.net/"/>
-				<Shortcut Id="UninstallProduct"             
+                <Shortcut Id="UninstallProduct"
                           Name="Uninstall Matrix Rain"
                           Description="Uninstalls Matrix Rain Screensaver"
                           Target="[SystemFolder]msiexec.exe"
@@ -88,12 +90,9 @@
         <Property Id="LicenseAccepted" Value="1" />
         <Property Id="ARPPRODUCTICON" Value="icon.ico" />
 
-
         <Icon Id="icon.ico" SourceFile="..\win\icon.ico"/>
 
-
         <CustomAction Id="VistaScrSvrSettings" Property="RUNDLL32" ExeCommand="desk.cpl,InstallScreenSaver [SystemFolder]mrain.sCr" Execute="immediate" Return="asyncNoWait" />
-        <CustomAction Id="LegacyScrSvrSettings" Property="CONTROL" ExeCommand="control.exe desktop" Return="asyncNoWait" />                             
 
         <UI Id="MRainCustomUI">
             <TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8" />
@@ -139,16 +138,12 @@
             <Publish Dialog="MaintenanceTypeDlg" Control="RemoveButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
             <Publish Dialog="MaintenanceTypeDlg" Control="Back" Event="NewDialog" Value="MaintenanceWelcomeDlg">1</Publish>
 
-
             <Publish Dialog="CustomExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
             <Publish Dialog="CustomExitDialog" Control="Finish" Event="DoAction" 
                      Value="VistaScrSvrSettings" >OpenScrSvrSettings = 1 AND VersionNT >= 600 and NOT Installed</Publish>
-
-            <Publish Dialog="CustomExitDialog" Control="Finish" Event="DoAction" 
-                     Value="LegacyScrSvrSettings" >OpenScrSvrSettings = 1 AND NOT VersionNT >= 600 and NOT Installed</Publish>
             <Property Id="ARPNOMODIFY" Value="1" />
         </UI>
 
-        <UIRef Id="WixUI_Common" />                      
+        <UIRef Id="WixUI_Common" />
     </Product>
 </Wix>
