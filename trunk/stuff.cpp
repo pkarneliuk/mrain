@@ -143,7 +143,6 @@ bool convert_bmp_2_include_gray_array(char* bmp_file, char* array_name) try
     const unsigned long width  = info.biWidth;
     const unsigned long height = info.biHeight;
     const unsigned int  bpp    = info.biBitCount/8;
-    const unsigned int size    = width * height * bpp;
 
     ofs << "#ifndef " << out_name.c_str() << "\n#define " << out_name.c_str() << '\n';
     ofs << "const unsigned int " << array_name << "_width="  << width  << ";\n";
@@ -167,7 +166,8 @@ bool convert_bmp_2_include_gray_array(char* bmp_file, char* array_name) try
             unsigned int gray = unsigned char((red + green + blue)*256.0f);
             ofs << gray << ',';
 */
-            ofs << 0xff - unsigned int(pixel[0]) << ',';
+            unsigned int color = pixel[0];
+            ofs << 0xff - color << ',';
         }
 
         outbuf->sputc('\n');
