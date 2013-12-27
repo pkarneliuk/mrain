@@ -109,7 +109,7 @@ public:
         template<typename MemberType, unsigned int index>
         MemberType* const address_of(size_t size)
         {
-            return reinterpret_cast<MemberType* const>(((char*)address) + T::index<index>::offset * size);
+            return reinterpret_cast<MemberType* const>(((char*)address) + T::template index<index>::offset * size);
         }
 
         Map(const Map&);            // undefined

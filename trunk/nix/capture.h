@@ -18,7 +18,7 @@ public:
     Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_name);
     ~Capture();
 
-    const char* capture();
+    const unsigned char* capture();
     unsigned int width()const { return captured_width;  }
     unsigned int height()const{ return captured_height; }
 
@@ -26,6 +26,14 @@ public:
     {
         return 0;   // Not implemented yet
     }
+
+    enum Native4CC {
+        GREY = 0,
+        YUYV = 1,
+        UYVY = 2,
+        P422 = 3,
+        YUY2 = 4,
+    };
 
 private:
     void free();
@@ -69,7 +77,7 @@ private:
     //#define V4L2_PIX_FMT_YUV555  v4l2_fourcc('Y','U','V','O') /* 16  YUV-5-5-5     */
     //#define V4L2_PIX_FMT_YUV565  v4l2_fourcc('Y','U','V','P') /* 16  YUV-5-6-5     */
     //#define V4L2_PIX_FMT_YUV32   v4l2_fourcc('Y','U','V','4') /* 32  YUV-8-8-8-8   */
-
+/*
     static void GREYtoGREY(const char* src, const char* end, char* dst);
 
     static void YUYVtoRGB (const char* src, const char* end, char* dst);
@@ -82,9 +90,9 @@ private:
 
     static void YUV422PtoGREY(const char* src, const char* end, char* dst);
 
-
+*/
     unsigned int select_format();
-
+/*
     typedef void (*Decoder)(const char* src, const char* end, char* dst);
     struct Converter
     {
@@ -92,14 +100,14 @@ private:
         Decoder decoder[num];
     };
 
-    const static Converter supported_formats[4];
+    const static Converter supported_formats[4];*/
 
     unsigned int captured_width;
     unsigned int captured_height;
 
     MMapBuffer**    buffers;
     unsigned int    num_buffers;
-    const Decoder*  decoders;
+ //   const Decoder*  decoders;
     Device          device;
 	
 	// thread`s stuff
