@@ -7,7 +7,8 @@
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
-#include <locale>
+#include <iostream>
+#include <fstream>
 #include <cmath>
 
 #include "stuff.h"
@@ -99,65 +100,86 @@ bool Version::operator>=(const char* str)
     return iversion >= v.iversion;
 }
 
-bool convert_bmp_2_include_array(char* bmp_file, char* array_name)
+bool convert_bmp_2_include_gray_array(char* bmp_file, char* array_name) try
 {
-    FILE* src = fopen(bmp_file,"rb");
-    fprintf(stdout,"open %s: %s\n", bmp_file, src ? "successed" : "failed");
-    if(NULL == src) return false;
+    std::ofstream ifs(bmp_file, std::ios_base::in  | std::ios_base::binary);
 
-    char out_name[256]={'\0'};
-    sprintf(out_name, "%s.h", array_name);
-    FILE* dst = fopen(out_name,"wb");
-    fprintf(stdout,"create %s: %s\n", out_name, dst ? "successed" : "failed");
-    if(NULL == dst) return false;
+    std::cout << "open " << bmp_file << ':' << (ifs.is_open() ? "successed" : "failed") << '\n';
+    if(!ifs.is_open()) return false;
 
-    char* p = out_name;
-    while(char c = *p)
+    ifs.exceptions(std::ifstream::failbit | std::ifstream::badbit | std::ifstream::eofbit);
+
+    std::string out_name(array_name);
+    out_name += ".h";
+
+    std::ofstream ofs(out_name.c_str(), std::ios_base::out | std::ios_base::binary);
+    std::cout << "create " << out_name.c_str() << ':' << (ofs.is_open() ? "successed" : "failed") << '\n';
+    if(!ofs.is_open()) return false;
+
+    ofs.exceptions(std::ofstream::failbit | std::ofstream::badbit);
+
+    for(std::string::size_type i=0; i<out_name.length(); ++i)
     {
-        if( isalnum(c) )
+        char c = out_name[i];
+        if(isalnum(c))
         {
-            *p = char(toupper(c));
+            out_name[i] = toupper(c);
         }
-        else *p = '_';
-            p++;
+        else out_name[i] = '_';
     }
 
-    size_t res = 0;
+    std::filebuf* const  inbuf = ifs.rdbuf();
+    std::filebuf* const outbuf = ofs.rdbuf();
 
-    BMP_FILEHEADER file_header;
-    res = fread(&file_header, sizeof(file_header), 1, src );
-    if(res != 1 || file_header.bfType[0] != 'B' || file_header.bfType[1] != 'M' )
-        return false;
+    BMP_FILEHEADER file;
+    BMP_INFOHEADER info;
 
-    BMP_INFOHEADER info_header;
-    res = fread(&info_header, sizeof(info_header), 1, src );
-    if(res != 1 )
-        return false;
+    inbuf->sgetn(reinterpret_cast<char*>(&file), sizeof(file));
 
-    unsigned long width = info_header.biWidth;
-    unsigned long height = info_header.biHeight;
-    unsigned int size = width * height * (info_header.biBitCount/8);
+    if(file.bfType[0] != 'B' || file.bfType[1] != 'M' ) return false;
 
-    fprintf(dst,"#ifndef %s\n#define %s\n", out_name, out_name);
-    fprintf(dst,"const unsigned %s_width=%ld;\n",array_name, width);
-    fprintf(dst,"const unsigned int %s_height=%ld;\n",array_name,  height);
-    fprintf(dst,"const unsigned char %s[]={\n", array_name);
-    unsigned char buffer[16];
-    for(unsigned int i=0; i<(size/16); i++)
+    inbuf->sgetn(reinterpret_cast<char*>(&info), sizeof(info));
+
+    const unsigned long width  = info.biWidth;
+    const unsigned long height = info.biHeight;
+    const unsigned int  bpp    = info.biBitCount/8;
+    const unsigned int size    = width * height * bpp;
+
+    ofs << "#ifndef " << out_name.c_str() << "\n#define " << out_name.c_str() << '\n';
+    ofs << "const unsigned int " << array_name << "_width="  << width  << ";\n";
+    ofs << "const unsigned int " << array_name << "_height=" << height << ";\n";
+    ofs << "const unsigned char " << array_name << "[]={\n";
+
+    ofs << std::hex << std::showbase;
+
+    unsigned char buffer[16*4];
+    for(unsigned int i=0; i<(width * height/16); i++) // 16 values per line
     {
-        size_t count = fread(buffer, sizeof(char), sizeof(buffer), src);
+        std::streamsize count = inbuf->sgetn(reinterpret_cast<char*>(buffer), 16*bpp);
 
-        for(size_t k=0; k<count; k+=4)
+        for(std::streamsize k=0; k<count; k+=bpp)
         {
-            fprintf(dst, buffer[k+3] ? "0x0, " : "0xFF, ");
+            unsigned char* pixel = &(buffer[k]);
+//      "   float gray = dot(v.rgb, vec3(0.2125, 0.7154, 0.0721));"
+/*          float red   = float(pixel[0]) * 0.2125f;
+            float green = float(pixel[1]) * 0.7154f;
+            float blue  = float(pixel[2]) * 0.0721f;
+            unsigned int gray = unsigned char((red + green + blue)*256.0f);
+            ofs << gray << ',';
+*/
+            ofs << 0xff - unsigned int(pixel[0]) << ',';
         }
-        fprintf(dst,"\n");
+
+        outbuf->sputc('\n');
     }
 
-    fprintf(dst,"};\n#endif//%s\n\n", out_name);
+    ofs << "};\n#endif//" << out_name.c_str() << '\n';
 
-    fclose(src);
-    fclose(dst);
     return true;
+}
+catch(std::exception& e)
+{
+    std::cerr << " error:" << e.what() << std::endl;
+    return false;
 }
 //-----------------------------------------------------------------------------

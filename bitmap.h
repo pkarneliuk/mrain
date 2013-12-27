@@ -1,7 +1,7 @@
 //---------- ------------------------------------------------------------------
 // "Matrix Rain" - screensaver for X Server Systems
 // file name:   bitmap.h
-// copyright:   (C) 2008, 2009 by Pavel Karneliuk
+// copyright:   (C) 2008, 2009, 2013 by Pavel Karneliuk
 // license:     GNU General Public License v2
 // e-mail:      pavel_karneliuk@users.sourceforge.net
 //---------- ------------------------------------------------------------------
@@ -10,6 +10,8 @@
 #ifndef BITMAP_H
 #define BITMAP_H
 //---------- ------------------------------------------------------------------
+#include <iostream>
+#include <fstream>
 #include <cstdio>
 
 #include "stuff.h"
@@ -21,13 +23,13 @@ public:
 
     ~Bitmap(){ clear(); }
 
-    unsigned int width ()const{ return image_width;  }
-    unsigned int height()const{ return image_height; }
-    unsigned char* data()const{ return buffer; }
+    unsigned int width () const { return image_width;  }
+    unsigned int height() const { return image_height; }
+    unsigned char* data() const { return buffer; }
 
-    bool dump(const char* bmp_file)const
+    bool dump(const char* bmp_file) const try
     {
-        fprintf (stderr, "dump bitmap into %s\n", bmp_file);
+        std::clog << "dump bitmap to: " << bmp_file << std::endl;
 
         unsigned int dob_width = (4 - (image_width & 0x3)) & 0x3;
         unsigned int rounded_width = image_width + dob_width;
@@ -55,90 +57,78 @@ public:
         info.biClrUsed = 0;
         info.biClrImportant = 0;
 
-        size_t res = 0;
+        std::ofstream ofs;
+        ofs.exceptions(std::ofstream::failbit | std::ofstream::badbit);
+        ofs.open(bmp_file, std::ios_base::out | std::ios_base::binary);
 
-        FILE* mfd = fopen(bmp_file, "wb");
-        res = fwrite(&file, sizeof(file), 1, mfd);
-        if(res != 1)
-        {
-            fclose(mfd);
-            return false;
-        }
-        res = fwrite(&info, sizeof(info), 1, mfd);
-        if(res != 1)
-        {
-            fclose(mfd);
-            return false;
-        }
-        char dummy[4];
+        std::filebuf* const outbuf = ofs.rdbuf();
+
+        outbuf->sputn(reinterpret_cast<const char*>(&file), sizeof(file));
+        outbuf->sputn(reinterpret_cast<const char*>(&info), sizeof(info));
+
+        const char dummy[4]={0};
 
         // write from bottom to up
         unsigned char* pixel = buffer + (image_height-1) * (image_width * 3);
         for(unsigned int i=0; i<image_height; i++)
         {
-            pixel -= fwrite(pixel, 3, image_width, mfd) * 3;
-            res = fwrite(dummy, dob_width, sizeof(char), mfd);
-            if(res != 1)
+            pixel -= outbuf->sputn(reinterpret_cast<const char*>(pixel), image_width*3);
+            if(dob_width)
             {
-                fclose(mfd);
-                return false;
+                outbuf->sputn(dummy, dob_width);
             }
         }
-        fclose(mfd);
 
         return true;
     }
+    catch(std::exception& e)
+    {
+        std::cerr << "couldn't write to file:" << bmp_file << " error:" << e.what() << std::endl;
+        return false;
+    }
 
-    bool load(const char* bmp_file)
+    bool load(const char* bmp_file) try
     {
         BMP_FILEHEADER file = {0};
         BMP_INFOHEADER info = {0};
 
-        size_t res = 0;
+        std::ofstream ifs;
+        ifs.exceptions(std::ifstream::failbit | std::ifstream::badbit | std::ifstream::eofbit);
+        ifs.open(bmp_file, std::ios_base::in  | std::ios_base::binary);
 
-        FILE* mfd = fopen(bmp_file, "rb");
-        if( mfd == NULL ) return false;
+        std::filebuf* const inbuf = ifs.rdbuf();
 
-        res = fread(&file, sizeof(file), 1, mfd);
-        if(res != 1)
-        {
-            fclose(mfd);
-            return false;
-        }
-        res = fread(&info, sizeof(info), 1, mfd);
-        if(res != 1)
-        {
-            fclose(mfd);
-            return false;
-        }
+        inbuf->sgetn(reinterpret_cast<char*>(&file), sizeof(file));
+        inbuf->sgetn(reinterpret_cast<char*>(&info), sizeof(info));
 
         image_width = info.biWidth;
         image_height= info.biHeight;
 
         const size_t data_size = file.bfSize - (sizeof(file) + sizeof(info));
         const size_t pixel_size = info.biBitCount / 8;
+        const size_t line_size = image_width * pixel_size;
         const size_t dob_width = (4 - (image_width & 0x3)) & 0x3;
 
+        clear();
         buffer = new unsigned char[data_size];
 
         // read from bottom to up
-        unsigned char* p = buffer + (image_height-1) * (image_width * pixel_size);
-
-        char dummy[4];
+        unsigned char* pixel = buffer + (image_height-1) * line_size;
         for(unsigned int i=0; i<image_height; i++)
         {
-            p -= fread(p, pixel_size, image_width, mfd) * pixel_size;
-            res = fread(dummy, dob_width, sizeof(char), mfd);
-            if(res != 1)
+            pixel -= inbuf->sgetn(reinterpret_cast<char*>(pixel), line_size);
+            if(dob_width)
             {
-                fclose(mfd);
-                return false;
+                inbuf->pubseekoff(dob_width, std::ios_base::cur);
             }
         }
-
-        fclose(mfd);
-
         return true;
+    }
+    catch(std::exception& e)
+    {
+        clear();
+        std::cerr << "couldn't read from file:" << bmp_file << " error:" << e.what() << std::endl;
+        return false;
     }
 
 protected:

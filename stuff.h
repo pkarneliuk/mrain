@@ -146,7 +146,7 @@ unsigned int make_seed();
 // put path to 'file_name' at user`s home folder into buffer
 unsigned int inhome_path(char* buffer, size_t size, const char* file_name);
 
-bool convert_bmp_2_include_array(char* bmp_file, char* array_name);
+bool convert_bmp_2_include_gray_array(char* bmp_file, char* array_name);
 
 inline unsigned int round_pow_2(unsigned int a)
 {
