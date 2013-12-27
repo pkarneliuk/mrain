@@ -96,7 +96,7 @@ void Matrix::build_program()
     // optimization of:
     //"    texcoord.t = ((gl_VertexID % 4) < 2) ? 1.0 : 0.0;"
     "    texcoord.t = (~gl_VertexID & 0x3) >> 1;"
-    "    texcoord.s = float(data.s +  uint(gl_VertexID & 0x1) )/32.0;"
+    "    texcoord.s = float(data.s +  uint(gl_VertexID & 0x1) )/64.0;"
     "}";
 
     vshader.set_source(vertex_shader);
@@ -277,7 +277,7 @@ GLfloat x, GLfloat y, GLfloat z, const vector& ac, float h1, float h2, float r, 
     {
         GLfloat a = cosf(float(( int(wavehead - (i/4)) %80))*(3.1415926f/180.0f));
 
-        GLubyte g = rand()%32;
+        GLubyte g = rand()%64;
 
         glyphs[i].i = g;
         colors[i].r = 0.0f;
@@ -446,7 +446,7 @@ void MatrixVideo::build_program()
     // optimization of:
     //"    texcoord.t = ((gl_VertexID % 4) < 2) ? 1.0 : 0.0;"
     "    tcoord.t = (~gl_VertexID & 0x3) >> 1;"
-    "    tcoord.s = float(data.s +  uint(gl_VertexID & 0x1) )/32.0;"
+    "    tcoord.s = float(data.s +  uint(gl_VertexID & 0x1) )/64.0;"
     "}";
 
     vshader.set_source(vertex_shader);

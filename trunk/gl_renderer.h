@@ -28,7 +28,7 @@ public:
     void reshape(unsigned int width, unsigned int height);
     unsigned int draw();
 
-    const Transform& get_transform() { return transformation; }
+    const Transform& get_transform() const { return transformation; }
 
 private:
     GLRenderer(class NativeWindow* win);
