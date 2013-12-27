@@ -59,8 +59,17 @@ public:
 
         FILE* mfd = fopen(bmp_file, "wb");
         res = fwrite(&file, sizeof(file), 1, mfd);
+        if(res != 1)
+        {
+            fclose(mfd);
+            return false;
+        }
         res = fwrite(&info, sizeof(info), 1, mfd);
-
+        if(res != 1)
+        {
+            fclose(mfd);
+            return false;
+        }
         char dummy[4];
 
         // write from bottom to up
@@ -69,6 +78,11 @@ public:
         {
             pixel -= fwrite(pixel, 3, image_width, mfd) * 3;
             res = fwrite(dummy, dob_width, sizeof(char), mfd);
+            if(res != 1)
+            {
+                fclose(mfd);
+                return false;
+            }
         }
         fclose(mfd);
 
@@ -86,7 +100,17 @@ public:
         if( mfd == NULL ) return false;
 
         res = fread(&file, sizeof(file), 1, mfd);
+        if(res != 1)
+        {
+            fclose(mfd);
+            return false;
+        }
         res = fread(&info, sizeof(info), 1, mfd);
+        if(res != 1)
+        {
+            fclose(mfd);
+            return false;
+        }
 
         image_width = info.biWidth;
         image_height= info.biHeight;
@@ -105,6 +129,11 @@ public:
         {
             p -= fread(p, pixel_size, image_width, mfd) * pixel_size;
             res = fread(dummy, dob_width, sizeof(char), mfd);
+            if(res != 1)
+            {
+                fclose(mfd);
+                return false;
+            }
         }
 
         fclose(mfd);

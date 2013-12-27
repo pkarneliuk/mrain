@@ -24,6 +24,8 @@ protected:
     {
     }
 
+    virtual ~BaseWindow(){}
+
     BaseWindow(BaseWindow&);            //undefined
     BaseWindow& operator=(BaseWindow&); //undefined
 

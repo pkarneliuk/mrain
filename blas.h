@@ -85,6 +85,7 @@ public:
     matrix& operator=(const matrix& m)
     {
         memcpy(array, m.array, sizeof(matrix));
+        return *this;
     }
     matrix(const float a[16])
     {

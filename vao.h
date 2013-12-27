@@ -62,7 +62,7 @@ private:
             }
             glEnableVertexAttribArray(index);
 
-            Bind<U::element, U::next>::interleaved(stride, index+1, offset + sizeof(T)); // recursive call template
+            Bind<typename U::element, typename U::next>::interleaved(stride, index+1, offset + sizeof(T)); // recursive call template
         }
 
         static inline void serial(GLuint number, GLuint index, size_t offset)
@@ -82,7 +82,7 @@ private:
             }
             glEnableVertexAttribArray(index);
 
-            Bind<U::element, U::next>::serial(number, index+1, offset + sizeof(T));
+            Bind<typename U::element, typename U::next>::serial(number, index+1, offset + sizeof(T));
         }
     };
 
@@ -99,13 +99,13 @@ public:
     template <typename Layout> // interleaved placement in VBO f.e: (VNCVNCVNCVNC)
     void bind(VBO<Layout, true>&, GLuint n, GLuint first_index)
     {
-        BindList<Layout::list>::interleaved(sizeof(Layout), first_index, 0);
+        BindList<typename Layout::list>::interleaved(sizeof(Layout), first_index, 0);
     }
 
     template <typename Layout> // serial placement in VBO f.e: (VVVVNNNNCCCC)
     void bind(VBO<Layout, false>&, GLuint n, GLuint first_index)
     {
-        BindList<Layout::list>::serial(n, first_index, 0);
+        BindList<typename Layout::list>::serial(n, first_index, 0);
     }
 
     template<typename T>

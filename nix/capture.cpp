@@ -19,7 +19,8 @@
 #include <fcntl.h>       // low-level i/o
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-#include <linux/videodev.h>
+#include <sys/stat.h>
+#include <linux/videodev2.h>
 
 #include "capture.h"
 #include "stuff.h"
@@ -42,7 +43,7 @@ int xioctl(int fd, int request, void *arg)
 Capture::Device::Device(const char* dev_name):fd(-1)
 {
     struct stat st={0};
-    if( -1 == stat(dev_name, &st) )
+    if( -1 == ::stat(dev_name, &st) )
     {
         throw runtime_error("'%s' is not exist. errno:%i", dev_name, errno);
     }
@@ -82,7 +83,7 @@ Capture::MMapBuffer::~MMapBuffer()
 }
 
 Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_name) try:
-    buffers(NULL), num_buffers(0), decoders(NULL), device(dev_name), worker_thread(NULL)
+    buffers(NULL), num_buffers(0), /*decoders(NULL),*/ device(dev_name), worker_thread(0)
 {
     // obtain information about driver and hardware capabilities
     struct v4l2_capability cap;
@@ -212,7 +213,7 @@ Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_nam
         {
             throw runtime_error("captred frame width must be align of 4");
         }
-
+/*
         // set decoder
         for(unsigned int i=0; i<sizeof(supported_formats)/sizeof(supported_formats[0]); i++)
         {
@@ -221,7 +222,7 @@ Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_nam
                 decoders = supported_formats[i].decoder;
                 break;
             }
-        }
+        }*/
     }
 
 /*    // Buggy driver paranoia.
@@ -284,7 +285,7 @@ Capture::Capture(unsigned int covet_w, unsigned int covet_h, const char* dev_nam
 }
 catch(...)
 {
-	free();
+    free();
     throw;
 }
 
@@ -305,7 +306,7 @@ void Capture::free()
     delete[] buffers;
 }
 
-const char* Capture::capture()
+const unsigned char* Capture::capture()
 {
     return buffer;
 }
@@ -364,14 +365,14 @@ unsigned int Capture::select_format()
         {
             if(0U == format)    // find if not found
             {
-                for(unsigned int j=0; j<sizeof(supported_formats)/sizeof(supported_formats[0]); j++)
+   /*             for(unsigned int j=0; j<sizeof(supported_formats)/sizeof(supported_formats[0]); j++)
                 {
                     if(supported_formats[j].fourcc == desc.pixelformat )
                     {
                         format = desc.pixelformat;
                         break;
                     }
-                }
+                }*/
             }
             char str[5]={'\0'};
             str[0] = (desc.pixelformat>>0 ) & 0xFF;
@@ -392,11 +393,11 @@ unsigned int Capture::select_format()
 
 void Capture::decode_buffer(int index)
 {
-    MMapBuffer* current = buffers[index];
+  /*  MMapBuffer* current = buffers[index];
     decoders[format]((char*)current->start,
-        (char*)current->start + current->length, buffer);
+        (char*)current->start + current->length, buffer);*/
 }
-
+/*
 const Capture::Converter Capture::supported_formats[4]=
 {
     { V4L2_PIX_FMT_YUYV, { YUYVtoRGB, YUYVtoBGR, YUYVtoGRAY } },
@@ -571,5 +572,5 @@ void Capture::UYVYtoGRAY(const char* src, const char* end, char* dst)
 void Capture::YUV422PtoGREY(const char* src, const char* end, char* dst)
 {
     memcpy(dst, src, end - src);
-}
+}*/
 //-----------------------------------------------------------------------------

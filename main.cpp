@@ -18,7 +18,8 @@ int main(int argc, char **argv)
 
     if( opts[Options::help] ) return opts.usage();
 
-    if( int id = opts[Options::config] )
+    int id = opts[Options::config];
+    if( id )
     {
         Config config(opts);
         return config.show_dialog(0);

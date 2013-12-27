@@ -32,6 +32,7 @@ public:
     }
 
     BaseCapture():fourcc(0),w(0),h(0),rate(0),format(num),buffer(NULL),coder(NULL){}
+    virtual ~BaseCapture(){}
 
     unsigned int width () { return w; }
     unsigned int height() { return h; }

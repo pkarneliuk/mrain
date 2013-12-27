@@ -18,7 +18,7 @@ TextureArray::TextureArray(unsigned int n):num_textures(n)
     glGenTextures (num_textures, texture_id);
 
     textures = new Texture*[num_textures];
-    memset(textures, NULL, sizeof(Texture*) * num_textures);
+    memset(textures, 0, sizeof(Texture*) * num_textures);
 }
 
 TextureArray::~TextureArray()

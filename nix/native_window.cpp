@@ -201,7 +201,7 @@ int NativeWindow::x_error_handler(Display *dpy, XErrorEvent *error)
 Window NativeWindow::root_window(Screen *screen)
 {
     static Screen *save_screen = NULL;
-    static Window root = NULL;
+    static Window root = 0;
 
     if (screen != save_screen)
     {

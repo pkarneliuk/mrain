@@ -41,7 +41,8 @@ void VideoBuffer::update(const Bitmap& frame, unsigned long usec)
 {
     if( (last_time -= usec) <= 0 )
     {
-        top_index = (++top_index) % num_textures;
+        ++top_index;
+        top_index %= num_textures;
         last_time += delay;
     }
 

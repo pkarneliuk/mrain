@@ -122,15 +122,17 @@ bool convert_bmp_2_include_array(char* bmp_file, char* array_name)
             p++;
     }
 
-    size_t res =0;
+    size_t res = 0;
 
     BMP_FILEHEADER file_header;
     res = fread(&file_header, sizeof(file_header), 1, src );
-    if(file_header.bfType[0] != 'B' || file_header.bfType[1] != 'M' )
+    if(res != 1 || file_header.bfType[0] != 'B' || file_header.bfType[1] != 'M' )
         return false;
 
     BMP_INFOHEADER info_header;
     res = fread(&info_header, sizeof(info_header), 1, src );
+    if(res != 1 )
+        return false;
 
     unsigned long width = info_header.biWidth;
     unsigned long height = info_header.biHeight;
