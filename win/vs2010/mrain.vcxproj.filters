@@ -33,9 +33,6 @@
     <ClCompile Include="..\..\application.cpp">
       <Filter>sources</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\base_window.cpp">
-      <Filter>sources</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\blas.cpp">
       <Filter>sources</Filter>
     </ClCompile>
@@ -96,9 +93,6 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\base_capture.h">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\base_window.h">
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\bitmap.h">

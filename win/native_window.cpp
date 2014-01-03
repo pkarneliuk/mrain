@@ -1,22 +1,47 @@
 //-----------------------------------------------------------------------------
 // "Matrix Rain" - screensaver for X Server Systems
 // file name:   native_window.cpp
-// copyright:   (C) 2008, 2009 by Pavel Karneliuk
+// copyright:   (C) 2008, 2009, 2014 by Pavel Karneliuk
 // license:     GNU General Public License v2
 // e-mail:      pavel_karneliuk@users.sourceforge.net
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
-#include <stdio.h>
+#include <Windowsx.h>   // GET_X_LPARAM()/GET_Y_LPARAM()
 
+#include "app_window.h"
 #include "capture.h"
 #include "native_window.h"
+#include "options.h"
+#include "resource.h"   // windows only
 //-----------------------------------------------------------------------------
-const char* NativeWindow::win_class_name="MatrixRainWinClass";
+const char* win_class_name="MatrixRainWinClass";
+//-----------------------------------------------------------------------------
+NativeWindow::NativeWindow()
+    : hwnd(0)
+{
+}
 
-NativeWindow::NativeWindow(BaseWindow::Mode mode, unsigned int parent_id, int width, int height)
-    : BaseWindow(mode)
-    , hwnd(0)
+NativeWindow::~NativeWindow()
+{
+    DestroyWindow(hwnd);
+    UnregisterClass(win_class_name, GetModuleHandle(NULL));
+}
+
+bool NativeWindow::process_events()
+{
+    MSG msg;
+    while(PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+    {
+        if(msg.message == WM_QUIT) return false;
+
+        TranslateMessage(&msg);
+        DispatchMessage (&msg);
+    }
+    return true;
+}
+
+void NativeWindow::create_window(AppWindow* win, unsigned int parent_id, int width, int height)
 {
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc;
@@ -29,21 +54,21 @@ NativeWindow::NativeWindow(BaseWindow::Mode mode, unsigned int parent_id, int wi
     wc.hCursor      = LoadCursor(NULL,IDC_ARROW);
     wc.hbrBackground= NULL;
     wc.lpszMenuName = NULL;
-    wc.lpszClassName= NativeWindow::win_class_name;
+    wc.lpszClassName= win_class_name;
 
     RegisterClass(&wc);
 
     // default properties
     DWORD exstyle = WS_EX_APPWINDOW;
-    DWORD style   = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
+    DWORD style   = WS_OVERLAPPEDWINDOW;
     HWND parent = NULL;
     int x = 0;
     int y = 0;
 
-    if( BaseWindow::preview == mode && 0 != parent_id )
+    if( AppWindow::preview == win->mode && 0 != parent_id )
     {
         exstyle = 0;
-        style   = WS_CHILD|WS_VISIBLE;
+        style   = WS_CHILD;
         parent = (HWND)parent_id;
         RECT rc={0};
         GetWindowRect(parent, &rc);
@@ -56,84 +81,64 @@ NativeWindow::NativeWindow(BaseWindow::Mode mode, unsigned int parent_id, int wi
         RECT desktop={0};
         GetWindowRect(GetDesktopWindow(), &desktop);
 
-        if( BaseWindow::screensaver == mode )
+        if( AppWindow::screensaver == win->mode )
         {
-            //      SetCursor(NULL);
             exstyle= WS_EX_TOPMOST;
-            style  = WS_POPUP|WS_VISIBLE;
+            style  = WS_POPUP;
             width  = desktop.right;
             height = desktop.bottom;
 
             ShowCursor(FALSE);
             SystemParametersInfo(SPI_SETSCREENSAVERRUNNING, 1, NULL, SPIF_SENDCHANGE);
         }
-        else if(BaseWindow::standalone == mode)
+        else if(AppWindow::standalone == win->mode)
         {
-            x = (desktop.right - width)>>1;
-            y = (desktop.bottom- height)>>1;
+            x = (desktop.right - width)/2;
+            y = (desktop.bottom- height)/2;
         }
     }
 
 //Thremble
-    hwnd = CreateWindowEx(exstyle, NativeWindow::win_class_name, BaseWindow::caption, style,
-                            x, y, width, height, parent, NULL, hInstance, this);
-    if( 0 == SetTimer(hwnd, BREAK_TIMER_ID, MAX_EVENTS_PROCESSING_TIME, NULL ) )
-    {
-        printf("Break timer not set !");
-    }
+    hwnd = CreateWindowEx(exstyle, win_class_name, AppWindow::caption, style,
+                            x, y, width, height, parent, NULL, hInstance, win);
 }
 
-NativeWindow::~NativeWindow()
+void NativeWindow::activate()
 {
-    if( BaseWindow::screensaver == mode )
-    {
-        SystemParametersInfo(SPI_SETSCREENSAVERRUNNING, 0, NULL, SPIF_SENDCHANGE);
-        ShowCursor(TRUE);
-    }
-    KillTimer(hwnd, BREAK_TIMER_ID);
-    DestroyWindow(hwnd);
-    UnregisterClass(NativeWindow::win_class_name, GetModuleHandle(NULL));
-}
-
-bool NativeWindow::process_events()
-{
-    MSG msg;
-    while(PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
-    {
-        if(msg.message == WM_QUIT) return false;
-        // break too long event processing
-     /*   if((WM_TIMER == msg.message) && (BREAK_TIMER_ID == msg.wParam))
-        {
-            return true;
-        }*/
-        TranslateMessage(&msg);
-        DispatchMessage (&msg);
-    }
-    return true;
+    ShowWindow(hwnd, SW_SHOW);
 }
 
 LRESULT NativeWindow::ScreenSaverProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    NativeWindow* win = (NativeWindow*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+    AppWindow* win = (AppWindow*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 
     switch(msg)
     {
         case WM_CREATE:
         {
             CREATESTRUCT *cs=(CREATESTRUCT*)lParam;
-            win = (NativeWindow*)cs->lpCreateParams;
+            win = (AppWindow*)cs->lpCreateParams;
             SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)win);
             GetCursorPos(&win->start_point);
+            SetTimer(hWnd, BREAK_TIMER_ID, MAX_EVENTS_PROCESSING_TIME, NULL );
             win->hwnd = hWnd;
+            win->create_renderer();
+        }
+        break;
 
-            win->renderer = new GLRenderer(win);
+        case WM_DESTROY:
+        KillTimer(win->hwnd, BREAK_TIMER_ID);
+        if( AppWindow::screensaver == win->mode )
+        {
+            SystemParametersInfo(SPI_SETSCREENSAVERRUNNING, 0, NULL, SPIF_SENDCHANGE);
+            ShowCursor(TRUE);
         }
         break;
 
         case WM_ACTIVATE:
         case WM_ACTIVATEAPP:
     //  case WM_NCACTIVATE:
-        if(FALSE == wParam && win && win->mode == BaseWindow::screensaver) PostQuitMessage(0);
+        if(FALSE == wParam && win->mode == AppWindow::screensaver) PostQuitMessage(0);
         break;
 
         case WM_SIZE:
@@ -152,15 +157,13 @@ LRESULT NativeWindow::ScreenSaverProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
         break;
 
         case WM_MOVING:
-        if(win->mode == BaseWindow::standalone) return TRUE;
+        if(win->mode == AppWindow::standalone) return TRUE;
         break;
-
 
         case WM_MOUSEMOVE:
         {
-            if(win == 0) break;
-            int x = LOWORD(lParam);
-            int y = HIWORD(lParam);
+            int x = GET_X_LPARAM(lParam);
+            int y = GET_Y_LPARAM(lParam);
             if(win->start_point.x == x && win->start_point.y == y) break;
         }
         case WM_LBUTTONDOWN:
@@ -168,24 +171,15 @@ LRESULT NativeWindow::ScreenSaverProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
         case WM_MBUTTONDOWN:
         case WM_KEYDOWN:
 
-        if(wParam != VK_ESCAPE && win->mode != BaseWindow::screensaver) break;
+        if(wParam != VK_ESCAPE && win->mode != AppWindow::screensaver) break;
         case WM_CLOSE:
-            delete win->renderer;
+            win->destroy_renderer();
             PostQuitMessage(0);
         break;
 
         case WM_TIMER:
             win->repaint();
         break;
-        
-
-/*      case WM_SETCURSOR:
-        SetCursor(NULL);
-        ShowCursor(FALSE);
-        return TRUE;
-*/
-        //case WM_DESTROY:
-        //break;
 
         case WM_SYSCOMMAND:
         if( SC_SCREENSAVE == wParam )

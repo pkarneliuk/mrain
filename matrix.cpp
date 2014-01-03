@@ -64,7 +64,7 @@ Matrix::Matrix(unsigned int ns, unsigned int ng, TextureAtlas::Texture* texture)
     vbo.unbind();
 
     model.identity();
-    model.translate(vector(- float(nstrips/2), float(nglyphs/2), -80.0f));
+    model.translate(vector(- float(nstrips/2), float(nglyphs/2), -70.0f));
 }
 
 Matrix::~Matrix()
