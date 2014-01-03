@@ -9,7 +9,6 @@
 //-----------------------------------------------------------------------------
 #include <iostream>
 
-#include "blas.h"
 #include "gl_renderer.h"
 #include "gpu_program.h"
 #include "buffer_object.h"
@@ -100,7 +99,6 @@ public:
     GPU_Program program;
     matrix model;
 } * triangle = NULL;
-
 //-----------------------------------------------------------------------------
 GLRenderer::GLRenderer(class NativeWindow* win)
     : GLContext(win)

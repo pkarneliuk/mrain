@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // "Matrix Rain" - screensaver for X Server Systems
 // file name:   app_window.h
-// copyright:   (C) 2008, 2009 by Pavel Karneliuk
+// copyright:   (C) 2008, 2009, 2014 by Pavel Karneliuk
 // license:     GNU General Public License v2
 // e-mail:      pavel_karneliuk@users.sourceforge.net
 //-----------------------------------------------------------------------------
@@ -10,25 +10,46 @@
 #ifndef APP_WINDOW_H
 #define APP_WINDOW_H
 //-----------------------------------------------------------------------------
+#include "gl_renderer.h"
 #include "native_window.h"
 //-----------------------------------------------------------------------------
 class AppWindow : private NativeWindow
 {
 public:
-    AppWindow(class Application* app);
-    AppWindow(class Application* app, unsigned int parent_id);
-    AppWindow(class Application* app, int width, int height);
+    static const char caption[];
+    enum Mode{ preview, standalone, screensaver };
+
+    AppWindow(class Application* app, const Options& options);
     ~AppWindow();
 
-    bool process_events();
+    void activate      () { NativeWindow::activate();              }
+    bool process_events() { return NativeWindow::process_events(); }
 
     inline GLRenderer* get_renderer(){ return renderer; }
 
-protected:
-    virtual void repaint();
-
 private:
+    friend class NativeWindow;
+
+    void resize(unsigned int width, unsigned int height)
+    {
+        renderer->reshape(width, height);
+    }
+
+    void create_renderer()
+    {
+        renderer = new GLRenderer(this);
+    }
+
+    void destroy_renderer()
+    {
+        delete renderer;
+    }
+
+    void repaint();
+
     class Application* application;
+    class GLRenderer*  renderer;
+    Mode mode;
 };
 //-----------------------------------------------------------------------------
 #endif//APP_WINDOW_H

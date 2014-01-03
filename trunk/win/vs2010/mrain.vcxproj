@@ -186,7 +186,6 @@ light.exe  -nologo -ext WixUIExtension -ext WiXUtilExtension -b $(OutDir) -pdbou
     <ClCompile Include="..\..\application.cpp" />
     <ClCompile Include="..\..\app_window.cpp" />
     <ClCompile Include="..\..\base_capture.cpp" />
-    <ClCompile Include="..\..\base_window.cpp" />
     <ClCompile Include="..\..\blas.cpp" />
     <ClCompile Include="..\..\gl_renderer.cpp" />
     <ClCompile Include="..\..\gpu_program.cpp" />
@@ -208,7 +207,6 @@ light.exe  -nologo -ext WixUIExtension -ext WiXUtilExtension -b $(OutDir) -pdbou
     <ClInclude Include="..\..\application.h" />
     <ClInclude Include="..\..\app_window.h" />
     <ClInclude Include="..\..\base_capture.h" />
-    <ClInclude Include="..\..\base_window.h" />
     <ClInclude Include="..\..\bitmap.h" />
     <ClInclude Include="..\..\blas.h" />
     <ClInclude Include="..\..\gl_renderer.h" />

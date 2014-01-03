@@ -17,7 +17,7 @@
 //-----------------------------------------------------------------------------
 class GLRenderer:private GLContext
 {
-    friend class NativeWindow;
+    friend class AppWindow;
 public:
 
     inline const Version& version () const { return gl_version;              }

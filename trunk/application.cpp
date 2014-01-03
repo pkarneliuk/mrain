@@ -8,6 +8,7 @@
 
 //-----------------------------------------------------------------------------
 #include <csignal>
+#include <iostream>
 
 #include "application.h"
 #include "app_window.h"
@@ -29,20 +30,8 @@ Application::Application(const Options& opts)
     , fps    (60)
     , running(true)
 {
-    if( options[Options::scrsvr_mode] )
-    {
-        window = new AppWindow(this);
-    }
-    else if( int id = options[Options::window_id] )
-    {
-        window = new AppWindow(this, id);
-    }
-    else
-    {
-        int width  = options[Options::width];
-        int height = options[Options::height];
-        window = new AppWindow(this, width, height);
-    }
+
+    window = new AppWindow(this, options);
 
     try
     {
@@ -50,7 +39,7 @@ Application::Application(const Options& opts)
     }
     catch(runtime_error& error)
     {
-        fprintf(stderr, "capture error: %s\n", error.what() );
+        std::cerr << "capture error: " << error.what() << std::endl;
     }
 
     instance = this;
@@ -76,6 +65,8 @@ Application::~Application()
 
 int Application::run()
 {
+    window->activate();
+
     while( running && window->process_events() )
     {
         do_frame();
