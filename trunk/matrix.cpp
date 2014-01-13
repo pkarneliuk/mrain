@@ -96,7 +96,7 @@ void Matrix::build_program()
     // optimization of:
     //"    texcoord.t = ((gl_VertexID % 4) < 2) ? 1.0 : 0.0;"
     "    tcoord.t = 0.15 + 0.7*((~gl_VertexID & 0x3) >> 1);"
-    "    tcoord.s = float(data.s +  0.15 + 0.7*(uint(gl_VertexID & 0x1)) )/64.0;"
+    "    tcoord.s = float( float(data.s) +  0.15 + 0.7*(float(gl_VertexID & 0x1)) )/64.0;"
     "}";
 
     vshader.set_source(vertex_shader);
@@ -447,7 +447,7 @@ void MatrixVideo::build_program()
     // optimization of:
     //"    texcoord.t = ((gl_VertexID % 4) < 2) ? 1.0 : 0.0;"
     "    tcoord.t = 0.15 + 0.7*((~gl_VertexID & 0x3) >> 1);"
-    "    tcoord.s = float(data.s +  0.15 + 0.7*(uint(gl_VertexID & 0x1)) )/64.0;"
+    "    tcoord.s = float( float(data.s) +  0.15 + 0.7*(float(gl_VertexID & 0x1)) )/64.0;"
     "}";
 
     vshader.set_source(vertex_shader);
