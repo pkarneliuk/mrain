@@ -12,15 +12,6 @@
 #include "gl_context.h"
 #include "native_window.h"
 //-----------------------------------------------------------------------------
-#ifdef _DEBUG
-#define WGL_BIND(func) { *((PROC*)  (&func)) = wglGetProcAddress( #func ); \
-                        std::clog << (func) << ": " << #func << std::endl; }
-#define LIB_LINK(func) { OpenGL::OGL:: func = :: func;                     \
-           std::clog << (OpenGL::OGL::func) << ": " << #func << std::endl; }
-#else
-#define WGL_BIND(func) { *((PROC*)(& func )) = wglGetProcAddress( #func ); }
-#define LIB_LINK(func) { OpenGL::OGL:: func = :: func;                     }
-#endif
 namespace OpenGL
 {
     namespace OGL
@@ -169,7 +160,7 @@ GLContext::GLContext(NativeWindow* win)
     {
         const int attributes[] =
         {
-            WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
+            WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
             WGL_CONTEXT_MINOR_VERSION_ARB, 0,
             WGL_CONTEXT_PROFILE_MASK_ARB,  WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
             WGL_CONTEXT_FLAGS_ARB,         WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
@@ -196,71 +187,31 @@ GLContext::~GLContext()
     ReleaseDC(WindowFromDC(hdc), hdc);
 }
 
-extern "C" {
-GLAPI void APIENTRY glCullFace (GLenum mode);
-GLAPI void APIENTRY glFrontFace (GLenum mode);
-GLAPI void APIENTRY glHint (GLenum target, GLenum mode);
-GLAPI void APIENTRY glLineWidth (GLfloat width);
-GLAPI void APIENTRY glPointSize (GLfloat size);
-GLAPI void APIENTRY glPolygonMode (GLenum face, GLenum mode);
-GLAPI void APIENTRY glScissor (GLint x, GLint y, GLsizei width, GLsizei height);
-GLAPI void APIENTRY glTexParameterf (GLenum target, GLenum pname, GLfloat param);
-GLAPI void APIENTRY glTexParameterfv (GLenum target, GLenum pname, const GLfloat *params);
-GLAPI void APIENTRY glTexParameteri (GLenum target, GLenum pname, GLint param);
-GLAPI void APIENTRY glTexParameteriv (GLenum target, GLenum pname, const GLint *params);
-GLAPI void APIENTRY glTexImage1D (GLenum target, GLint level, GLint internalformat, GLsizei width, GLint border, GLenum format, GLenum type, const GLvoid *pixels);
-GLAPI void APIENTRY glTexImage2D (GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels);
-GLAPI void APIENTRY glDrawBuffer (GLenum mode);
-GLAPI void APIENTRY glClear (GLbitfield mask);
-GLAPI void APIENTRY glClearColor (GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
-GLAPI void APIENTRY glClearStencil (GLint s);
-GLAPI void APIENTRY glClearDepth (GLdouble depth);
-GLAPI void APIENTRY glStencilMask (GLuint mask);
-GLAPI void APIENTRY glColorMask (GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
-GLAPI void APIENTRY glDepthMask (GLboolean flag);
-GLAPI void APIENTRY glDisable (GLenum cap);
-GLAPI void APIENTRY glEnable (GLenum cap);
-GLAPI void APIENTRY glFinish (void);
-GLAPI void APIENTRY glFlush (void);
-GLAPI void APIENTRY glBlendFunc (GLenum sfactor, GLenum dfactor);
-GLAPI void APIENTRY glLogicOp (GLenum opcode);
-GLAPI void APIENTRY glStencilFunc (GLenum func, GLint ref, GLuint mask);
-GLAPI void APIENTRY glStencilOp (GLenum fail, GLenum zfail, GLenum zpass);
-GLAPI void APIENTRY glDepthFunc (GLenum func);
-GLAPI void APIENTRY glPixelStoref (GLenum pname, GLfloat param);
-GLAPI void APIENTRY glPixelStorei (GLenum pname, GLint param);
-GLAPI void APIENTRY glReadBuffer (GLenum mode);
-GLAPI void APIENTRY glReadPixels (GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels);
-GLAPI void APIENTRY glGetBooleanv (GLenum pname, GLboolean *params);
-GLAPI void APIENTRY glGetDoublev (GLenum pname, GLdouble *params);
-GLAPI GLenum APIENTRY glGetError (void);
-GLAPI void APIENTRY glGetFloatv (GLenum pname, GLfloat *params);
-GLAPI void APIENTRY glGetIntegerv (GLenum pname, GLint *params);
-GLAPI const GLubyte * APIENTRY glGetString (GLenum name);
-GLAPI void APIENTRY glGetTexImage (GLenum target, GLint level, GLenum format, GLenum type, GLvoid *pixels);
-GLAPI void APIENTRY glGetTexParameterfv (GLenum target, GLenum pname, GLfloat *params);
-GLAPI void APIENTRY glGetTexParameteriv (GLenum target, GLenum pname, GLint *params);
-GLAPI void APIENTRY glGetTexLevelParameterfv (GLenum target, GLint level, GLenum pname, GLfloat *params);
-GLAPI void APIENTRY glGetTexLevelParameteriv (GLenum target, GLint level, GLenum pname, GLint *params);
-GLAPI GLboolean APIENTRY glIsEnabled (GLenum cap);
-GLAPI void APIENTRY glDepthRange (GLdouble near, GLdouble far);
-GLAPI void APIENTRY glViewport (GLint x, GLint y, GLsizei width, GLsizei height);
-} // extern "C"
+static HMODULE opengl32 = GetModuleHandle("opengl32.dll");
+
+#define DO_WGL_BIND(func) do { reinterpret_cast<PROC&>(func) = wglGetProcAddress( #func );                               \
+                          if (func == nullptr)  reinterpret_cast<PROC&>(func) = GetProcAddress(opengl32, #func); } while(0)
+
+#ifdef _DEBUG
+#define WGL_BIND(func) do { DO_WGL_BIND(func); std::clog << (func) << ": " << #func << '\n'; } while(0)
+#else
+#define WGL_BIND(func) DO_WGL_BIND(func)
+#endif
 
 bool OpenGL::OGL::load()
 {
     // GL_VERSION_1_0
-    LIB_LINK(glTexParameteri);
-    LIB_LINK(glTexImage2D);
-    LIB_LINK(glClear);
-    LIB_LINK(glClearColor);
-    LIB_LINK(glDepthMask);
-    LIB_LINK(glDisable);
-    LIB_LINK(glEnable);
-    LIB_LINK(glBlendFunc);
-    LIB_LINK(glGetError);
-    LIB_LINK(glGetString);
-    LIB_LINK(glViewport);
+    WGL_BIND(glTexParameteri);
+    WGL_BIND(glTexImage2D);
+    WGL_BIND(glClear);
+    WGL_BIND(glClearColor);
+    WGL_BIND(glDepthMask);
+    WGL_BIND(glDisable);
+    WGL_BIND(glEnable);
+    WGL_BIND(glBlendFunc);
+    WGL_BIND(glGetError);
+    WGL_BIND(glGetString);
+    WGL_BIND(glViewport);
     // GL_VERSION_1_1
     WGL_BIND(glDrawArrays);
     WGL_BIND(glTexSubImage2D);
