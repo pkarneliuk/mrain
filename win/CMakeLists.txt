@@ -8,7 +8,7 @@ if(MSVC)
   file(GLOB WIN_CPP "win/*.cpp")
   file(GLOB WIN_H "win/*.h")
   source_group("sources" FILES ${CPP} ${H})
-  source_group("sources\\win" FILES ${WIN_CPP} ${WIN_H} win/CMakeLists.txt)
+  source_group("sources\\win" FILES ${WIN_CPP} ${WIN_H} win/CMakeLists.txt win/resources.rc)
 endif()
 
 target_include_directories(${PROJECT_NAME} PRIVATE ./win)
@@ -19,6 +19,7 @@ target_sources(${PROJECT_NAME} PRIVATE
   win/native_stuff.cpp
   win/native_window.cpp
   win/CMakeLists.txt
+  win/resources.rc
   ${CPP} ${H} ${WIN_CPP} ${WIN_H})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
