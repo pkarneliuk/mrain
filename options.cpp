@@ -11,6 +11,7 @@
 #include <cstdio>
 #include <cstring>
 #include <fstream>
+#include <iostream>
 
 #include "options.h"
 #include "stuff.h"
@@ -221,21 +222,21 @@ void Options::parse(int argc, char **argv)
         }
         else
         {
-            for(int j=0; j<num; j++)
+            for(auto& opt : options)
             {
-                if( strstr(argv[i], options[j].name) )
+                if( strstr(argv[i], opt.name) )
                 {
-                    if( '-' != options[j].key )     // is short key -X ?
+                    if( '-' != opt.key )     // is short key -X ?
                     {
-                        options[j] = "true";
+                        opt = "true";
                     }
                     else if( char* s=strchr(argv[i],'=') ) // format: [key=value] ?
                     {
-                        options[j] = s+1;
+                        opt = s+1;
                     }
-                    else if( char* s=strchr(argv[i],':') ) // format: [key:value] ?
+                    else if( char* t=strchr(argv[i],':') ) // format: [key:value] ?
                     {
-                        options[j] = s+1;
+                        opt = t+1;
                     }
                     else if( i+1 < argc )   // format: [key value] ?
                     {
@@ -244,9 +245,9 @@ void Options::parse(int argc, char **argv)
                         bool next_is_key = (search_name(argv[i+1]) != -1);
 
                         // is it begin of short key string (-XXX) ?
-                        if( const char* sk_str = is_short_key(argv[i+1]) )
+                        if( const char* sk = is_short_key(argv[i+1]) )
                         {
-                            next_is_key = (search_key(*sk_str) != -1);
+                            next_is_key = (search_key(*sk) != -1);
                         }
 
                         if(next_is_key)
@@ -255,7 +256,7 @@ void Options::parse(int argc, char **argv)
                                    "use syntax: [key=value], [key:value] "
                                    "or [key value]\n", argv[i]);
                         }
-                        else options[j] = argv[++i];
+                        else opt = argv[++i];
                     }
                     break;
                 }
@@ -278,36 +279,31 @@ bool Options::save(const char* filepath)
 
     std::ofstream out(filepath, std::ios_base::binary | std::ios_base::out);
     if( !out.is_open() ) return false;
-
-    const int count = sizeof(serializable)/sizeof(serializable[0]);
-    for(int i=0; i<count; i++)
+    std::clog << "write configuration: " << filepath << '\n';
+    for(auto& s : serializable)
     {
-        Options::Opt& opt = options[serializable[i]];
+        Options::Opt& opt = options[s];
         if( !opt.empty() )
         {
             out << opt.name << '=' << opt.value << '\n';
         }
     }
-
     return out.good();
 }
 
 bool Options::load(const char* filepath)
 {
-    if(NULL == filepath) filepath = default_filepath; // use default filepath
+    if(nullptr == filepath) filepath = default_filepath; // use default filepath
 
     std::ifstream in(filepath, std::ios_base::binary | std::ios_base::in);
     if( !in.is_open() ) return false;
-
-    const int count = sizeof(serializable)/sizeof(serializable[0]);
-
+    std::clog << "read configuration: " << filepath << '\n';
     char buffer[128];
     while( in.getline(buffer, sizeof(buffer)) )
     {
-        for(int i=0; i<count; i++)
+        for(auto& i : serializable)
         {
-            Options::Opt& opt = options[serializable[i]];
-
+            Options::Opt& opt = options[i];
             if( strstr(buffer, opt.name) )
             {
                 if( char* s=strchr(buffer,'=') ) // format: [key=value] ?
@@ -324,14 +320,14 @@ bool Options::load(const char* filepath)
 int Options::usage()const
 {
     fprintf(stdout, "possible arguments:\n");
-    for(int i=0; i<num; i++)
+    for (auto& opt : options)
     {
-        if(options[i].key != '-')
-            printf("  -%c ", options[i].key);
+        if(opt.key != '-')
+            printf("  -%c ", opt.key);
         else
             printf("     ");
 
-        printf("%-12s value:%-12s\t%s\n", options[i].name, options[i].value, options[i].comment);
+        printf("%-12s value:%-12s\t%s\n", opt.name, opt.value, opt.comment);
     }
     return 0;
 }
@@ -360,6 +356,6 @@ const char* Options::is_short_key(const char* str)
 {
     if( '-' == str[0] && isalpha(str[1]) )
         return str+1;
-    return NULL;
+    return nullptr;
 }
 //-----------------------------------------------------------------------------
