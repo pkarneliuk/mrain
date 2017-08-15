@@ -32,6 +32,13 @@ private:
     char buffer[1024];
 };
 
+struct noncopyable
+{
+    noncopyable() = default;
+    noncopyable(const noncopyable&) = delete;
+    void operator=(const noncopyable&) = delete;
+};
+
 class Random
 {
     enum { table_size=55 };
