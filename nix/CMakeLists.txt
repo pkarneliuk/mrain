@@ -1,0 +1,1 @@
+message(FATAL_ERROR "Configuration for *nix build is not jet supported")
