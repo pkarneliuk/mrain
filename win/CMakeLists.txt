@@ -1,6 +1,7 @@
 if(MSVC)
   target_compile_options(${PROJECT_NAME} PRIVATE /MP /W4 /wd4201)
   target_compile_definitions(${PROJECT_NAME} PRIVATE _CRT_SECURE_NO_WARNINGS)
+  set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY LINK_FLAGS "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
 
   set_property(GLOBAL PROPERTY USE_FOLDERS ON)
   file(GLOB CPP "*.cpp")
