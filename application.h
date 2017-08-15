@@ -11,29 +11,32 @@
 #define APPLICATION_H
 //-----------------------------------------------------------------------------
 #include <cstdlib>
+#include <memory>
 
 #include "options.h"
+#include "scene.h"
 #include "stuff.h"
 //-----------------------------------------------------------------------------
-class Application
+class AppWindow;
+class Capture;
+class Scene;
+
+class Application : noncopyable
 {
 public:
-    Application(const Options& opts);
-    ~Application();
-    Application& operator=(Application&); //undefined
+    explicit Application(const Options& opts);
 
     int run();
-
     void do_frame();
 
 private:
     static void signal_handler(int sig);
 
-    const Options&      options;
-    class AppWindow*    window;
-    class Capture*      capture;
-    class Scene*        scene;
-    FPS                 fps;
+    const Options&             options;
+    std::unique_ptr<AppWindow> window;
+    std::unique_ptr<Capture>   capture;
+    std::unique_ptr<Scene>     scene;
+    FPS                        fps;
     bool running;
 };
 //-----------------------------------------------------------------------------

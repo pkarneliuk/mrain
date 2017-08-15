@@ -15,27 +15,23 @@
 #include "capture.h"
 #include "scene.h"
 //-----------------------------------------------------------------------------
-static Application* instance = NULL;
+static Application* instance = nullptr;
 
-void Application::signal_handler(int sig)
+void Application::signal_handler(int)
 {
     if(instance) instance->running = false;
 }
 
 Application::Application(const Options& opts)
     : options(opts)
-    , window (NULL)
-    , capture(NULL)
-    , scene  (NULL)
     , fps    (60)
     , running(true)
 {
-
-    window = new AppWindow(this, options);
+    window = std::make_unique<AppWindow>(this, options);
 
     try
     {
-        capture = new Capture(640, 480, options[Options::device]);
+        capture = std::make_unique<Capture>(640, 480, options[Options::device]);
     }
     catch(runtime_error& error)
     {
@@ -53,14 +49,7 @@ Application::Application(const Options& opts)
     sigaction(SIGTERM, &action, NULL);
     #endif//UNIX
 
-    scene = new Scene(window->get_renderer(), capture, options);
-}
-
-Application::~Application()
-{
-    delete scene;
-    delete capture;
-    delete window;
+    scene = std::make_unique<Scene>(window->get_renderer(), capture.get(), options);
 }
 
 int Application::run()
