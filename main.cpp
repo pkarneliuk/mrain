@@ -1,25 +1,23 @@
-//-----------------------------------------------------------------------------
-// "Matrix Rain" - screensaver for X Server Systems
-// file name:   main.cpp
-// copyright:   (C) 2008, 2009, 2013 by Pavel Karneliuk
-// license:     GNU General Public License v2
-// e-mail:      pavel_karneliuk@users.sourceforge.net
-//-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
-#include "application.h"
+//------------------------------------------------------------------------------
+// "Matrix Rain" - Interactive screensaver with webcam integration
+// copyright:   (C) 2008, 2009, 2013, 2017 by Pavel Karneliuk
+// license:     GNU General Public License v3
+// e-mail:      pavel.karneliuk@gmail.com
+//------------------------------------------------------------------------------
 #include "app_window.h"
-//-----------------------------------------------------------------------------
+#include "application.h"
+//------------------------------------------------------------------------------
 int main(int argc, char **argv)
 {
     Options opts(".mrainrc");
     opts.load();
     opts.parse(argc, argv);
 
-    if( opts[Options::help] ) return opts.usage();
+    if(opts[Options::help])
+        return opts.usage();
 
     int id = opts[Options::config];
-    if( id )
+    if(id)
     {
         Config config(opts);
         return config.show_dialog(0);
@@ -29,4 +27,4 @@ int main(int argc, char **argv)
 
     return application.run();
 }
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------

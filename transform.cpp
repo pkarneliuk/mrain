@@ -1,14 +1,14 @@
-//-----------------------------------------------------------------------------
-// "Matrix Rain" - screensaver for X Server Systems
-// file name:   transform.cpp
-// copyright:   (C) 2013 by Pavel Karneliuk
-// license:     GNU General Public License v2
-// e-mail:      pavel_karneliuk@users.sourceforge.net
-//-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+// "Matrix Rain" - Interactive screensaver with webcam integration
+// copyright:   (C) 2008, 2009, 2013, 2017 by Pavel Karneliuk
+// license:     GNU General Public License v3
+// e-mail:      pavel.karneliuk@gmail.com
+//------------------------------------------------------------------------------
+#pragma once
+//------------------------------------------------------------------------------
 #include "transform.h"
-//-----------------------------------------------------------------------------
+#include "gpu_program.h"
+//------------------------------------------------------------------------------
 void Transform::bind_transform(GPU_Program& program, const matrix& model) const
 {
     matrix tmp;
@@ -20,4 +20,4 @@ void Transform::bind_viewport(GPU_Program& program) const
 {
     program.set_uniform("viewport", viewport);
 }
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------

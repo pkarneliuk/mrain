@@ -1,45 +1,51 @@
-//-----------------------------------------------------------------------------
-// "Matrix Rain" - screensaver for X Server Systems
-// file name:   texture_array.h
-// copyright:   (C) 2008, 2009 by Pavel Karneliuk
-// license:     GNU General Public License v2
-// e-mail:      pavel_karneliuk@users.sourceforge.net
-//-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
-#ifndef TEXTURE_ARRAY_H
-#define TEXTURE_ARRAY_H
-//-----------------------------------------------------------------------------
-#include <cstdio>
-#include <cstdlib>
+//------------------------------------------------------------------------------
+// "Matrix Rain" - Interactive screensaver with webcam integration
+// copyright:   (C) 2008, 2009, 2013, 2017 by Pavel Karneliuk
+// license:     GNU General Public License v3
+// e-mail:      pavel.karneliuk@gmail.com
+//------------------------------------------------------------------------------
+#pragma once
+//------------------------------------------------------------------------------
 #include "gl_context.h"
-//-----------------------------------------------------------------------------
-class TextureArray
+#include "stuff.h"
+#include <vector>
+//------------------------------------------------------------------------------
+template <GLenum Type>
+class TextureArray : noncopyable
 {
-protected:
-    class Texture
+public:
+    struct TextureID : noncopyable
     {
-    public:
-        Texture(GLuint arg_id, GLenum t):id(arg_id), type(t){}
-        virtual ~Texture(){}
-
-        inline void bind()
+        TextureID(GLuint i) noexcept
+            : id{ i }
         {
-            glBindTexture(type, id);
         }
 
+        void bind() const noexcept { glBindTexture(Type, id); }
+        GLenum type() const noexcept { return Type; }
     private:
-        GLuint id;
-        GLenum type;
+        const GLuint id;
     };
 
-    TextureArray(unsigned int n);
-    ~TextureArray();
+    explicit TextureArray(std::size_t n)
+    : ids(n)
+    {
+        glGenTextures((GLsizei)ids.size(), &ids[0]);
+    }
+    ~TextureArray()
+    {
+        glDeleteTextures((GLsizei)ids.size(), &ids[0]);
+    }
 
-    Texture** textures;
-    GLuint* texture_id;
-    unsigned int num_textures;
+    TextureID* operator[](std::size_t index) const
+    {
+        return (TextureID*)&(ids[index]);
+    }
+    std::size_t size() const
+    {
+        return ids.size();
+    }
+protected:
+    std::vector<GLuint> ids;
 };
-//-----------------------------------------------------------------------------
-#endif//TEXTURE_ARRAY_H
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------

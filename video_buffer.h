@@ -1,40 +1,39 @@
-//-----------------------------------------------------------------------------
-// "Matrix Rain" - screensaver for X Server Systems
-// file name:   video_buffer.h
-// copyright:   (C) 2008, 2009 by Pavel Karneliuk
-// license:     GNU General Public License v2
-// e-mail:      pavel_karneliuk@users.sourceforge.net
-//-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
-#ifndef VIDEO_BUFFER_H
-#define VIDEO_BUFFER_H
-//-----------------------------------------------------------------------------
-#include "texture_array.h"
+//------------------------------------------------------------------------------
+// "Matrix Rain" - Interactive screensaver with webcam integration
+// copyright:   (C) 2008, 2009, 2013, 2017 by Pavel Karneliuk
+// license:     GNU General Public License v3
+// e-mail:      pavel.karneliuk@gmail.com
+//------------------------------------------------------------------------------
+#pragma once
+//------------------------------------------------------------------------------
 #include "bitmap.h"
-//-----------------------------------------------------------------------------
-class VideoBuffer:public TextureArray
+#include "texture_array.h"
+//------------------------------------------------------------------------------
+class VideoBuffer : public TextureArray<GL_TEXTURE_2D>
 {
 public:
-    class VideoFrame:public TextureArray::Texture
+    class VideoFrame : public TextureID
     {
     public:
-        VideoFrame(unsigned char* data, unsigned int width, unsigned int height, GLuint tex_id);
-        void update(unsigned char* data, unsigned int offset_x, unsigned int offset_y, unsigned int width, unsigned int height);
-    private:
+        void update(unsigned char* data, unsigned int offset_x,
+                    unsigned int offset_y, unsigned int width,
+                    unsigned int height);
     };
 
-    VideoBuffer(const Bitmap& frame, int layers, unsigned long micsec_delay);
+    VideoBuffer(const Bitmap& frame, std::size_t layers,
+                unsigned long micsec_delay);
 
-    inline VideoFrame* frame() const { return static_cast<VideoFrame*>(textures[top_index]); }
+    inline VideoFrame* frame() const
+    {
+        return static_cast<VideoFrame*>((*this)[top_index]);
+    }
     void update(const Bitmap& bitmap, unsigned long usec);
 
 protected:
-    unsigned int top_index;
+    std::size_t top_index;
+
 private:
     unsigned long last_time;
     unsigned long delay;
 };
-//-----------------------------------------------------------------------------
-#endif//VIDEO_BUFFER_H
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------

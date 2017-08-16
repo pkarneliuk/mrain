@@ -18,7 +18,6 @@ target_sources(${PROJECT_NAME} PRIVATE
   options.cpp
   scene.cpp
   stuff.cpp
-  texture_array.cpp
   texture_atlas.cpp
   transform.cpp
   video_buffer.cpp
@@ -30,7 +29,7 @@ elseif(WIN32)
   include(./win/CMakeLists.txt)
 endif()
 
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Interactive screensaver with web-cam integration")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Interactive screensaver with webcam integration")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "mrain")
 set(CPACK_PACKAGE_CONTACT "pavel.karneliuk@gmail.com")
 include(CPack)
