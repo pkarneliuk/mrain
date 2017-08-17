@@ -2,7 +2,7 @@
   <CPackWiXFragment Id="#PRODUCT">
 
     <DirectoryRef Id="TARGETDIR">
-      <Directory Id="SystemFolder">
+      <Directory Id="System64Folder">
         <Component Id="mrain.sCr" Guid="6C654D56-2DB9-4cfa-B234-27E58B484303" Permanent="no">
           <File Id="mrain.sCr" Source="Matrix-Rain-Screensaver/mrain.exe" Name="mrain.sCr" ReadOnly="yes" KeyPath="yes" Checksum="yes"/>
           <RemoveFile Id="config" Property="LocalAppDataFolder" Name="*.mrainrc" On="uninstall"/>
@@ -15,8 +15,8 @@
             <Shortcut Id="ApplicationStartMenuShortcut"
                       Name="Matrix Rain Screensaver Configuration"
                       Description="Matrix Rain Screensaver Configuration"
-                      Target="[SystemFolder]cmd.exe"
-                      Arguments="/C start /B [SystemFolder]mrain.sCr /c:-1"
+                      Target="[SystemFolder64]cmd.exe"
+                      Arguments="/C start /B [SystemFolder64]mrain.sCr /c:-1"
                       Icon="icon.ico"
                       Show="minimized"/>
             <Shortcut Id="UninstallProduct"
