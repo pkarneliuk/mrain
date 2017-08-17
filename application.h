@@ -1,22 +1,17 @@
-//-----------------------------------------------------------------------------
-// "Matrix Rain" - screensaver for X Server Systems
-// file name:   application.h
-// copyright:   (C) 2008, 2009, 2013 by Pavel Karneliuk
-// license:     GNU General Public License v2
-// e-mail:      pavel_karneliuk@users.sourceforge.net
-//-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
-#ifndef APPLICATION_H
-#define APPLICATION_H
-//-----------------------------------------------------------------------------
-#include <cstdlib>
-#include <memory>
-
+//------------------------------------------------------------------------------
+// "Matrix Rain" - Interactive screensaver with webcam integration
+// copyright:   (C) 2008, 2009, 2013, 2017 by Pavel Karneliuk
+// license:     GNU General Public License v3
+// e-mail:      pavel.karneliuk@gmail.com
+//------------------------------------------------------------------------------
+#pragma once
+//------------------------------------------------------------------------------
 #include "options.h"
 #include "scene.h"
 #include "stuff.h"
-//-----------------------------------------------------------------------------
+#include <cstdlib>
+#include <memory>
+//------------------------------------------------------------------------------
 class AppWindow;
 class Capture;
 class Scene;
@@ -26,7 +21,7 @@ class Application : noncopyable
 public:
     explicit Application(const Options& opts);
 
-    int run();
+    int  run();
     void do_frame();
 
 private:
@@ -37,8 +32,6 @@ private:
     std::unique_ptr<Capture>   capture;
     std::unique_ptr<Scene>     scene;
     FPS                        fps;
-    bool running;
+    bool                       running;
 };
-//-----------------------------------------------------------------------------
-#endif//APPLICATION_H
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------

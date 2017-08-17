@@ -1,24 +1,20 @@
-//-----------------------------------------------------------------------------
-// "Matrix Rain" - screensaver for X Server Systems
-// file name:   capture.h
-// copyright:   (C) 2008, 2009, 2012, 2013 by Pavel Karneliuk
-// license:     GNU General Public License v2
-// e-mail:      pavel_karneliuk@users.sourceforge.net
-//-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
-#ifndef CAPTURE_H
-#define CAPTURE_H
-//-----------------------------------------------------------------------------
-#include <windows.h>
-#include <atlbase.h>
+//------------------------------------------------------------------------------
+// "Matrix Rain" - Interactive screensaver with webcam integration
+// copyright:   (C) 2008, 2009, 2013, 2017 by Pavel Karneliuk
+// license:     GNU General Public License v3
+// e-mail:      pavel.karneliuk@gmail.com
+//------------------------------------------------------------------------------
+#pragma once
+//------------------------------------------------------------------------------
 #include <Mfapi.h>
 #include <Mfidl.h>
 #include <Mfreadwrite.h>
+#include <atlbase.h>
+#include <windows.h>
 
 #include "base_capture.h"
-//-----------------------------------------------------------------------------
-class Capture:public BaseCapture
+//------------------------------------------------------------------------------
+class Capture : public BaseCapture
 {
     class CriticalSection
     {
@@ -26,27 +22,33 @@ class Capture:public BaseCapture
         class Lock
         {
         public:
-            Lock(CriticalSection& c):cs(c) { EnterCriticalSection(&cs.cs); }
-            ~Lock()                        { LeaveCriticalSection(&cs.cs); }
+            Lock(CriticalSection& c)
+            : cs(c)
+            {
+                EnterCriticalSection(&cs.cs);
+            }
+            ~Lock() { LeaveCriticalSection(&cs.cs); }
+
         private:
-            Lock(Lock&);            // undefined
-            void operator=(Lock&);  // undefined
+            Lock(Lock&);          // undefined
+            void operator=(Lock&);// undefined
 
             CriticalSection& cs;
         };
 
-        CriticalSection()  { InitializeCriticalSection(&cs); }
-        ~CriticalSection() { DeleteCriticalSection(&cs);     }
+        CriticalSection() { InitializeCriticalSection(&cs); }
+        ~CriticalSection() { DeleteCriticalSection(&cs); }
+
     private:
-        CriticalSection(CriticalSection&);  // undefined
-        void operator=(CriticalSection&);   // undefined
+        CriticalSection(CriticalSection&);// undefined
+        void operator=(CriticalSection&); // undefined
 
         CRITICAL_SECTION cs;
     };
 
 public:
-
-    enum Native4CC {
+    enum Native4CC
+    {
         GREY = FCC('GREY'),
         YUYV = FCC('YUYV'),
         UYVY = FCC('UYVY'),
@@ -58,22 +60,20 @@ public:
     ~Capture();
 
     virtual bool set_buffer(unsigned char* buf, out_format fmt);
-    HRESULT async_read()const;
+    HRESULT async_read() const;
 
     void decode_to_buffer(unsigned char* src, unsigned int length) const;
     void decode_padded_to_buffer(unsigned char* scanline0, long pitch) const;
 
-    static unsigned int enum_devices(char buffers[][128], const unsigned int size)throw();
+    static unsigned int enum_devices(char               buffers[][128],
+                                     const unsigned int size) throw();
 
 private:
-
     static IMFActivate* find_device(const char* dev_name);
 
     CComPtr<IMFSourceReader> reader;
-    INT32 stride;
+    INT32                    stride;
 
     mutable CriticalSection cs;
 };
-//-----------------------------------------------------------------------------
-#endif//CAPTURE_H
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------

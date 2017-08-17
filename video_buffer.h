@@ -15,7 +15,7 @@ public:
     class VideoFrame : public TextureID
     {
     public:
-        void update(unsigned char* data, unsigned int offset_x,
+        void update(const std::uint8_t* data, unsigned int offset_x,
                     unsigned int offset_y, unsigned int width,
                     unsigned int height);
     };

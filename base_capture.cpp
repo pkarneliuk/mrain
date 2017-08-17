@@ -1,18 +1,14 @@
-//-----------------------------------------------------------------------------
-// "Matrix Rain" - screensaver for X Server Systems
-// file name:   base_capture.cpp
-// copyright:   (C) 2013 by Pavel Karneliuk
-// license:     GNU General Public License v2
-// e-mail:      pavel_karneliuk@users.sourceforge.net
-//-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
-#include <cstring> // for memcpy()
-
+//------------------------------------------------------------------------------
+// "Matrix Rain" - Interactive screensaver with webcam integration
+// copyright:   (C) 2008, 2009, 2013, 2017 by Pavel Karneliuk
+// license:     GNU General Public License v3
+// e-mail:      pavel.karneliuk@gmail.com
+//------------------------------------------------------------------------------
 #include "base_capture.h"
 #include "capture.h"
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
+#include <cstring>
+//------------------------------------------------------------------------------
+// clang-format off
 namespace {
     struct RGB { unsigned char r,g,b; };
     struct BGR { unsigned char b,g,r; };
@@ -119,17 +115,18 @@ const BaseCapture::Transform BaseCapture::encoders[]=
     { Capture::P422, 8,  { 0,         0,         YUV422PtoGREY } },
     { 0            , 0,  { 0,         0,                     0 } }, // end of list
 };
+// clang-format on
 
 const BaseCapture::Transform& BaseCapture::get_transform(unsigned int fourcc)
 {
     const Transform* p = &(encoders[0]);
     do
     {
-        if(fourcc == p->fourcc) break;
+        if(fourcc == p->fourcc)
+            break;
         p++;
-    }
-    while(p->fourcc != 0);
+    } while(p->fourcc != 0);
 
     return *p;
 }
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------

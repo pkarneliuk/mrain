@@ -1,27 +1,25 @@
-//-----------------------------------------------------------------------------
-// "Matrix Rain" - screensaver for X Server Systems
-// file name:   options.cpp
-// copyright:   (C) 2008, 2009 by Pavel Karneliuk
-// license:     GNU General Public License v2
-// e-mail:      pavel_karneliuk@users.sourceforge.net
-//-----------------------------------------------------------------------------
-//Ida Maria
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+// "Matrix Rain" - Interactive screensaver with webcam integration
+// copyright:   (C) 2008, 2009, 2013, 2017 by Pavel Karneliuk
+// license:     GNU General Public License v3
+// e-mail:      pavel.karneliuk@gmail.com
+//------------------------------------------------------------------------------
+#include "options.h"
+#include "stuff.h"
 #include <cassert>
 #include <cstdio>
 #include <cstring>
 #include <fstream>
 #include <iostream>
-
-#include "options.h"
-#include "stuff.h"
-//-----------------------------------------------------------------------------
-Options::Opt::Opt(char k, const char* n, const char* v, const char* c):comment(c), key(k)
+//------------------------------------------------------------------------------
+Options::Opt::Opt(char k, const char* n, const char* v, const char* c)
+: comment(c)
+, key(k)
 {
-    assert(sizeof(name)  > strlen(n));
+    assert(sizeof(name) > strlen(n));
     assert(sizeof(value) > strlen(v));
 
-    strcpy(name,  n);
+    strcpy(name, n);
     strcpy(value, v);
 }
 
@@ -31,109 +29,107 @@ Options::Opt& Options::Opt::operator=(const Opt& val)
     return *this;
 }
 
-Options::Opt::operator std::string()const
+Options::Opt::operator std::string() const
 {
     if(NULL == value)
     {
-        fprintf (stderr, "resource not found, return default value: empty-string.\n");
+        fprintf(stderr,
+                "resource not found, return default value: empty-string.\n");
         return std::string();
     }
     std::string str(value);
     return str;
 }
 
-Options::Opt::operator const char*const()const
-{
-    return value;
-}
+Options::Opt::operator const char* const() const { return value; }
 
-Options::Opt::operator bool ()const
+Options::Opt::operator bool() const
 {
     if(NULL == value)
     {
-        fprintf (stderr, "resource not found, return default value: false.\n");
+        fprintf(stderr, "resource not found, return default value: false.\n");
         return false;
     }
 
-    char buf [100];
+    char  buf[100];
     char* tmp = buf;
 
-    for (const char *s = value; *s ; s++)
-    *tmp++ = isupper(*s) ? (char)tolower(*s) : *s;
-    *tmp = '\0';
+    for(const char* s = value; *s; s++)
+        *tmp++ = isupper(*s) ? (char)tolower(*s) : *s;
+    *tmp       = '\0';
 
-    if (!strcmp (buf, "on") || !strcmp (buf, "true") || !strcmp (buf, "yes"))
+    if(!strcmp(buf, "on") || !strcmp(buf, "true") || !strcmp(buf, "yes"))
         return true;
 
-    if (!strcmp (buf,"off") || !strcmp (buf, "false") || !strcmp (buf,"no"))
+    if(!strcmp(buf, "off") || !strcmp(buf, "false") || !strcmp(buf, "no"))
         return false;
 
-    fprintf (stderr, "resource value must be boolean, not \"%s\".\n", buf);
+    fprintf(stderr, "resource value must be boolean, not \"%s\".\n", buf);
     return false;
 }
 
-Options::Opt::operator int ()const
+Options::Opt::operator int() const
 {
     if(NULL == value)
     {
-        fprintf (stderr, "resource not found, return default value: 0.\n");
+        fprintf(stderr, "resource not found, return default value: 0.\n");
         return 0;
     }
 
     const char* s = value;
-    while (*s && *s <= ' ') s++;
+    while(*s && *s <= ' ') s++;
 
     int val = 0;
-    if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X'))	// 0x: parse as hex
+    if(s[0] == '0' && (s[1] == 'x' || s[1] == 'X'))// 0x: parse as hex
     {
-        if (0 < sscanf (s, "%X", &val))
+        if(0 < sscanf(s, "%X", &val))
         {
             return val;
         }
     }
-    else                        // else parse as dec
+    else// else parse as dec
     {
-        if (0 < sscanf (s, "%d", &val))
+        if(0 < sscanf(s, "%d", &val))
         {
             return val;
         }
     }
 
-    fprintf (stderr, "resource value must be an integer  [%s]\n", value);
+    fprintf(stderr, "resource value must be an integer  [%s]\n", value);
     return 0;
 }
 
-Options::Opt::operator float ()const
+Options::Opt::operator float() const
 {
     if(NULL == value)
     {
-        fprintf (stderr, "resource not found, return default value: 0.0f.\n");
+        fprintf(stderr, "resource not found, return default value: 0.0f.\n");
         return 0.0f;
     }
 
-    float val=0.0f;
-    if (0 < sscanf (value, " %f", &val))
+    float val = 0.0f;
+    if(0 < sscanf(value, " %f", &val))
     {
         return val;
     }
-    fprintf (stderr, "resource value must be a float\n");
+    fprintf(stderr, "resource value must be a float\n");
     return 0.0f;
 }
 
-Options::Opt::operator double ()const
+Options::Opt::operator double() const
 {
     if(NULL == value)
     {
-        fprintf (stderr, "resource not found, return default value: 0.0.\n");
+        fprintf(stderr, "resource not found, return default value: 0.0.\n");
         return 0.0;
     }
 
     double val;
-    if (0 < sscanf (value, " %lf", &val))
+    if(0 < sscanf(value, " %lf", &val))
     {
         return val;
     }
-    fprintf (stderr, "resource value must be a double\n");
+    fprintf(stderr, "resource value must be a double\n");
     return 0.0;
 }
 
@@ -177,11 +173,11 @@ Options::Options(const char* default_file_name)
 {
     assert(default_file_name);
 
-    if( 0 == inhome_path(default_filepath, max_path, default_file_name) )
+    if(0 == inhome_path(default_filepath, max_path, default_file_name))
     {
         memset(default_filepath, '\0', sizeof(default_filepath));
     }
-
+// clang-format off
 #ifdef UNIX
     options[scrsvr_mode] = Opt( 'r', "--root",      "false",      "setup a root window for fullscreen mode"   );
     options[window_id]   = Opt( '-', "--window-id", "0",          "specific X window ID"                      );
@@ -202,61 +198,66 @@ Options::Options(const char* default_file_name)
     options[hflip]       = Opt( 'H', "--hflip",     "false",      "horisontal flip of a video frame"          );
     options[no_shaders]  = Opt( 'N', "--no-shaders","false",      "force disable shaders"                     );
     options[help]        = Opt( 'h', "--help",      "false",      "show this message and quit"                );
+    // clang-format on
 }
 
-void Options::parse(int argc, char **argv)
+void Options::parse(int argc, char** argv)
 {
-    for(int i=1; i<argc; i++)
-    {
+    for(int i = 1; i < argc; i++) {
         // is it begin of short key  string (-XXX) ?
-        if( const char* sk_str = is_short_key(argv[i]) )
+        if(const char* sk_str = is_short_key(argv[i]))
         {
             // loop over short key string
-            for(int j=0; j<num && sk_str[j] != '\0'; j++)
-            {
+            for(int j = 0; j < num && sk_str[j] != '\0'; j++) {
                 int k = search_key(sk_str[j]);
 
-                if(-1 == k) fprintf(stderr,"unknow short key: '%c'\n", sk_str[j]);
-                else options[k] = "true";
+                if(-1 == k)
+                    fprintf(stderr, "unknow short key: '%c'\n", sk_str[j]);
+                else
+                    options[k] = "true";
             }
         }
         else
         {
-            for(auto& opt : options)
-            {
-                if( strstr(argv[i], opt.name) )
+            for(auto& opt : options) {
+                if(strstr(argv[i], opt.name))
                 {
-                    if( '-' != opt.key )     // is short key -X ?
+                    if('-' != opt.key)// is short key -X ?
                     {
                         opt = "true";
                     }
-                    else if( char* s=strchr(argv[i],'=') ) // format: [key=value] ?
+                    else if(char* s =
+                                strchr(argv[i], '='))// format: [key=value] ?
                     {
-                        opt = s+1;
+                        opt = s + 1;
                     }
-                    else if( char* t=strchr(argv[i],':') ) // format: [key:value] ?
+                    else if(char* t =
+                                strchr(argv[i], ':'))// format: [key:value] ?
                     {
-                        opt = t+1;
+                        opt = t + 1;
                     }
-                    else if( i+1 < argc )   // format: [key value] ?
+                    else if(i + 1 < argc)// format: [key value] ?
                     {
-                        //have we least one additional arg ?
+                        // have we least one additional arg ?
                         // if it is - check it !
-                        bool next_is_key = (search_name(argv[i+1]) != -1);
+                        bool next_is_key = (search_name(argv[i + 1]) != -1);
 
                         // is it begin of short key string (-XXX) ?
-                        if( const char* sk = is_short_key(argv[i+1]) )
+                        if(const char* sk = is_short_key(argv[i + 1]))
                         {
                             next_is_key = (search_key(*sk) != -1);
                         }
 
                         if(next_is_key)
                         {
-                            fprintf(stderr, "'%s' key must have value! "
-                                   "use syntax: [key=value], [key:value] "
-                                   "or [key value]\n", argv[i]);
+                            fprintf(stderr,
+                                    "'%s' key must have value! "
+                                    "use syntax: [key=value], [key:value] "
+                                    "or [key value]\n",
+                                    argv[i]);
                         }
-                        else opt = argv[++i];
+                        else
+                            opt = argv[++i];
                     }
                     break;
                 }
@@ -265,25 +266,22 @@ void Options::parse(int argc, char **argv)
     }
 }
 
-
-const Options::opt_name serializable[]={
-    Options::device,
-    Options::no_shaders,
-    Options::vflip,
-    Options::hflip,
-    };
+const Options::opt_name serializable[] = {
+    Options::device, Options::no_shaders, Options::vflip, Options::hflip,
+};
 
 bool Options::save(const char* filepath)
 {
-    if(NULL == filepath) filepath = default_filepath; // use default filepath
+    if(NULL == filepath)
+        filepath = default_filepath;// use default filepath
 
     std::ofstream out(filepath, std::ios_base::binary | std::ios_base::out);
-    if( !out.is_open() ) return false;
+    if(!out.is_open())
+        return false;
     std::clog << "write configuration: " << filepath << '\n';
-    for(auto& s : serializable)
-    {
+    for(auto& s : serializable) {
         Options::Opt& opt = options[s];
-        if( !opt.empty() )
+        if(!opt.empty())
         {
             out << opt.name << '=' << opt.value << '\n';
         }
@@ -293,22 +291,22 @@ bool Options::save(const char* filepath)
 
 bool Options::load(const char* filepath)
 {
-    if(nullptr == filepath) filepath = default_filepath; // use default filepath
+    if(nullptr == filepath)
+        filepath = default_filepath;// use default filepath
 
     std::ifstream in(filepath, std::ios_base::binary | std::ios_base::in);
-    if( !in.is_open() ) return false;
+    if(!in.is_open())
+        return false;
     std::clog << "read configuration: " << filepath << '\n';
     char buffer[128];
-    while( in.getline(buffer, sizeof(buffer)) )
-    {
-        for(auto& i : serializable)
-        {
+    while(in.getline(buffer, sizeof(buffer))) {
+        for(auto& i : serializable) {
             Options::Opt& opt = options[i];
-            if( strstr(buffer, opt.name) )
+            if(strstr(buffer, opt.name))
             {
-                if( char* s=strchr(buffer,'=') ) // format: [key=value] ?
+                if(char* s = strchr(buffer, '='))// format: [key=value] ?
                 {
-                    opt = s+1;  // save new value
+                    opt = s + 1;// save new value
                 }
                 break;
             }
@@ -317,11 +315,10 @@ bool Options::load(const char* filepath)
     return true;
 }
 
-int Options::usage()const
+int Options::usage() const
 {
     fprintf(stdout, "possible arguments:\n");
-    for (auto& opt : options)
-    {
+    for(auto& opt : options) {
         if(opt.key != '-')
             printf("  -%c ", opt.key);
         else
@@ -334,28 +331,27 @@ int Options::usage()const
 
 int Options::search_name(const char* name)
 {
-    if( 0 < strcmp(name, "--") )
-    for(int i=0; i<num; i++)
-    {
-        if( 0 == strcmp(name, options[i].name) )
-            return i;
-    }
+    if(0 < strcmp(name, "--"))
+        for(int i = 0; i < num; i++) {
+            if(0 == strcmp(name, options[i].name))
+                return i;
+        }
     return -1;
 }
 
 int Options::search_key(char key)
 {
-    for(int i=0; i<num; i++)
-    {
-        if(key == options[i].key) return i;
+    for(int i = 0; i < num; i++) {
+        if(key == options[i].key)
+            return i;
     }
     return -1;
 }
 
 const char* Options::is_short_key(const char* str)
 {
-    if( '-' == str[0] && isalpha(str[1]) )
-        return str+1;
+    if('-' == str[0] && isalpha(str[1]))
+        return str + 1;
     return nullptr;
 }
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------

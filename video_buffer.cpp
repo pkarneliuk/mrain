@@ -6,7 +6,8 @@
 //------------------------------------------------------------------------------
 #include "video_buffer.h"
 //------------------------------------------------------------------------------
-void VideoBuffer::VideoFrame::update(unsigned char* data, unsigned int offset_x,
+void VideoBuffer::VideoFrame::update(const std::uint8_t* data,
+                                     unsigned int        offset_x,
                                      unsigned int offset_y, unsigned int width,
                                      unsigned int height)
 {
@@ -31,7 +32,7 @@ VideoBuffer::VideoBuffer(const Bitmap& frame, std::size_t layers,
         //   glTexParameteri (type, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
         glTexImage2D(type, 0, GL_RGB, frame.width(), frame.height(), 0, GL_RGB,
-            GL_UNSIGNED_BYTE, frame.data());
+                     GL_UNSIGNED_BYTE, frame.data());
         //    glTexSubImage2D(type, 0, 0, 0, width, height, GL_LUMINANCE,
         //    GL_UNSIGNED_BYTE, data);
     }

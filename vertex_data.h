@@ -1,19 +1,16 @@
-//-----------------------------------------------------------------------------
-// "Matrix Rain" - screensaver for X Server Systems
-// file name:   vertex_data.h
-// copyright:   (C) 2013 by Pavel Karneliuk
-// license:     GNU General Public License v2
-// e-mail:      pavel_karneliuk@users.sourceforge.net
-//-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
-#ifndef VERTEX_DATA_H
-#define VERTEX_DATA_H
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+// "Matrix Rain" - Interactive screensaver with webcam integration
+// copyright:   (C) 2008, 2009, 2013, 2017 by Pavel Karneliuk
+// license:     GNU General Public License v3
+// e-mail:      pavel.karneliuk@gmail.com
+//------------------------------------------------------------------------------
+#pragma once
+//------------------------------------------------------------------------------
 #include "gl_context.h"
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 namespace VertexData
 {
+    // clang-format off
     struct D1UB
     {
         enum{ num=1, type=GL_INT+GL_UNSIGNED_BYTE };
@@ -104,7 +101,6 @@ namespace VertexData
         };
     };
 
-
     // Examples of usage:
     // typedef Layout<V3F, V3F, T2F, C4UB> VervexNormalTexCoordColor;
     // int offset = VervexNormalTexCoordColor::index<2>::offset;
@@ -122,8 +118,8 @@ namespace VertexData
         template<typename T, typename U>
         struct Node
         {
-            typedef T element;
-            typedef U next;
+            using element = T;
+            using next    = U;
         };
 
         typedef Node<M1,
@@ -138,21 +134,21 @@ namespace VertexData
 
     private:
         // Index
-        template<typename L, unsigned int Offset, unsigned int i>
+        template<typename L, unsigned int Offset, std::size_t i>
         struct Index
         {
         private:
-            typedef Index<typename L::next, Offset+sizeof(typename L::element), i-1> Next;
+            using Next = Index<typename L::next, Offset+sizeof(typename L::element), i-1>;
         public:
             enum { offset = Next::offset };
-            typedef typename Next::type type;
+            using type = typename Next::type;
         };
 
         template<typename L, unsigned int Offset>
         struct Index<L, Offset, 0>
         {
             enum { offset = Offset };
-            typedef typename L::element type;
+            using type = typename L::element;
         };
 
         // Size
@@ -169,13 +165,11 @@ namespace VertexData
         };
         char dummy[size<typename list::element, typename list::next>::value]; //for valid sizeof(Layout)
 
-        Layout(); // undefiend constructor
+        Layout() = delete;
 
     public:
-        template<unsigned int i> struct index:public Index<list, 0, i>{};
+        template<std::size_t i> struct index:public Index<list, 0, i>{};
     };
-
-}// VertexData
-//-----------------------------------------------------------------------------
-#endif//VERTEX_DATA_H
-//-----------------------------------------------------------------------------
+    // clang-format on
+}
+//------------------------------------------------------------------------------

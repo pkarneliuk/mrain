@@ -1,17 +1,13 @@
-//-----------------------------------------------------------------------------
-// "Matrix Rain" - screensaver for X Server Systems
-// file name:   gpu_program.cpp
-// copyright:   (C) 2008, 2009, 2013 by Pavel Karneliuk
-// license:     GNU General Public License v2
-// e-mail:      pavel_karneliuk@users.sourceforge.net
-//-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+// "Matrix Rain" - Interactive screensaver with webcam integration
+// copyright:   (C) 2008, 2009, 2013, 2017 by Pavel Karneliuk
+// license:     GNU General Public License v3
+// e-mail:      pavel.karneliuk@gmail.com
+//------------------------------------------------------------------------------
+#include "gpu_program.h"
 #include <iostream>
 #include <memory>
-
-#include "gpu_program.h"
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 bool Shader::compile()
 {
     glCompileShader(handle);
@@ -24,7 +20,7 @@ void Shader::log()
 {
     GLint size = 0;
     glGetShaderiv(handle, GL_INFO_LOG_LENGTH, &size);
-    if(size > 1/*'\0' - empty string*/)
+    if(size > 1 /*'\0' - empty string*/)
     {
         std::unique_ptr<GLchar[]> info(new GLchar[size]);
         glGetShaderInfoLog(handle, size, NULL, info.get());
@@ -44,7 +40,7 @@ void GPU_Program::log()
 {
     GLint size = 0;
     glGetProgramiv(handle, GL_INFO_LOG_LENGTH, &size);
-    if(size > 1/*'\0' - empty string*/)
+    if(size > 1 /*'\0' - empty string*/)
     {
         std::unique_ptr<GLchar[]> info(new GLchar[size]);
         glGetProgramInfoLog(handle, size, NULL, info.get());
@@ -89,4 +85,4 @@ void GPU_Program::set_uniform_matrix(const char* name, const float a[16])
     GLint location = glGetUniformLocation(handle, name);
     glUniformMatrix4fv(location, 1, GL_FALSE, a);
 }
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------

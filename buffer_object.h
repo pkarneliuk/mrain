@@ -1,67 +1,47 @@
-//-----------------------------------------------------------------------------
-// "Matrix Rain" - screensaver for X Server Systems
-// file name:   buffer_object.h
-// copyright:   (C) 2013 by Pavel Karneliuk
-// license:     GNU General Public License v2
-// e-mail:      pavel_karneliuk@users.sourceforge.net
-//-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
-#ifndef BUFFER_OBJECT_H
-#define BUFFER_OBJECT_H
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+// "Matrix Rain" - Interactive screensaver with webcam integration
+// copyright:   (C) 2008, 2009, 2013, 2017 by Pavel Karneliuk
+// license:     GNU General Public License v3
+// e-mail:      pavel.karneliuk@gmail.com
+//------------------------------------------------------------------------------
+#pragma once
+//------------------------------------------------------------------------------
 #include "gl_renderer.h"
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 template <GLenum Target>
-class BufferObject
+class BufferObject : noncopyable
 {
 protected:
-    enum{ target = Target };
-public:
-
-    class Map
+    enum
     {
-    public:
-        Map(GLenum access) : address(glMapBuffer(target, access))
-        {
-        }
-
-        ~Map()
-        {
-            glUnmapBuffer(target);
-        }
-
-        Map(const Map&);            // undefined
-        Map& operator=(const Map&); // undefined
-
-        void * const address;
+        target = Target
     };
 
-    BufferObject(const BufferObject&);            // undefined
-    BufferObject& operator=(const BufferObject&); // undefined
-
-    BufferObject()
+public:
+    class Map : noncopyable
     {
-        glGenBuffers(1, &buffer);
-    }
+    public:
+        Map(GLenum access)
+        : address{glMapBuffer(target, access)}
+        {
+        }
 
-    ~BufferObject()
-    {
-        glDeleteBuffers(1, &buffer);
-    }
+        ~Map() { glUnmapBuffer(target); }
 
-    void bind()
-    {
-        glBindBuffer(target, buffer);
-    }
+        GLvoid* const address;
+    };
 
-    static void unbind()
-    {
-        glBindBuffer(target, 0);
-    }
+    BufferObject() { glGenBuffers(1, &buffer); }
 
-    void create(const GLsizeiptr size, const void* data, GLenum usage)  // alloc + [set_data ...]
+    ~BufferObject() { glDeleteBuffers(1, &buffer); }
+
+    void bind() { glBindBuffer(target, buffer); }
+
+    static void unbind() { glBindBuffer(target, 0); }
+
+    void create(const GLsizeiptr size, const void* data, GLenum usage)
     {
+        // alloc + [set_data ...]
         glBufferData(target, size, data, usage);
     }
 
@@ -70,7 +50,7 @@ public:
         glBufferData(target, size, NULL, usage);
     }
 
-    void set_data(GLintptr offset, GLsizeiptr size, const void *data)
+    void set_data(GLintptr offset, GLsizeiptr size, const void* data)
     {
         glBufferSubData(target, offset, size, data);
     }
@@ -86,51 +66,42 @@ protected:
     GLuint buffer;
 };
 
-typedef BufferObject<GL_ARRAY_BUFFER> VBOBase;
+using VBOBase = BufferObject<GL_ARRAY_BUFFER>;
 
-template<
-    typename T,
-    bool Interleaved=false // true - Array of Structures 'T' false - Structure 'T' of Arrays
->
-class VBO: public VBOBase
+template <typename T,             // Layout of vertex data
+          bool Interleaved = false// true - Array of Structures 'T'
+                                  // false - Structure 'T' of Arrays
+          >
+class VBO : public VBOBase
 {
 public:
     class Map : public VBOBase::Map
     {
     public:
-        Map(GLenum access) : VBOBase::Map(access)
+        Map(GLenum access)
+        : VBOBase::Map(access)
         {
         }
 
-        ~Map()
+        template <std::size_t index>
+        auto const address_of(size_t size)
         {
+            using Element = T::template index<index>;
+            return reinterpret_cast<Element::type* const>(
+                ((char*)address) + Element::offset * size);
         }
-
-        template<typename MemberType, unsigned int index>
-        MemberType* const address_of(size_t size)
-        {
-            return reinterpret_cast<MemberType* const>(((char*)address) + T::template index<index>::offset * size);
-        }
-
-        Map(const Map&);            // undefined
-        Map& operator=(const Map&); // undefined
     };
 
-    void create(const unsigned int num, const void* array, GLenum usage)
+    void create(const std::size_t num, const void* array, GLenum usage)
     {
         VBOBase::create(num * sizeof(T), array, usage);
     }
 
-    void alloc(const unsigned int num, GLenum usage)
+    void alloc(const std::size_t num, GLenum usage)
     {
         VBOBase::alloc(num * sizeof(T), usage);
     }
 
-    unsigned int size() const
-    {
-        return VBOBase::size() / sizeof(T);
-    }
+    unsigned int size() const { return VBOBase::size() / sizeof(T); }
 };
-//-----------------------------------------------------------------------------
-#endif//BUFFER_OBJECT_H
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------

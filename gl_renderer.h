@@ -1,30 +1,26 @@
-//-----------------------------------------------------------------------------
-// "Matrix Rain" - screensaver for X Server Systems
-// file name:   gl_renderer.h
-// copyright:   (C) 2008, 2009, 2013 by Pavel Karneliuk
-// license:     GNU General Public License v2
-// e-mail:      pavel_karneliuk@users.sourceforge.net
-//-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
-#ifndef GL_RENDERER_H
-#define GL_RENDERER_H
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+// "Matrix Rain" - Interactive screensaver with webcam integration
+// copyright:   (C) 2008, 2009, 2013, 2017 by Pavel Karneliuk
+// license:     GNU General Public License v3
+// e-mail:      pavel.karneliuk@gmail.com
+//------------------------------------------------------------------------------
+#pragma once
+//------------------------------------------------------------------------------
 #include "blas.h"
 #include "gl_context.h"
 #include "stuff.h"
 #include "transform.h"
-//-----------------------------------------------------------------------------
-class GLRenderer:private GLContext
+//------------------------------------------------------------------------------
+class GLRenderer : private GLContext
 {
     friend class AppWindow;
+
 public:
+    inline const Version& version() const { return gl_version; }
+    inline const GLubyte* renderer() const { return glGetString(GL_RENDERER); }
+    inline const GLubyte* vendor() const { return glGetString(GL_VENDOR); }
 
-    inline const Version& version () const { return gl_version;              }
-    inline const GLubyte* renderer() const { return glGetString(GL_RENDERER);}
-    inline const GLubyte* vendor  () const { return glGetString(GL_VENDOR);  }
-
-    inline void present(){ GLContext::swap_buffers(); }
+    inline void present() { GLContext::swap_buffers(); }
     void reshape(unsigned int width, unsigned int height);
     unsigned int draw();
 
@@ -32,11 +28,8 @@ public:
 
 private:
     GLRenderer(class NativeWindow* win);
-    ~GLRenderer();
 
-    Version gl_version;
-    Transform transformation;
+    const Version gl_version;
+    Transform     transformation;
 };
-//-----------------------------------------------------------------------------
-#endif//GL_RENDERER_H
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------

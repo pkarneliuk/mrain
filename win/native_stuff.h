@@ -1,26 +1,24 @@
-//-----------------------------------------------------------------------------
-// "Matrix Rain" - screensaver for X Server Systems
-// file name:   native_stuff.h
-// copyright:   (C) 2008, 2009 by Pavel Karneliuk
-// license:     GNU General Public License v2
-// e-mail:      pavel_karneliuk@users.sourceforge.net
-//-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
-#ifndef NATIVE_STUFF_H
-#define NATIVE_STUFF_H
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+// "Matrix Rain" - Interactive screensaver with webcam integration
+// copyright:   (C) 2008, 2009, 2013, 2017 by Pavel Karneliuk
+// license:     GNU General Public License v3
+// e-mail:      pavel.karneliuk@gmail.com
+//------------------------------------------------------------------------------
+#pragma once
+//------------------------------------------------------------------------------
 #include <windows.h>
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 class Timer
 {
     friend class Waiter;
+
 public:
     Timer();
 
-    void reset();
+    void          reset();
     unsigned long time();
     unsigned long tick();
+
 private:
     LARGE_INTEGER prev;
     LARGE_INTEGER begin;
@@ -31,11 +29,13 @@ private:
 class Waiter
 {
     static Timer timer;
+
 public:
     Waiter(unsigned long microseconds);
 
-    bool ready();
+    bool        ready();
     static void tick();
+
 private:
     unsigned long sec;
     unsigned long usec;
@@ -46,18 +46,13 @@ private:
 #pragma pack(push, 1)
 struct BMP_FILEHEADER
 {
-    unsigned char   bfType[2];
-    unsigned int    bfSize;
-    unsigned short  bfReserved1;
-    unsigned short  bfReserved2;
-    unsigned int    bfOffBits;
+    unsigned char  bfType[2];
+    unsigned int   bfSize;
+    unsigned short bfReserved1;
+    unsigned short bfReserved2;
+    unsigned int   bfOffBits;
 };
 #pragma pack(pop)
 
-inline void sleeep(unsigned long microseconds)
-{
-    ::Sleep(microseconds/1000);
-}
-//-----------------------------------------------------------------------------
-#endif//NATIVE_STUFF_H
-//-----------------------------------------------------------------------------
+inline void sleeep(unsigned long microseconds) { ::Sleep(microseconds / 1000); }
+//------------------------------------------------------------------------------
