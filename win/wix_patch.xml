@@ -1,0 +1,50 @@
+<CPackWiXPatch>
+  <CPackWiXFragment Id="#PRODUCT">
+
+    <DirectoryRef Id="TARGETDIR">
+      <Directory Id="SystemFolder">
+        <Component Id="mrain.sCr" Guid="6C654D56-2DB9-4cfa-B234-27E58B484303" Permanent="no">
+          <File Id="mrain.sCr" Source="Matrix-Rain-Screensaver/mrain.exe" Name="mrain.sCr" ReadOnly="yes" KeyPath="yes" Checksum="yes"/>
+          <RemoveFile Id="config" Property="LocalAppDataFolder" Name="*.mrainrc" On="uninstall"/>
+        </Component>
+      </Directory>
+
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="Matrix Rain">
+          <Component Id='ApplicationShortcut' Guid='D1A41D1E-53AC-478E-A125-AF5A8BC8B36B'>
+            <Shortcut Id="ApplicationStartMenuShortcut"
+                      Name="Matrix Rain Screensaver Configuration"
+                      Description="Matrix Rain Screensaver Configuration"
+                      Target="[SystemFolder]cmd.exe"
+                      Arguments="/C start /B [SystemFolder]mrain.sCr /c:-1"
+                      Icon="icon.ico"
+                      Show="minimized"/>
+            <Shortcut Id="UninstallProduct"
+                      Name="Uninstall Matrix Rain Screensaver"
+                      Description="Uninstalls Matrix Rain Screensaver"
+                      Target="[SystemFolder]msiexec.exe"
+                      Arguments="/x [ProductCode]"/>
+            <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
+            <RegistryValue Root="HKCU"
+                           Key="Software\Matrix Rain"
+                           Name="installed"
+                           Type="integer"
+                           Value="1"
+                           KeyPath="yes"/>
+          </Component>
+        </Directory>
+      </Directory>
+    </DirectoryRef>
+
+    <Condition Message="This application is only supported on Windows Vista or higher.">
+      <![CDATA[Installed OR (VersionNT >= 600)]]>
+    </Condition>
+
+    <Icon Id="icon.ico" SourceFile="Matrix-Rain-Screensaver/icon.ico"/>
+  </CPackWiXFragment>
+
+  <CPackWiXFragment Id="#PRODUCTFEATURE">
+    <ComponentRef Id="mrain.sCr"/>
+    <ComponentRef Id="ApplicationShortcut"/>
+  </CPackWiXFragment>
+</CPackWiXPatch>
