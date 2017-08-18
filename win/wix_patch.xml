@@ -16,7 +16,7 @@
                       Name="Matrix Rain Screensaver Configuration"
                       Description="Matrix Rain Screensaver Configuration"
                       Target="[SystemFolder64]cmd.exe"
-                      Arguments="/C start /B [SystemFolder64]mrain.sCr /c:-1"
+                      Arguments="/C start /B [System64Folder]mrain.sCr /c:-1"
                       Icon="icon.ico"
                       Show="minimized"/>
             <Shortcut Id="UninstallProduct"
@@ -39,8 +39,12 @@
     <Condition Message="This application is only supported on Windows 7 or higher.">
       <![CDATA[Installed OR (VersionNT >= 601)]]>
     </Condition>
-
     <Icon Id="icon.ico" SourceFile="Matrix-Rain-Screensaver/icon.ico"/>
+
+    <CustomAction Id="OpenScrSvrSettings" Property="RUNDLL32" ExeCommand="desk.cpl,InstallScreenSaver [System64Folder]mrain.sCr" Execute="immediate" Return="asyncNoWait" />
+    <InstallExecuteSequence>
+      <Custom Action='OpenScrSvrSettings' After='InstallFinalize'/>
+    </InstallExecuteSequence>
   </CPackWiXFragment>
 
   <CPackWiXFragment Id="#PRODUCTFEATURE">
