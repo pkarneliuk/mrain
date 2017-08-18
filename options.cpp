@@ -9,6 +9,7 @@
 #include <cassert>
 #include <cstdio>
 #include <cstring>
+#include <experimental/filesystem>
 #include <fstream>
 #include <iostream>
 //------------------------------------------------------------------------------
@@ -170,13 +171,8 @@ void Options::Opt::operator=(double v)
 }
 
 Options::Options(const char* default_file_name)
+: default_file{default_file_name}
 {
-    assert(default_file_name);
-
-    if(0 == inhome_path(default_filepath, max_path, default_file_name))
-    {
-        memset(default_filepath, '\0', sizeof(default_filepath));
-    }
 // clang-format off
 #ifdef UNIX
     options[scrsvr_mode] = Opt( 'r', "--root",      "false",      "setup a root window for fullscreen mode"   );
@@ -272,10 +268,11 @@ const Options::opt_name serializable[] = {
 
 bool Options::save(const char* filepath)
 {
-    if(NULL == filepath)
-        filepath = default_filepath;// use default filepath
+    if(nullptr == filepath)
+        filepath = default_file;// use default filepath
 
-    std::ofstream out(filepath, std::ios_base::binary | std::ios_base::out);
+    std::ofstream out(inhome_path(filepath),
+                      std::ios_base::binary | std::ios_base::out);
     if(!out.is_open())
         return false;
     std::clog << "write configuration: " << filepath << '\n';
@@ -292,9 +289,10 @@ bool Options::save(const char* filepath)
 bool Options::load(const char* filepath)
 {
     if(nullptr == filepath)
-        filepath = default_filepath;// use default filepath
+        filepath = default_file;// use default filepath
 
-    std::ifstream in(filepath, std::ios_base::binary | std::ios_base::in);
+    std::ifstream in(inhome_path(filepath),
+                     std::ios_base::binary | std::ios_base::in);
     if(!in.is_open())
         return false;
     std::clog << "read configuration: " << filepath << '\n';

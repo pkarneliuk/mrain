@@ -11,6 +11,7 @@
 #include <iostream>
 //------------------------------------------------------------------------------
 Random grandom;
+Timer  Waiter::timer;
 //------------------------------------------------------------------------------
 // clang-format off
 // The following 'random' numbers are taken from CRC, 18th Edition, page 622.
@@ -65,6 +66,12 @@ float Random::operator()(float f)
 
 unsigned int Random::operator()(unsigned int r) { return (*this)() % r; }
 
+unsigned int Random::make_seed()
+{
+    return static_cast<unsigned int>(
+        Timer::clock::now().time_since_epoch().count());
+}
+
 //------------------------------------------------------------------------------
 
 Version::Version(const char* string)
@@ -97,8 +104,6 @@ bool Version::operator>=(const char* str)
     Version v(str);
     return iversion >= v.iversion;
 }
-
-Timer Waiter::timer;
 
 bool convert_bmp_2_include_gray_array(char* bmp_file, char* array_name) try
 {

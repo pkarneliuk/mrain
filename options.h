@@ -64,19 +64,14 @@ public:
     Options(const char* default_file_name);
 
     void parse(int argc, char** argv);// parse command-line
-    bool save(const char* filepath = NULL);
-    bool load(const char* filepath = NULL);
+    bool save(const char* filepath = nullptr);
+    bool load(const char* filepath = nullptr);
     int usage() const;
 
     inline const Opt& operator[](opt_name id) const { return options[id]; }
     inline Opt& operator[](opt_name id) { return options[id]; }
 
 private:
-    enum
-    {
-        max_path = 256
-    };
-
     // private helpers
     int search_name(const char* name);
     int search_key(char key);
@@ -84,6 +79,6 @@ private:
 
     Opt options[num];
 
-    char default_filepath[max_path];
+    const char* const default_file;
 };
 //------------------------------------------------------------------------------

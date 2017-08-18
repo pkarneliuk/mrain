@@ -11,6 +11,7 @@
 #include <cstdarg>
 #include <cstdint>
 #include <cstdio>
+#include <experimental/filesystem>
 #include <memory>
 #include <stdexcept>
 #include <thread>
@@ -56,6 +57,8 @@ public:
     unsigned int operator()();
     float operator()(float f);
     unsigned int operator()(unsigned int i);
+
+    static unsigned int make_seed();
 
 private:
     int index1, index2;
@@ -173,7 +176,7 @@ public:
             the_sec -= std::chrono::microseconds{1'000'000};
             fps  = cfps;// save count per frame
             cfps = 0;
-            printf("FPS: %zu\n", fps);
+            // printf("FPS: %zu\n", fps);
         }
         return frame_time.count();
     }
@@ -204,10 +207,9 @@ struct BMP_INFOHEADER
     unsigned int   biClrImportant;
 };
 
-unsigned int make_seed();
-
 // put path to 'file_name' at user`s home folder into buffer
-unsigned int inhome_path(char* buffer, size_t size, const char* file_name);
+namespace fs = std::experimental::filesystem;
+fs::path inhome_path(const fs::path& file_name);
 
 bool convert_bmp_2_include_gray_array(char* bmp_file, char* array_name);
 

@@ -5,28 +5,21 @@
 // e-mail:      pavel.karneliuk@gmail.com
 //------------------------------------------------------------------------------
 #include "native_stuff.h"
-#include <cstdio>
-#include <shlobj.h>
+#include <Shlobj.h>
+#include <experimental/filesystem>
 //------------------------------------------------------------------------------
-
-unsigned int make_seed()
+namespace fs = std::experimental::filesystem;
+fs::path inhome_path(const fs::path& file_name)
 {
-    LARGE_INTEGER tp;
-    QueryPerformanceCounter(&tp);
-    return (999 * tp.LowPart) + (1001 * tp.HighPart) +
-           (1003 * GetCurrentProcessId());
-}
+    PWSTR    str = nullptr;
+    fs::path result;
+    if(S_OK !=
+       SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, NULL, &str))
+        return result;
 
-unsigned int inhome_path(char* buffer, size_t size, const char* file_name)
-{
-    char tmp_path[MAX_PATH];
-    if(S_FALSE == SHGetFolderPathA(NULL,
-                                   CSIDL_LOCAL_APPDATA | CSIDL_FLAG_CREATE,
-                                   NULL, SHGFP_TYPE_CURRENT, tmp_path))
-        return 0;
-    unsigned int len = _snprintf(buffer, size, "%s\\%s", tmp_path, file_name);
-
-    return len < size ? len : 0;
+    result = str;
+    CoTaskMemFree(str);
+    return result /= file_name;
 }
 
 static class WinConsole
