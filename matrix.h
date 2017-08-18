@@ -123,8 +123,8 @@ protected:
             }
         }
 
-        inline void vertexcpy(VertexData::V3F* array, unsigned int num,
-                              unsigned int begin_frame)
+        void vertexcpy(VertexData::V3F* array, std::size_t num,
+                       std::size_t begin_frame)
         {
             assert(sizeof(vector) == sizeof(VertexData::V3F));
             memcpy(array, vcache.data() + (begin_frame * 4),
@@ -157,7 +157,7 @@ protected:
     class Strip
     {
     public:
-        Strip(unsigned int n, VertexData::D4UB* glyphs,
+        Strip(std::size_t n, VertexData::D4UB* glyphs,
               VertexData::V3F* vertices, VertexData::C4F* colors, GLfloat x,
               GLfloat y, GLfloat z, const vector& ac, float h1, float h2,
               float r, float p, float q, float rotates);
@@ -173,13 +173,12 @@ protected:
         Counter wave_waiter;  // a wave`s lifecycle
         Counter aframe_waiter;// an animation frame`s lifecycle
 
-        unsigned int n_glyphs; // total glyphs
-        unsigned int end_glyph;// last glyph
-        unsigned int wavehead; // head of wave
-
+        std::size_t n_glyphs; // total glyphs
+        std::size_t end_glyph;// last glyph
+        std::size_t wavehead; // head of wave
         std::size_t adelay;// animation delay bad idea, it will be refactored :(
-        unsigned int aframe;  // animation frame
-        bool         arunning;// animation running
+        std::size_t aframe;// animation frame
+        bool        arunning;// animation running
 
     private:
         void wave_tick(VertexData::D4UB* glyphs, VertexData::V3F* vertices,

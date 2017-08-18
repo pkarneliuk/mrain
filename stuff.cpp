@@ -5,6 +5,7 @@
 // e-mail:      pavel.karneliuk@gmail.com
 //------------------------------------------------------------------------------
 #include "stuff.h"
+#include <cctype>
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -97,6 +98,8 @@ bool Version::operator>=(const char* str)
     return iversion >= v.iversion;
 }
 
+Timer Waiter::timer;
+
 bool convert_bmp_2_include_gray_array(char* bmp_file, char* array_name) try
 {
     std::ofstream ifs(bmp_file, std::ios_base::in | std::ios_base::binary);
@@ -125,7 +128,7 @@ bool convert_bmp_2_include_gray_array(char* bmp_file, char* array_name) try
         char c = out_name[i];
         if(isalnum(c))
         {
-            out_name[i] = toupper(c);
+            out_name[i] = (char)std::toupper(c);
         }
         else
             out_name[i] = '_';

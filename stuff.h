@@ -7,11 +7,13 @@
 #pragma once
 //------------------------------------------------------------------------------
 #include "native_stuff.h"
+#include <chrono>
 #include <cstdarg>
 #include <cstdint>
 #include <cstdio>
 #include <memory>
 #include <stdexcept>
+#include <thread>
 //------------------------------------------------------------------------------
 class runtime_error : public std::exception
 {
@@ -66,23 +68,23 @@ extern Random grandom;
 class Counter
 {
 public:
-    explicit Counter(unsigned int lim)
+    explicit Counter(std::size_t lim)
     : limit{lim}
     {
     }
 
-    inline unsigned int test(unsigned int delta)
+    std::size_t test(std::size_t delta)
     {// integer calculations!
         // Warning! There is an overflow!
         count += delta;
-        unsigned int uptimes = count / limit;
+        std::size_t uptimes = count / limit;
         count %= limit;
         return uptimes;
     }
 
 private:
-    unsigned int limit;
-    unsigned int count = 0;
+    std::size_t limit;
+    std::size_t count = 0;
 };
 
 class Version
@@ -104,42 +106,87 @@ private:
     unsigned int iversion;
 };
 
+class Timer
+{
+    friend class Waiter;
+
+public:
+    using clock = std::chrono::high_resolution_clock;
+
+    Timer() { prev = begin = clock::now(); }
+
+    std::chrono::microseconds time()
+    {
+        return std::chrono::duration_cast<std::chrono::microseconds>(
+            clock::now() - begin);
+    }
+    std::chrono::microseconds tick()
+    {
+        auto curr = clock::now();
+        auto t    = curr - prev;
+        prev      = curr;
+        return std::chrono::duration_cast<std::chrono::microseconds>(t);
+    }
+
+private:
+    clock::time_point prev;
+    clock::time_point begin;
+};
+
+class Waiter
+{
+    static Timer timer;
+
+public:
+    explicit Waiter(std::chrono::microseconds microseconds)
+    : end{timer.prev + microseconds}
+    {
+    }
+
+    bool        ready() const { return (end < timer.prev); }
+    static void tick() { timer.tick(); }
+
+private:
+    const Timer::clock::time_point end;
+};
+
 class FPS : noncopyable
 {
 public:
     FPS(unsigned int limit)
-    : lim((limit == 0) ? 0 : (1000000 / limit))
+    : lim((limit == 0) ? 0 : (1'000'000 / limit))
     {
     }
 
-    unsigned long count_frame()
+    Timer::clock::rep count_frame()
     {
-        curr_fps++;
-        unsigned long compute_time = timer.tick();
+        cfps++;
+        const auto compute_time = timer.tick();
         if(compute_time < lim)
         {
-            sleeep(lim - compute_time);
+            std::this_thread::sleep_for(lim - compute_time);
         }
-        unsigned long frame_time = compute_time + timer.tick();
+        auto frame_time = compute_time + timer.tick();
         the_sec += frame_time;
-        if(the_sec > 1000000)
+        if(the_sec > std::chrono::microseconds{1'000'000})
         {
-            the_sec -= 1000000;
-            fps      = curr_fps;// save count per frame
-            curr_fps = 0;
-            //    printf("FPS: %i\n", fps);
+            the_sec -= std::chrono::microseconds{1'000'000};
+            fps  = cfps;// save count per frame
+            cfps = 0;
+            printf("FPS: %zu\n", fps);
         }
-        return frame_time;
+        return frame_time.count();
     }
 
-    operator unsigned int() const { return fps; }
+    operator std::size_t() const noexcept { return fps; }
 
 private:
-    Timer              timer;
-    const unsigned int lim;
-    unsigned int       the_sec  = 0;
-    unsigned int       fps      = 0;
-    unsigned int       curr_fps = 0;
+    Timer       timer;
+    std::size_t fps  = 0;
+    std::size_t cfps = 0;
+
+    const std::chrono::microseconds lim;
+    std::chrono::microseconds       the_sec{0};
 };
 
 struct BMP_INFOHEADER

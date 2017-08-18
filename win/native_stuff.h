@@ -8,41 +8,6 @@
 //------------------------------------------------------------------------------
 #include <windows.h>
 //------------------------------------------------------------------------------
-class Timer
-{
-    friend class Waiter;
-
-public:
-    Timer();
-
-    void          reset();
-    unsigned long time();
-    unsigned long tick();
-
-private:
-    LARGE_INTEGER prev;
-    LARGE_INTEGER begin;
-
-    static LARGE_INTEGER frequency;
-};
-
-class Waiter
-{
-    static Timer timer;
-
-public:
-    Waiter(unsigned long microseconds);
-
-    bool        ready();
-    static void tick();
-
-private:
-    unsigned long sec;
-    unsigned long usec;
-
-    LARGE_INTEGER end;
-};
-
 #pragma pack(push, 1)
 struct BMP_FILEHEADER
 {
@@ -53,6 +18,4 @@ struct BMP_FILEHEADER
     unsigned int   bfOffBits;
 };
 #pragma pack(pop)
-
-inline void sleeep(unsigned long microseconds) { ::Sleep(microseconds / 1000); }
 //------------------------------------------------------------------------------

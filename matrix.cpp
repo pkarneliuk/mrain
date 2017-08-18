@@ -20,7 +20,8 @@ Matrix::Matrix(std::size_t ns, std::size_t ng, TextureAtlas::Texture* texture)
 , nglyphs(ng)
 , strips(ns)
 , grid_random(324467)
-, animation_period(100'000'000 + grandom(50'000'000U))
+, animation_period(
+      std::chrono::microseconds{100'000'000 + grandom(50'000'000U)})
 {
     const std::size_t strip_pack   = nglyphs * 4;
     const std::size_t num_vertices = nstrips * strip_pack;
@@ -228,7 +229,7 @@ void Matrix::spawn_d()
     }
 }
 
-Matrix::Strip::Strip(unsigned int n, VertexData::D4UB* glyphs,
+Matrix::Strip::Strip(std::size_t n, VertexData::D4UB* glyphs,
                      VertexData::V3F* vertices, VertexData::C4F* colors,
                      GLfloat x, GLfloat y, GLfloat z, const vector& ac,
                      float h1, float h2, float r, float p, float q,
@@ -294,7 +295,7 @@ Matrix::Strip::Strip(unsigned int n, VertexData::D4UB* glyphs,
 void Matrix::Strip::draw(GLint* first, GLsizei* count)
 {
     *first = 0;
-    *count = end_glyph * 4;
+    *count = GLsizei(end_glyph * 4);
 }
 
 void Matrix::Strip::tick(VertexData::D4UB* glyphs, VertexData::V3F* vertices,
@@ -310,7 +311,7 @@ void Matrix::Strip::tick(VertexData::D4UB* glyphs, VertexData::V3F* vertices,
         }
         else
         {
-            if(unsigned int iframe = aframe_waiter.test(usec))
+            if(std::size_t iframe = aframe_waiter.test(usec))
             {
                 aframe += iframe;
                 if(aframe >= animation.nframes)// animation ends
@@ -321,8 +322,8 @@ void Matrix::Strip::tick(VertexData::D4UB* glyphs, VertexData::V3F* vertices,
 
                 //  end_glyph = n_glyphs;
 
-                unsigned int w = animation.nframes - aframe;
-                unsigned int k = n_glyphs;
+                const auto w = animation.nframes - aframe;
+                const auto k = n_glyphs;
 
                 if(k > w)
                     end_glyph = 0;
@@ -337,7 +338,7 @@ void Matrix::Strip::wave_tick(VertexData::D4UB* glyphs,
                               VertexData::V3F* /*vertices*/,
                               VertexData::C4F* colors, unsigned long usec)
 {
-    if(unsigned int inc = wave_waiter.test(usec))
+    if(std::size_t inc = wave_waiter.test(usec))
     {
         if(end_glyph < n_glyphs)
         {

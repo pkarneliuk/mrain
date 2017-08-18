@@ -63,7 +63,7 @@ int Application::run()
 
 void Application::do_frame()
 {
-    const unsigned long tick = fps.count_frame();
+    const auto tick = fps.count_frame();
 
     scene->draw();
     scene->tick(tick);
