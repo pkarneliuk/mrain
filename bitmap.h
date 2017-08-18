@@ -25,6 +25,7 @@ public:
     unsigned int         height() const { return image_height; }
     unsigned char*       data() { return &(buffer[0]); }
     const unsigned char* data() const { return &(buffer[0]); }
+    bool                 empty() const noexcept { return buffer.empty(); }
 
     bool dump(const char* bmp_file) const try
     {

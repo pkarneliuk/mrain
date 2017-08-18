@@ -50,7 +50,7 @@ public:
         Buffer(class BaseCapture* c, const BaseCapture::out_format format)
         : capture(c)
         {
-            if(capture != NULL)
+            if(capture != nullptr)
             {
                 Bitmap::image_width  = capture->width();
                 Bitmap::image_height = capture->height();
@@ -67,10 +67,10 @@ public:
 
         ~Buffer()
         {
-            if(capture != NULL)
+            if(capture != nullptr)
             {
                 // reset capture
-                capture->set_buffer(NULL, num);
+                capture->set_buffer(nullptr, num);
             }
         }
 

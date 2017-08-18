@@ -118,7 +118,7 @@ Scene::Scene(GLRenderer* render, Capture* capture, const Options& options)
 , frame(capture, Capture::RGB)
 , renderer(render)
 {
-    if(frame.data() != nullptr)// capturing enabled
+    if(!frame.empty())// capturing enabled
     {
         frames_stack = std::make_unique<VideoBuffer>(frame, 0, 10000);
 

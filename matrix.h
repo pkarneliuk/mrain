@@ -77,6 +77,7 @@ protected:
         : nframes(n)
         , spline(key_points, 7)
         , twister(r, h2, p, q, rotates)
+        , vcache(nframes * 4)
         {
             key_points[0] = a;
             key_points[1] = a;
@@ -94,9 +95,7 @@ protected:
             //  key_points[7] = vector(xa, ya, za);
             key_points[8] = a;
 
-            vcache = new VertexData::V3F[nframes * 4];
-
-            for(unsigned int i = 0; i < nframes - 1; i++) {
+            for(std::size_t i = 0; i < nframes; i++) {
                 vector v0 = get_point(i);
                 vector v1 = v0;
                 v1.x += size;
@@ -104,11 +103,11 @@ protected:
                 vector v3 = v2;
                 v3.x += size;
 
-                unsigned int index = i << 2;// i*4
+                const std::size_t index = i * 4;
 
-                vcache[index].x = v0.x;
-                vcache[index].y = v0.y;
-                vcache[index].z = v0.z;
+                vcache[index + 0].x = v0.x;
+                vcache[index + 0].y = v0.y;
+                vcache[index + 0].z = v0.z;
 
                 vcache[index + 1].x = v1.x;
                 vcache[index + 1].y = v1.y;
@@ -124,19 +123,18 @@ protected:
             }
         }
 
-        ~Animation() { delete[] vcache; }
-
         inline void vertexcpy(VertexData::V3F* array, unsigned int num,
                               unsigned int begin_frame)
         {
             assert(sizeof(vector) == sizeof(VertexData::V3F));
-            memcpy(array, vcache + (begin_frame * 4), sizeof(vector) * num);
+            memcpy(array, vcache.data() + (begin_frame * 4),
+                   sizeof(vector) * num);
         }
 
-        const unsigned int nframes;
+        const std::size_t nframes;
 
     private:
-        vector get_point(unsigned int frame)
+        vector get_point(std::size_t frame)
         {
             frame %= nframes;
             float t = float(frame) / nframes;
@@ -150,22 +148,22 @@ protected:
                 return key_points[7] + twister(0.018f + (t - s) / (1.0f - s));
         }
 
-        vector           key_points[9];
-        HSpline          spline;
-        Twister          twister;
-        VertexData::V3F* vcache;
+        vector                       key_points[9];
+        HSpline                      spline;
+        Twister                      twister;
+        std::vector<VertexData::V3F> vcache;
     };
 
     class Strip
     {
     public:
         Strip(unsigned int n, VertexData::D4UB* glyphs,
-              VertexData::V3F* vertexies, VertexData::C4F* colors, GLfloat x,
+              VertexData::V3F* vertices, VertexData::C4F* colors, GLfloat x,
               GLfloat y, GLfloat z, const vector& ac, float h1, float h2,
               float r, float p, float q, float rotates);
 
         void draw(GLint* first, GLsizei* count);
-        void tick(VertexData::D4UB* glyphs, VertexData::V3F* vertexies,
+        void tick(VertexData::D4UB* glyphs, VertexData::V3F* vertices,
                   VertexData::C4F* colors, unsigned long usec);
 
         const GLfloat size;
@@ -184,7 +182,7 @@ protected:
         bool         arunning;// animation running
 
     private:
-        void wave_tick(VertexData::D4UB* glyphs, VertexData::V3F* vertexies,
+        void wave_tick(VertexData::D4UB* glyphs, VertexData::V3F* vertices,
                        VertexData::C4F* colors, unsigned long usec);
     };
 
